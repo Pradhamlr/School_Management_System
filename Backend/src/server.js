@@ -1,11 +1,65 @@
+// ==========================================
+// DEPENDENCIES & IMPORTS
+// ==========================================
 const express = require('express');
+require('express-async-errors');
+require('dotenv').config();
+
+// Initialize Express application
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+// ==========================================
+// MIDDLEWARE IMPORTS
+// ==========================================
+const cors = require('cors');
+
+// Custom middleware
+const errorHandlerMiddleware = require('./middlewares/errorHandler');
+const notFoundMiddleware = require('./middlewares/notFound');
+const authMiddleware = require('./middlewares/authMiddleware');
+
+// ==========================================
+// ROUTE IMPORTS
+// ==========================================
+const authRoutes = require('./routes/authRoutes');
+
+// ==========================================
+// MIDDLEWARE SETUP
+// ==========================================
+// Enable CORS for all routes
+app.use(cors());
+
+// Body parsing middleware
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
+// ==========================================
+// ROUTES
+// ==========================================
+// Health check
 app.get('/', (req, res) => {
-  res.send('Server is running');
+  res.json({
+    message: 'School Management System API is running!',
+    version: '1.0.0'
+  });
 });
 
+// Authentication routes
+app.use('/api/auth', authRoutes);
+
+// ==========================================
+// ERROR HANDLING
+// ==========================================
+// 404 handler
+app.use(notFoundMiddleware);
+
+// Global error handler
+app.use(errorHandlerMiddleware);
+
+// ==========================================
+// START SERVER
+// ==========================================
 app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
+  console.log(`Server is running on port ${PORT}`);
 });
