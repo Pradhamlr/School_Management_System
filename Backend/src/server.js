@@ -17,6 +17,7 @@ const cors = require('cors');
 // Custom middleware
 const errorHandlerMiddleware = require('./middlewares/errorHandler');
 const notFoundMiddleware = require('./middlewares/notFound');
+const authMiddleware = require('./middlewares/authMiddleware');
 
 // ==========================================
 // ROUTE IMPORTS
