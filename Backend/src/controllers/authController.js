@@ -19,10 +19,27 @@ const signUp = async (req, res) => {
 
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = await prisma.user.create({
-        data: { name, email, password: hashedPassword, role: role || 'student'}
+        data: { name, email, password: hashedPassword, role: role || 'STUDENT'}
     });
 
     res.status(StatusCodes.CREATED).json({ user: newUser });
 }
 
-module.exports = { signUp };
+const login = async (req, res) => {
+    const { email, password } = req.body;
+
+    const existingUser = await prisma.user.findUnique({ where: { email } });
+    if (!existingUser) {
+        throw new UnauthenticatedError('Invalid credentials');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, existingUser.password);
+    if (!isPasswordValid) {
+        throw new UnauthenticatedError('Invalid credentials');
+    }
+
+    const token = jwt.sign({ userId: existingUser.id, role: existingUser.role }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_LIFETIME });
+    res.status(StatusCodes.OK).json({ user: existingUser, token });
+}
+
+module.exports = { signUp, login };
