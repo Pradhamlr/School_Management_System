@@ -1,8 +1,8 @@
 // Express routes: Auth
 const express = require('express');
 const router = express.Router();
-const { signup }= require('../controllers/authController.js');
+const { signUp }= require('../controllers/authController');
 
-router.post("/signup", signup);
+router.post("/signup", signUp);
 
 module.exports = router;
