@@ -25,6 +25,7 @@ const authorizeAdmin = require('./middlewares/roleMiddleware')
 // ==========================================
 const authRoutes = require('./routes/authRoutes');
 const studentRoutes = require('./routes/studentRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
 
 // ==========================================
 // MIDDLEWARE SETUP
@@ -50,6 +51,7 @@ app.get('/', (req, res) => {
 // Authentication routes
 app.use('/api/auth', authRoutes);
 app.use('/api/students', authMiddleware, authorizeAdmin, studentRoutes);
+app.use('/api/teachers', authMiddleware, authorizeAdmin, teacherRoutes);
 
 // ==========================================
 // ERROR HANDLING
