@@ -58,6 +58,22 @@ const getStudentById = async (req, res) => {
     });
 }
 
+const getCurrentStudent = async (req, res) => {
+    const student = await prisma.student.findUnique({
+        where: { userId: req.user.id },
+        include: { user: true }
+    });
+
+    if (!student) {
+        throw new NotFoundError('Student not found');
+    }
+
+    res.status(StatusCodes.OK).json({
+        success: true,
+        student
+    });
+}
+
 const updateStudent = async (req, res) => {
     const { rollNumber, class: studentClass, section, dob } = req.body;
 
@@ -116,6 +132,7 @@ module.exports = {
     createStudent,
     getAllStudents,
     getStudentById,
+    getCurrentStudent,
     updateStudent,
     deleteStudent
 };

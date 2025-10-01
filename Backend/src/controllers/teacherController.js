@@ -57,6 +57,22 @@ const getTeacherById = async (req, res) => {
     });
 }
 
+const getCurrentTeacher = async (req, res) => {
+    const teacher = await prisma.teacher.findUnique({
+        where: { userId: req.user.id },
+        include: { user: true }
+    });
+
+    if (!teacher) {
+        throw new NotFoundError('Teacher not found');
+    }
+
+    res.status(StatusCodes.OK).json({
+        success: true,
+        teacher
+    });
+}
+
 const updateTeacher = async (req, res) => {
     const { subject, department, hireDate } = req.body;
 
@@ -101,6 +117,7 @@ module.exports = {
     createTeacher,
     getAllTeachers,
     getTeacherById,
+    getCurrentTeacher,
     updateTeacher,
     deleteTeacher
 };
