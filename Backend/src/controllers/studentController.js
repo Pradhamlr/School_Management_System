@@ -5,7 +5,6 @@ const { StatusCodes } = require('http-status-codes');
 
 const prisma = new PrismaClient();
 
-// Create a new student
 const createStudent = async (req, res) => {
     const { userId, rollNumber, class: studentClass, section, dob } = req.body;
 
@@ -31,7 +30,6 @@ const createStudent = async (req, res) => {
     });
 }
 
-// Get all students
 const getAllStudents = async (req, res) => {
     const students = await prisma.student.findMany({
         include: { user: true },
@@ -43,7 +41,6 @@ const getAllStudents = async (req, res) => {
     });
 }
 
-// Get a single student by ID
 const getStudentById = async (req, res) => {
 
     const student = await prisma.student.findUnique({
@@ -61,7 +58,6 @@ const getStudentById = async (req, res) => {
     });
 }
 
-// Update student
 const updateStudent = async (req, res) => {
     const { rollNumber, class: studentClass, section, dob } = req.body;
 
@@ -101,7 +97,6 @@ const updateStudent = async (req, res) => {
     });
 }
 
-// Delete a student
 const deleteStudent = async (req, res) => {
 
     const existingStudent = await prisma.student.findUnique({ where: { id: Number(req.params.id) } });
