@@ -23,6 +23,8 @@ const authMiddleware = require('./middlewares/authMiddleware');
 // ROUTE IMPORTS
 // ==========================================
 const authRoutes = require('./routes/authRoutes');
+const studentRoutes = require('./routes/studentRoutes');
+const teacherRoutes = require('./routes/teacherRoutes');
 
 // ==========================================
 // MIDDLEWARE SETUP
@@ -47,6 +49,8 @@ app.get('/', (req, res) => {
 
 // Authentication routes
 app.use('/api/auth', authRoutes);
+app.use('/api/students', authMiddleware, studentRoutes);
+app.use('/api/teachers', authMiddleware, teacherRoutes);
 
 // ==========================================
 // ERROR HANDLING

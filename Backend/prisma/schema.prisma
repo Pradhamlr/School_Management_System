@@ -31,12 +31,21 @@ model Student {
   id        Int    @id @default(autoincrement())
   userId    Int    @unique
   user      User   @relation(fields: [userId], references: [id])
+
+    rollNumber String   @unique
+    class      String   
+    section    String?
+    dob        DateTime
 }
 
 model Teacher {
   id     Int   @id @default(autoincrement())
   userId Int   @unique
   user   User  @relation(fields: [userId], references: [id])
+
+    subject    String
+    department String 
+    hireDate   DateTime @default(now())
 }
 
 enum Role {
