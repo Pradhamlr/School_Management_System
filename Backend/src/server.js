@@ -18,11 +18,13 @@ const cors = require('cors');
 const errorHandlerMiddleware = require('./middlewares/errorHandler');
 const notFoundMiddleware = require('./middlewares/notFound');
 const authMiddleware = require('./middlewares/authMiddleware');
+const authorizeAdmin = require('./middlewares/roleMiddleware')
 
 // ==========================================
 // ROUTE IMPORTS
 // ==========================================
 const authRoutes = require('./routes/authRoutes');
+const studentRoutes = require('./routes/studentRoutes');
 
 // ==========================================
 // MIDDLEWARE SETUP
@@ -47,6 +49,7 @@ app.get('/', (req, res) => {
 
 // Authentication routes
 app.use('/api/auth', authRoutes);
+app.use('/api/students', authMiddleware, authorizeAdmin, studentRoutes);
 
 // ==========================================
 // ERROR HANDLING
