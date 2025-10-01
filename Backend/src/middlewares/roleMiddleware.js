@@ -7,4 +7,14 @@ const authorizeAdmin = (req, res, next) => {
     next();
 }
 
-module.exports = authorizeAdmin;
+const authorizeTeacher = (req, res, next) => {
+    if (req.user.role !== 'TEACHER') {
+        throw new UnauthenticatedError('Access denied: Teachers only');
+    }
+    next();
+}
+
+module.exports = {
+    authorizeAdmin,
+    authorizeTeacher
+};
