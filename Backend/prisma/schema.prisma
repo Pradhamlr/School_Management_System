@@ -36,6 +36,8 @@ model Student {
     class      String   
     section    String?
     dob        DateTime
+    
+    attendances StudentAttendance[]
 }
 
 model Teacher {
@@ -46,10 +48,45 @@ model Teacher {
     subject    String
     department String 
     hireDate   DateTime @default(now())
+    
+    attendances TeacherAttendance[]
+}
+
+model StudentAttendance {
+  id        Int              @id @default(autoincrement())
+  studentId Int
+  student   Student          @relation(fields: [studentId], references: [id])
+  date      DateTime
+  status    AttendanceStatus @default(ABSENT)
+  remarks   String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  
+  @@unique([studentId, date])
+}
+
+model TeacherAttendance {
+  id        Int              @id @default(autoincrement())
+  teacherId Int
+  teacher   Teacher          @relation(fields: [teacherId], references: [id])
+  date      DateTime
+  status    AttendanceStatus @default(ABSENT)
+  remarks   String?
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+  
+  @@unique([teacherId, date])
 }
 
 enum Role {
   ADMIN
   TEACHER
   STUDENT
+}
+
+enum AttendanceStatus {
+  PRESENT
+  ABSENT
+  LATE
+  EXCUSED
 }
