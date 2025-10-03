@@ -4,14 +4,14 @@ const { CustomAPIError } = require('../errors/customError');
 const { sendResponse } = require('../utils/response');
 
 const attendanceController = {
-  // Get attendance statistics for dashboard - Simplified version
+  // Get attendance statistics for dashboard
   getAttendanceStats: async (req, res) => {
     try {
       // Get today's date for stats
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      // Get basic student stats for today
+      // Get student attendance stats for today
       const totalStudents = await prisma.student.count();
       const presentStudents = await prisma.studentAttendance.count({
         where: {
@@ -20,7 +20,7 @@ const attendanceController = {
         }
       });
       
-      // Get basic teacher stats for today  
+      // Get teacher attendance stats for today
       const totalTeachers = await prisma.teacher.count();
       const presentTeachers = await prisma.teacherAttendance.count({
         where: {
@@ -33,24 +33,59 @@ const attendanceController = {
       const studentAttendanceRate = totalStudents > 0 ? Math.round((presentStudents / totalStudents) * 100) : 0;
       const teacherAttendanceRate = totalTeachers > 0 ? Math.round((presentTeachers / totalTeachers) * 100) : 0;
 
-      // Simple performance stats (just use present/absent for now)
-      const absentStudents = totalStudents - presentStudents;
-      const absentTeachers = totalTeachers - presentTeachers;
+      // Get class performance stats (based on last 30 days)
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+      const classStats = await prisma.studentAttendance.groupBy({
+        by: ['studentId'],
+        where: {
+          date: {
+            gte: thirtyDaysAgo,
+            lte: today
+          }
+        },
+        _count: {
+          status: true
+        },
+        _sum: {
+          status: true
+        }
+      });
+
+      // Calculate performance categories
+      let excellent = 0, good = 0, average = 0, poor = 0;
+      
+      for (const stat of classStats) {
+        const attendanceRate = (stat._count.status > 0) ? 
+          await prisma.studentAttendance.count({
+            where: {
+              studentId: stat.studentId,
+              date: { gte: thirtyDaysAgo, lte: today },
+              status: 'PRESENT'
+            }
+          }) / stat._count.status * 100 : 0;
+
+        if (attendanceRate >= 90) excellent++;
+        else if (attendanceRate >= 75) good++;
+        else if (attendanceRate >= 60) average++;
+        else poor++;
+      }
 
       const data = {
         students: [
           { name: "Present", value: presentStudents, color: "#6366F1" },
-          { name: "Absent", value: absentStudents, color: "#EF4444" }
+          { name: "Absent", value: totalStudents - presentStudents, color: "#EF4444" }
         ],
         teachers: [
           { name: "Present", value: presentTeachers, color: "#EC4899" },
-          { name: "Absent", value: absentTeachers, color: "#EF4444" }
+          { name: "Absent", value: totalTeachers - presentTeachers, color: "#EF4444" }
         ],
         performance: [
-          { name: "Good Attendance", value: presentStudents, color: "#10B981" },
-          { name: "Poor Attendance", value: absentStudents, color: "#EF4444" },
-          { name: "Total Students", value: totalStudents, color: "#6366F1" },
-          { name: "Total Teachers", value: totalTeachers, color: "#EC4899" }
+          { name: "Excellent (90%+)", value: excellent, color: "#10B981" },
+          { name: "Good (75-89%)", value: good, color: "#F59E0B" },
+          { name: "Average (60-74%)", value: average, color: "#F97316" },
+          { name: "Poor (<60%)", value: poor, color: "#EF4444" }
         ],
         summary: {
           totalStudents,

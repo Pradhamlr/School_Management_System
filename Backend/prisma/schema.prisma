@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -20,61 +14,54 @@ model User {
   password  String
   role      Role     @default(STUDENT)
   createdAt DateTime @default(now())
-
-  student Student?
-  teacher Teacher?
-
-
+  student   Student?
+  teacher   Teacher?
 }
 
 model Student {
-  id        Int    @id @default(autoincrement())
-  userId    Int    @unique
-  user      User   @relation(fields: [userId], references: [id])
-
-    rollNumber String   @unique
-    class      String   
-    section    String?
-    dob        DateTime
-    
-    attendances StudentAttendance[]
+  id          Int                 @id @default(autoincrement())
+  userId      Int                 @unique
+  class       String
+  dob         DateTime
+  rollNumber  String              @unique
+  section     String?
+  user        User                @relation(fields: [userId], references: [id])
+  attendances StudentAttendance[]
 }
 
 model Teacher {
-  id     Int   @id @default(autoincrement())
-  userId Int   @unique
-  user   User  @relation(fields: [userId], references: [id])
-
-    subject    String
-    department String 
-    hireDate   DateTime @default(now())
-    
-    attendances TeacherAttendance[]
+  id          Int                 @id @default(autoincrement())
+  userId      Int                 @unique
+  department  String
+  hireDate    DateTime            @default(now())
+  subject     String
+  user        User                @relation(fields: [userId], references: [id])
+  attendances TeacherAttendance[]
 }
 
 model StudentAttendance {
   id        Int              @id @default(autoincrement())
   studentId Int
-  student   Student          @relation(fields: [studentId], references: [id])
   date      DateTime
   status    AttendanceStatus @default(ABSENT)
   remarks   String?
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
-  
+  student   Student          @relation(fields: [studentId], references: [id])
+
   @@unique([studentId, date])
 }
 
 model TeacherAttendance {
   id        Int              @id @default(autoincrement())
   teacherId Int
-  teacher   Teacher          @relation(fields: [teacherId], references: [id])
   date      DateTime
   status    AttendanceStatus @default(ABSENT)
   remarks   String?
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
-  
+  teacher   Teacher          @relation(fields: [teacherId], references: [id])
+
   @@unique([teacherId, date])
 }
 
