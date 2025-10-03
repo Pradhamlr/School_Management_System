@@ -5,13 +5,13 @@ const { getAttendanceStats, getAllStudentsAttendanceToday, getAllTeachersAttenda
 const { authorizeAdmin, authorizeTeacher } = require('../middlewares/roleMiddleware');
 
 // Get attendance statistics for dashboard
-router.get('/stats', authorizeAdmin, authorizeTeacher, getAttendanceStats);
+router.get('/stats', getAttendanceStats);
 
 // Get all students with today's attendance
-router.get('/students/today', authorizeAdmin, authorizeTeacher, getAllStudentsAttendanceToday);
+router.get('/students/today', getAllStudentsAttendanceToday);
 
 // Get all teachers with today's attendance
-router.get('/teachers/today', authorizeAdmin,getAllTeachersAttendanceToday);
+router.get('/teachers/today', authorizeAdmin, getAllTeachersAttendanceToday);
 
 // Student attendance routes
 router.post('/students', authorizeTeacher, markStudentAttendance);

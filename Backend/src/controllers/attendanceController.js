@@ -41,9 +41,6 @@ const getAttendanceStats = async (req, res) => {
     },
     _count: {
       status: true
-    },
-    _sum: {
-      status: true
     }
   });
 
