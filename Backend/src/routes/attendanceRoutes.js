@@ -2,22 +2,23 @@
 const express = require('express');
 const router = express.Router();
 const { getAttendanceStats, getAllStudentsAttendanceToday, getAllTeachersAttendanceToday, markTeacherAttendance, getStudentAttendance, markStudentAttendance, getTeacherAttendance} = require('../controllers/attendanceController');
+const { authorizeAdmin, authorizeTeacher } = require('../middlewares/roleMiddleware');
 
 // Get attendance statistics for dashboard
-router.get('/stats', getAttendanceStats);
+router.get('/stats', authorizeAdmin, authorizeTeacher, getAttendanceStats);
 
 // Get all students with today's attendance
-router.get('/students/today', getAllStudentsAttendanceToday);
+router.get('/students/today', authorizeAdmin, authorizeTeacher, getAllStudentsAttendanceToday);
 
 // Get all teachers with today's attendance
-router.get('/teachers/today', getAllTeachersAttendanceToday);
+router.get('/teachers/today', authorizeAdmin,getAllTeachersAttendanceToday);
 
 // Student attendance routes
-router.post('/students', markStudentAttendance);
+router.post('/students', authorizeTeacher, markStudentAttendance);
 router.get('/students/:studentId', getStudentAttendance);
 
 // Teacher attendance routes
-router.post('/teachers', markTeacherAttendance);
+router.post('/teachers', authorizeAdmin, markTeacherAttendance);
 router.get('/teachers/:teacherId', getTeacherAttendance);
 
 module.exports = router;
