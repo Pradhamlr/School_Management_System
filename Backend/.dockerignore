@@ -1,0 +1,12 @@
+node_modules
+npm-debug.log
+Dockerfile
+.dockerignore
+.git
+.gitignore
+prisma/migrations
+*.sqlite
+coverage
+logs
+*.log
+node_modules
