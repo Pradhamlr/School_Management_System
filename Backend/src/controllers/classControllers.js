@@ -94,3 +94,12 @@ const assignStudentToClass = async (req, res) => {
     });
     res.status(StatusCodes.OK).json({ student: updatedStudent });
 }
+
+module.exports = {
+    createClass,
+    getClasses,
+    getClassById,
+    deleteClass,
+    assignClassTeacher,
+    assignStudentToClass
+};
