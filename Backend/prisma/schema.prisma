@@ -24,20 +24,21 @@ model Student {
   classId     Int
   dob         DateTime
   rollNumber  String              @unique
-  section     String?
   user        User                @relation(fields: [userId], references: [id])
   class       Class               @relation(fields: [classId], references: [id])
   attendances StudentAttendance[]
 }
 
 model Teacher {
-  id          Int                 @id @default(autoincrement())
-  userId      Int                 @unique
-  department  String
-  hireDate    DateTime            @default(now())
-  subject     String
-  user        User                @relation(fields: [userId], references: [id])
-  attendances TeacherAttendance[]
+  id         Int      @id @default(autoincrement())
+  userId     Int      @unique
+  department String
+  hireDate   DateTime @default(now())
+  user       User     @relation(fields: [userId], references: [id])
+
+  advisedClasses      Class[]               @relation("ClassTeacher")
+  teachingAssignments TeacherClassSubject[]
+  attendances         TeacherAttendance[]
 }
 
 model StudentAttendance {
@@ -67,29 +68,37 @@ model TeacherAttendance {
 }
 
 model Class {
-  id       Int       @id @default(autoincrement())
-  name     String    // e.g. "10"
-  section  String?   // e.g. "A"
+  id      Int     @id @default(autoincrement())
+  name    String // e.g. "10"
+  section String? // e.g. "A"
+
+  classTeacherId Int?
+  classTeacher   Teacher? @relation("ClassTeacher", fields: [classTeacherId], references: [id])
+
   students Student[]
-  exams    Exam[]
+  subjects TeacherClassSubject[]
+
+  createdAt DateTime @default(now())
 }
 
 model Subject {
-  id       Int       @id @default(autoincrement())
+  id       Int                   @id @default(autoincrement())
   name     String
-  code     String    @unique
-  teachers TeacherSubject[]
-  exams    Exam[]
+  code     String                @unique
+  teachers TeacherClassSubject[]
 }
 
-model TeacherSubject {
-    id      Int      @id @default(autoincrement())
-    teacherId Int
-    subjectId Int
-    teacher Teacher @relation(fields: [teacherId], references: [id])
-    subject Subject @relation(fields: [subjectId], references: [id])
+model TeacherClassSubject {
+  id        Int @id @default(autoincrement())
+  teacherId Int
+  subjectId Int
+  classId   Int
 
-    @@unique([teacherId, subjectId])
+  class   Class   @relation(fields: [classId], references: [id])
+  teacher Teacher @relation(fields: [teacherId], references: [id])
+  subject Subject @relation(fields: [subjectId], references: [id])
+
+  @@unique([teacherId, subjectId])
 }
 
 enum Role {
