@@ -74,6 +74,24 @@ model Class {
   exams    Exam[]
 }
 
+model Subject {
+  id       Int       @id @default(autoincrement())
+  name     String
+  code     String    @unique
+  teachers TeacherSubject[]
+  exams    Exam[]
+}
+
+model TeacherSubject {
+    id      Int      @id @default(autoincrement())
+    teacherId Int
+    subjectId Int
+    teacher Teacher @relation(fields: [teacherId], references: [id])
+    subject Subject @relation(fields: [subjectId], references: [id])
+
+    @@unique([teacherId, subjectId])
+}
+
 enum Role {
   ADMIN
   TEACHER
