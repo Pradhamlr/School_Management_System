@@ -95,11 +95,27 @@ const assignStudentToClass = async (req, res) => {
     res.status(StatusCodes.OK).json({ student: updatedStudent });
 }
 
+const getStudentClass = async (req, res) => {
+    const studentId = req.user.id;
+
+    const student = await prisma.student.findUnique({
+        where: { userId: studentId },
+        include: { class: { include: { classTeacher: { include: { user: true } } } } }
+    });
+
+    if (!student) {
+        throw new NotFoundError('Student not found');
+    }
+
+    res.status(StatusCodes.OK).json({ class: student.class });
+};
+
 module.exports = {
     createClass,
     getClasses,
     getClassById,
     deleteClass,
     assignClassTeacher,
-    assignStudentToClass
+    assignStudentToClass,
+    getStudentClass
 };
