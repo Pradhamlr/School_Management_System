@@ -21,11 +21,12 @@ model User {
 model Student {
   id          Int                 @id @default(autoincrement())
   userId      Int                 @unique
-  class       String
+  classId     Int
   dob         DateTime
   rollNumber  String              @unique
   section     String?
   user        User                @relation(fields: [userId], references: [id])
+  class       Class               @relation(fields: [classId], references: [id])
   attendances StudentAttendance[]
 }
 
@@ -63,6 +64,14 @@ model TeacherAttendance {
   teacher   Teacher          @relation(fields: [teacherId], references: [id])
 
   @@unique([teacherId, date])
+}
+
+model Class {
+  id       Int       @id @default(autoincrement())
+  name     String    // e.g. "10"
+  section  String?   // e.g. "A"
+  students Student[]
+  exams    Exam[]
 }
 
 enum Role {
