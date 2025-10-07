@@ -1,23 +1,24 @@
 // Express routes: Attendance
 const express = require('express');
 const router = express.Router();
-const attendanceController = require('../controllers/attendanceController');
+const { getAttendanceStats, getAllStudentsAttendanceToday, getAllTeachersAttendanceToday, markTeacherAttendance, getStudentAttendance, markStudentAttendance, getTeacherAttendance} = require('../controllers/attendanceController');
+const { authorizeAdmin, authorizeTeacher } = require('../middlewares/roleMiddleware');
 
 // Get attendance statistics for dashboard
-router.get('/stats', attendanceController.getAttendanceStats);
+router.get('/stats', getAttendanceStats);
 
 // Get all students with today's attendance
-router.get('/students/today', attendanceController.getAllStudentsAttendanceToday);
+router.get('/students/today', getAllStudentsAttendanceToday);
 
-// Get all teachers with today's attendance  
-router.get('/teachers/today', attendanceController.getAllTeachersAttendanceToday);
+// Get all teachers with today's attendance
+router.get('/teachers/today', authorizeAdmin, getAllTeachersAttendanceToday);
 
 // Student attendance routes
-router.post('/students', attendanceController.markStudentAttendance);
-router.get('/students/:studentId', attendanceController.getStudentAttendance);
+router.post('/students', authorizeTeacher, markStudentAttendance);
+router.get('/students/:studentId', getStudentAttendance);
 
 // Teacher attendance routes
-router.post('/teachers', attendanceController.markTeacherAttendance);
-router.get('/teachers/:teacherId', attendanceController.getTeacherAttendance);
+router.post('/teachers', authorizeAdmin, markTeacherAttendance);
+router.get('/teachers/:teacherId', getTeacherAttendance);
 
 module.exports = router;
