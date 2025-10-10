@@ -1,12 +1,11 @@
 // Business logic: Auth
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
 const BadRequestError = require('../errors/badRequest');
 const UnauthenticatedError = require('../errors/unauthenticated');
 
-const prisma = new PrismaClient();
 
 // Register a new user
 const signUp = async (req, res) => {

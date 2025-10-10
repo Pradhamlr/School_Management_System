@@ -1,7 +1,5 @@
-const {PrismaClient} = require('@prisma/client');
+const prisma = require('../config/prisma');
 const {StatusCodes} = require('http-status-codes');
-
-const prisma = new PrismaClient();
 const {BadRequestError, NotFoundError} = require("../errors");
 
 const createSubject = async (req, res) => {
@@ -75,12 +73,16 @@ const assignTeacherToSubject = async (req, res) => {
 };
 
 const getTeacherAssignments = async (req, res) => {
-  const teacherId = req.user.userId;
-  const assignments = await prisma.teacherClassSubject.findMany({
-    where: { teacherId },
-    include: { class: true, subject: true },
-  });
-  res.status(StatusCodes.OK).json(assignments);
+    // req.user.id is the user id from JWT; find the teacher record first
+    const userId = req.user.id;
+    const teacher = await prisma.teacher.findUnique({ where: { userId } });
+    if (!teacher) return res.status(StatusCodes.NOT_FOUND).json({ message: 'Teacher profile not found' });
+
+    const assignments = await prisma.teacherClassSubject.findMany({
+        where: { teacherId: teacher.id },
+        include: { class: true, subject: true },
+    });
+    res.status(StatusCodes.OK).json(assignments);
 };
 
 const getClassSubjects = async (req, res) => {

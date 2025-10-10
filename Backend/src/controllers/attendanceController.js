@@ -1,9 +1,8 @@
 const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
 
-const prisma = new PrismaClient();
 
 const getAttendanceStats = async (req, res) => {
   const today = new Date();
@@ -403,6 +402,7 @@ const getAllStudentsAttendanceToday = async (req, res) => {
       user: {
         select: { name: true, email: true }
       },
+      class: true,
       attendances: {
         where: {
           date: today
@@ -421,7 +421,7 @@ const getAllStudentsAttendanceToday = async (req, res) => {
     name: student.user.name,
     email: student.user.email,
     rollNumber: student.rollNumber,
-    class: student.class,
+    class: student.class || null,
     section: student.section,
     attendanceStatus: student.attendances[0]?.status || 'NOT_MARKED',
     remarks: student.attendances[0]?.remarks || null,
@@ -445,6 +445,9 @@ const getAllStudentsAttendanceToday = async (req, res) => {
       user: {
         select: { name: true, email: true }
       },
+      teachingAssignments: {
+        include: { subject: true, class: true }
+      },
       attendances: {
         where: {
           date: today
@@ -462,7 +465,7 @@ const getAllStudentsAttendanceToday = async (req, res) => {
     id: teacher.id,
     name: teacher.user.name,
     email: teacher.user.email,
-    subject: teacher.subject,
+    subjects: teacher.teachingAssignments?.map(t => ({ subject: t.subject, class: t.class })) || [],
     department: teacher.department,
     attendanceStatus: teacher.attendances[0]?.status || 'NOT_MARKED',
     remarks: teacher.attendances[0]?.remarks || null,
