@@ -51,9 +51,56 @@ const deleteSubject = async (req, res) => {
     res.status(StatusCodes.NO_CONTENT).send();
 };
 
+const assignTeacherToSubject = async (req, res) => {
+    const {teacherId, classId, subjectId} = req.body;
+
+    const existing = await prisma.teacherClassSubject.findFirst({
+        where: {
+            teacherId, classId, subjectId
+        }
+    });
+
+    if (existing) {
+        throw new BadRequestError('This teacher is already assigned to this subject in this class');
+    }
+
+    const assignment = await prisma.teacherClassSubject.create({
+        data: {
+            teacherId, classId, subjectId
+        },
+        include: {teacher: {include: {user: true}}, class: true, subject: true}
+    });
+
+    res.status(StatusCodes.CREATED).json({assignment});
+};
+
+const getTeacherAssignments = async (req, res) => {
+  const teacherId = req.user.userId;
+  const assignments = await prisma.teacherClassSubject.findMany({
+    where: { teacherId },
+    include: { class: true, subject: true },
+  });
+  res.status(StatusCodes.OK).json(assignments);
+};
+
+const getClassSubjects = async (req, res) => {
+  const classId = Number(req.params.classId);
+  const subjects = await prisma.teacherClassSubject.findMany({
+    where: { classId },
+    include: { subject: true, teacher: { include: { user: true } } },
+  });
+  res.status(StatusCodes.OK).json(subjects);
+}
+
+
+
+
 module.exports = {
     createSubject,
     getSubjects,
     updateSubject,
-    deleteSubject
+    deleteSubject,
+    assignTeacherToSubject,
+    getTeacherAssignments,
+    getClassSubjects
 };
