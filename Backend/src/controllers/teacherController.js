@@ -1,12 +1,10 @@
 const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
 
-const prisma = new PrismaClient();
-
 const createTeacher = async (req, res) => {
-    const { userId, subject, department, hireDate } = req.body;
+    const { userId, department, hireDate } = req.body;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.role !== 'TEACHER') {
@@ -19,7 +17,7 @@ const createTeacher = async (req, res) => {
     }
 
     const newTeacher = await prisma.teacher.create({
-        data: { userId, subject, department, hireDate: new Date(hireDate) },
+        data: { userId, department, hireDate: new Date(hireDate) },
         include: { user: true }
     });
 
@@ -74,7 +72,7 @@ const getCurrentTeacher = async (req, res) => {
 }
 
 const updateTeacher = async (req, res) => {
-    const { subject, department, hireDate } = req.body;
+    const { department, hireDate } = req.body;
 
     const existingTeacher = await prisma.teacher.findUnique({ where: { id: Number(req.params.id) } });
     if (!existingTeacher) {
@@ -82,7 +80,6 @@ const updateTeacher = async (req, res) => {
     }
 
     const updateData = {};
-    if (subject !== undefined) updateData.subject = subject;
     if (department !== undefined) updateData.department = department;
     if (hireDate !== undefined) updateData.hireDate = new Date(hireDate);
 

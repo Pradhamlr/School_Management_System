@@ -1,12 +1,11 @@
 const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
-const { PrismaClient } = require('@prisma/client');
+const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
 
-const prisma = new PrismaClient();
 
 const createStudent = async (req, res) => {
-    const { userId, rollNumber, class: studentClass, section, dob } = req.body;
+    const { userId, rollNumber, classId, section, dob } = req.body;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.role !== 'STUDENT') {
@@ -19,7 +18,7 @@ const createStudent = async (req, res) => {
     }
 
     const newStudent = await prisma.student.create({
-        data: { userId, rollNumber, class: studentClass, section, dob: new Date(dob) },
+        data: { userId, rollNumber, classId, section, dob: new Date(dob) },
         include: { user: true }
     });
 
@@ -75,7 +74,7 @@ const getCurrentStudent = async (req, res) => {
 }
 
 const updateStudent = async (req, res) => {
-    const { rollNumber, class: studentClass, section, dob } = req.body;
+    const { rollNumber, classId, section, dob } = req.body;
 
     const existingStudent = await prisma.student.findUnique({ where: { id: Number(req.params.id) } });
     if (!existingStudent) {
@@ -96,7 +95,7 @@ const updateStudent = async (req, res) => {
 
     const updateData = {};
     if (rollNumber !== undefined) updateData.rollNumber = rollNumber;
-    if (studentClass !== undefined) updateData.class = studentClass;
+    if (classId !== undefined) updateData.classId = classId;
     if (section !== undefined) updateData.section = section;
     if (dob !== undefined) updateData.dob = new Date(dob);
 
