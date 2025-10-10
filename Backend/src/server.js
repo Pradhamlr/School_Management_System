@@ -27,6 +27,7 @@ const studentRoutes = require('./routes/studentRoutes');
 const teacherRoutes = require('./routes/teacherRoutes');
 const attendanceRoutes = require('./routes/attendanceRoutes');
 const classRoutes = require('./routes/classRoutes');
+const subjectRoutes = require('./routes/subjectRoutes');
 
 // ==========================================
 // MIDDLEWARE SETUP
@@ -55,6 +56,7 @@ app.use('/api/students', authMiddleware, studentRoutes);
 app.use('/api/teachers', authMiddleware, teacherRoutes);
 app.use('/api/attendance', authMiddleware, attendanceRoutes);
 app.use('/api/classes', authMiddleware, classRoutes);
+app.use('/api/subjects', authMiddleware, subjectRoutes);
 
 // ==========================================
 // ERROR HANDLING

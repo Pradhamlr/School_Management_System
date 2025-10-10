@@ -33,7 +33,7 @@ const updateSubject = async (req, res) => {
     }
 
     const updatedSubject = await prisma.subject.update({
-        where: {id: Number(id)},
+        where: {id: Number(subjectId)},
         data: {name, code}
     });
     res.status(StatusCodes.OK).json({subject: updatedSubject});
