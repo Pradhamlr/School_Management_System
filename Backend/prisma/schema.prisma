@@ -113,6 +113,17 @@ model Exam {
   results   Result[]
 }
 
+model Result {
+  id        Int      @id @default(autoincrement())
+  examId    Int
+  studentId Int
+  marks     Float
+  grade     String?
+  exam      Exam    @relation(fields: [examId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id])
+  @@unique([examId, studentId])
+}
+
 enum Role {
   ADMIN
   TEACHER
