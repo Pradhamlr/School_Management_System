@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { recordResult, getClassResults, getStudentResults } = require('../controllers/resultController');
-const { authorizeAdmin, authorizeTeacher } = require('../middlewares/roleMiddleware');
+const authorize = require('../middlewares/roleMiddleware');
 
-router.post('/', authorizeTeacher, recordResult);
-router.get('/exam/:examId', authorizeTeacher, getClassResults);
-router.get('/student/:studentId', authorizeTeacher, getStudentResults);
+router.post('/', authorize('TEACHER'), recordResult);
+router.get('/exam/:examId', authorize('TEACHER'), getClassResults);
+router.get('/student/:studentId', authorize('TEACHER'), getStudentResults);
 
 module.exports = router;

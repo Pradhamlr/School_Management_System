@@ -1,20 +1,30 @@
-const UnauthenticatedError = require('../errors/unauthenticated');
+const { StatusCodes } = require('http-status-codes');
 
-const authorizeAdmin = (req, res, next) => {
-    if (req.user.role !== 'ADMIN') {
-        throw new UnauthenticatedError('Access denied: Admins only');
+const authorize = (...allowedRoles) => {
+  return (req, res, next) => {
+    try {
+      const userRole = req.user?.role;
+
+      if (!userRole) {
+        return res.status(StatusCodes.UNAUTHORIZED).json({
+          message: 'No user role found in token'
+        });
+      }
+
+      if (!allowedRoles.includes(userRole)) {
+        return res.status(StatusCodes.FORBIDDEN).json({
+          message: `Access denied. Requires role: ${allowedRoles.join(' or ')}`
+        });
+      }
+
+      next();
+    } catch (error) {
+      res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
+        message: 'Authorization check failed',
+        error: error.message
+      });
     }
-    next();
-}
-
-const authorizeTeacher = (req, res, next) => {
-    if (req.user.role !== 'TEACHER') {
-        throw new UnauthenticatedError('Access denied: Teachers only');
-    }
-    next();
-}
-
-module.exports = {
-    authorizeAdmin,
-    authorizeTeacher
+  };
 };
+
+module.exports = authorize;

@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const { createExam, getExams, getExamDetails } = require('../controllers/examController');
-const { authorizeAdmin, authorizeTeacher } = require('../middlewares/roleMiddleware');
+const authorize = require('../middlewares/roleMiddleware');
 
-router.post('/', authorizeAdmin, createExam);
-router.get('/', authorizeAdmin, getExams);
-router.get('/:id', authorizeAdmin, getExamDetails);
+router.post('/', authorize('ADMIN'), createExam);
+router.get('/', authorize('ADMIN'), getExams);
+router.get('/:id', authorize('ADMIN'), getExamDetails);
 
 module.exports = router;
