@@ -101,6 +101,18 @@ model TeacherClassSubject {
   @@unique([teacherId, subjectId])
 }
 
+model Exam {
+  id        Int      @id @default(autoincrement())
+  name      String
+  date      DateTime
+  classId   Int
+  subjectId Int
+  totalMarks Int
+  class     Class   @relation(fields: [classId], references: [id])
+  subject   Subject @relation(fields: [subjectId], references: [id])
+  results   Result[]
+}
+
 enum Role {
   ADMIN
   TEACHER
