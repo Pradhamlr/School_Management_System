@@ -27,6 +27,7 @@ model Student {
   user        User                @relation(fields: [userId], references: [id])
   class       Class               @relation(fields: [classId], references: [id])
   attendances StudentAttendance[]
+  Result      Result[]
 }
 
 model Teacher {
@@ -79,6 +80,7 @@ model Class {
   subjects TeacherClassSubject[]
 
   createdAt DateTime @default(now())
+  Exam      Exam[]
 }
 
 model Subject {
@@ -86,6 +88,7 @@ model Subject {
   name     String
   code     String                @unique
   teachers TeacherClassSubject[]
+  Exam     Exam[]
 }
 
 model TeacherClassSubject {
@@ -102,25 +105,26 @@ model TeacherClassSubject {
 }
 
 model Exam {
-  id        Int      @id @default(autoincrement())
-  name      String
-  date      DateTime
-  classId   Int
-  subjectId Int
+  id         Int      @id @default(autoincrement())
+  name       String
+  date       DateTime
+  classId    Int
+  subjectId  Int
   totalMarks Int
-  class     Class   @relation(fields: [classId], references: [id])
-  subject   Subject @relation(fields: [subjectId], references: [id])
-  results   Result[]
+  class      Class    @relation(fields: [classId], references: [id])
+  subject    Subject  @relation(fields: [subjectId], references: [id])
+  results    Result[]
 }
 
 model Result {
-  id        Int      @id @default(autoincrement())
+  id        Int     @id @default(autoincrement())
   examId    Int
   studentId Int
   marks     Float
   grade     String?
   exam      Exam    @relation(fields: [examId], references: [id])
   student   Student @relation(fields: [studentId], references: [id])
+
   @@unique([examId, studentId])
 }
 
