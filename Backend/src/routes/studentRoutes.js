@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { authorizeAdmin } = require('../middlewares/roleMiddleware')
+const authorize = require('../middlewares/roleMiddleware')
 
 const { 
     createStudent,
@@ -12,11 +12,11 @@ const {
     deleteStudent
 } = require('../controllers/studentController');
 
-router.post('/', authorizeAdmin, createStudent);
-router.get('/', authorizeAdmin, getAllStudents);          
+router.post('/', authorize('ADMIN'), createStudent);
+router.get('/', authorize('ADMIN'), getAllStudents);         
 router.get('/me', getCurrentStudent);      
-router.get('/:id', authorizeAdmin, getStudentById); 
-router.patch('/:id', authorizeAdmin, updateStudent);        
-router.delete('/:id', authorizeAdmin, deleteStudent); 
+router.get('/:id', authorize('ADMIN'), getStudentById); 
+router.patch('/:id', authorize('ADMIN'), updateStudent);        
+router.delete('/:id', authorize('ADMIN'), deleteStudent); 
 
 module.exports = router;
