@@ -2,7 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
-const { stripPasswords } = require('../utils/sanitize');
+ 
 
 const createClass = async (req, res) => {
     const { name, section } = req.body;
@@ -14,29 +14,29 @@ const createClass = async (req, res) => {
 
     const newClass = await prisma.class.create({
         data: { name, section },
-        include: { classTeacher: { include: { user: true } } }
+        include: { classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } }
     });
 
-    res.status(StatusCodes.CREATED).json({ class: stripPasswords(newClass) });
+    res.status(StatusCodes.CREATED).json({ class: newClass });
 }
 
 const getClasses = async (req, res) => {
     const classes = await prisma.class.findMany({
-        include: { classTeacher: { include: { user: true } } }
+        include: { classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } }
     });
-    res.status(StatusCodes.OK).json({ classes: stripPasswords(classes) });
+    res.status(StatusCodes.OK).json({ classes });
 }
 
 const getClassById = async (req, res) => {
     const classId = Number(req.params.id);
     const classData = await prisma.class.findUnique({
         where: { id: classId },
-        include: { classTeacher: { include: { user: true } } }
+        include: { classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } }
     });
     if (!classData) {
         throw new NotFoundError('Class not found');
     }
-    res.status(StatusCodes.OK).json({ class: stripPasswords(classData) });
+    res.status(StatusCodes.OK).json({ class: classData });
 }
 
 const deleteClass = async (req, res) => {
@@ -66,10 +66,10 @@ const assignClassTeacher = async (req, res) => {
     const updatedClass = await prisma.class.update({
         where: { id: classId },
         data: { classTeacherId },
-        include: { classTeacher: { include: { user: true } } }
+        include: { classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } }
     });
 
-    res.status(StatusCodes.OK).json({ class: stripPasswords(updatedClass) });
+    res.status(StatusCodes.OK).json({ class: updatedClass });
 }
 
 const assignStudentToClass = async (req, res) => {
@@ -89,9 +89,9 @@ const assignStudentToClass = async (req, res) => {
     const updatedStudent = await prisma.student.update({
         where: { id: studentId },
         data: { classId },
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
-    res.status(StatusCodes.OK).json({ student: stripPasswords(updatedStudent) });
+    res.status(StatusCodes.OK).json({ student: updatedStudent });
 }
 
 const getStudentClass = async (req, res) => {
@@ -99,14 +99,14 @@ const getStudentClass = async (req, res) => {
 
     const student = await prisma.student.findUnique({
         where: { userId: studentId },
-        include: { class: { include: { classTeacher: { include: { user: true } } } } }
+    include: { class: { include: { classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } } } }
     });
 
     if (!student) {
         throw new NotFoundError('Student not found');
     }
 
-    res.status(StatusCodes.OK).json({ class: stripPasswords(student.class) });
+    res.status(StatusCodes.OK).json({ class: student.class });
 };
 
 module.exports = {

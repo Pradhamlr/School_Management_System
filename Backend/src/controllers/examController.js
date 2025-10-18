@@ -2,7 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
-const { stripPasswords } = require('../utils/sanitize');
+ 
 
 const createExam = async (req, res) => {
     const { name, date, classId, subjectId, totalMarks } = req.body;
@@ -21,7 +21,7 @@ const createExam = async (req, res) => {
     res.status(StatusCodes.CREATED).json({
         success: true,
         message: 'Exam created successfully',
-        data: stripPasswords(exam)
+        data: exam
     });
 }
 
@@ -38,7 +38,7 @@ const getExams = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        exams: stripPasswords(exams)
+        exams
     });
 }
 
@@ -46,7 +46,7 @@ const getExamDetails = async (req, res) => {
     const examId = Number(req.params.id);
     const exam = await prisma.exam.findUnique({
         where: { id: examId },
-        include: { class: true, subject: true, results: { include: { student: { include: { user: true } } } } }
+        include: { class: true, subject: true, results: { include: { student: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } } } }
     });
 
     if (!exam) {
@@ -55,7 +55,7 @@ const getExamDetails = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        exam: stripPasswords(exam)
+        exam
     });
 }
 

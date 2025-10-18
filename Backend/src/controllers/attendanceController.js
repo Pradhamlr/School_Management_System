@@ -2,7 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
-const { stripPasswords } = require('../utils/sanitize');
+ 
 
 
 const getAttendanceStats = async (req, res) => {
@@ -108,7 +108,7 @@ const markStudentAttendance = async (req, res) => {
 
   const student = await prisma.student.findUnique({
     where: { id: Number(studentId) },
-    include: { user: true }
+    include: { user: { select: { id: true, name: true, email: true, role: true } } }
   });
 
   if (!student) {
@@ -139,18 +139,18 @@ const markStudentAttendance = async (req, res) => {
       student: {
         include: {
           user: {
-            select: { name: true, email: true }
+            select: { id: true, name: true, email: true, role: true }
           }
         }
       }
     }
   });
 
-  res.status(StatusCodes.CREATED).json({
+    res.status(StatusCodes.CREATED).json({
     success: true,
     message: 'Student attendance marked successfully',
     data: {
-      attendance: stripPasswords(attendance),
+      attendance,
       message: `Attendance marked as ${status} for ${student.user.name}`
     }
   });
@@ -171,7 +171,7 @@ const markTeacherAttendance = async (req, res) => {
 
   const teacher = await prisma.teacher.findUnique({
     where: { id: Number(teacherId) },
-    include: { user: true }
+    include: { user: { select: { id: true, name: true, email: true, role: true } } }
   });
 
   if (!teacher) {
@@ -202,7 +202,7 @@ const markTeacherAttendance = async (req, res) => {
       teacher: {
         include: {
           user: {
-            select: { name: true, email: true }
+            select: { id: true, name: true, email: true, role: true }
           }
         }
       }
@@ -213,7 +213,7 @@ const markTeacherAttendance = async (req, res) => {
     success: true,
     message: 'Teacher attendance marked successfully',
     data: {
-      attendance: stripPasswords(attendance),
+      attendance,
       message: `Attendance marked as ${status} for ${teacher.user.name}`
     }
   });
@@ -228,9 +228,9 @@ const getStudentAttendance = async (req, res) => {
     throw new BadRequestError('Student ID is required');
   }
 
-  const student = await prisma.student.findUnique({
+    const student = await prisma.student.findUnique({
     where: { id: Number(studentId) },
-    include: { user: { select: { name: true, email: true } } }
+    include: { user: { select: { id: true, name: true, email: true, role: true } } }
   });
 
   if (!student) {
@@ -287,8 +287,8 @@ const getStudentAttendance = async (req, res) => {
     Math.round((statistics.present / statistics.total) * 100) : 0;
 
   const data = {
-    student: stripPasswords(student),
-    attendance: stripPasswords(attendance),
+    student,
+    attendance,
     statistics,
     pagination: {
       currentPage: Number(page),
@@ -317,7 +317,7 @@ const getTeacherAttendance = async (req, res) => {
 
   const teacher = await prisma.teacher.findUnique({
     where: { id: Number(teacherId) },
-    include: { user: { select: { name: true, email: true } } }
+    include: { user: { select: { id: true, name: true, email: true, role: true } } }
   });
 
   if (!teacher) {
@@ -374,8 +374,8 @@ const getTeacherAttendance = async (req, res) => {
     Math.round((statistics.present / statistics.total) * 100) : 0;
 
   const data = {
-    teacher: stripPasswords(teacher),
-    attendance: stripPasswords(attendance),
+    teacher,
+    attendance,
     statistics,
     pagination: {
       currentPage: Number(page),

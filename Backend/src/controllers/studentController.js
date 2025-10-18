@@ -2,7 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
-const { stripPasswords } = require('../utils/sanitize');
+ 
 
 
 const createStudent = async (req, res) => {
@@ -20,24 +20,24 @@ const createStudent = async (req, res) => {
 
     const newStudent = await prisma.student.create({
         data: { userId, rollNumber, classId, section, dob: new Date(dob) },
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     res.status(StatusCodes.CREATED).json({ 
         success: true,
         message: 'Student created successfully',
-        student: stripPasswords(newStudent)
+        student: newStudent
     });
 }
 
 const getAllStudents = async (req, res) => {
     const students = await prisma.student.findMany({
-        include: { user: true },
+        include: { user: { select: { id: true, name: true, email: true, role: true } } },
     });
 
     res.status(StatusCodes.OK).json({
         success: true,
-        students: stripPasswords(students)
+        students
     });
 }
 
@@ -45,7 +45,7 @@ const getStudentById = async (req, res) => {
 
     const student = await prisma.student.findUnique({
         where: { id: Number(req.params.id) },
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     if (!student) {
@@ -54,14 +54,14 @@ const getStudentById = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        student: stripPasswords(student)
+        student
     });
 }
 
 const getCurrentStudent = async (req, res) => {
     const student = await prisma.student.findUnique({
         where: { userId: req.user.id },
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     if (!student) {
@@ -70,7 +70,7 @@ const getCurrentStudent = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        student: stripPasswords(student)
+        student
     });
 }
 
@@ -103,13 +103,13 @@ const updateStudent = async (req, res) => {
     const updatedStudent = await prisma.student.update({
         where: { id: Number(req.params.id) },
         data: updateData,
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     res.status(StatusCodes.OK).json({
         success: true,
         message: 'Student updated successfully',
-        student: stripPasswords(updatedStudent)
+        student: updatedStudent
     });
 }
 
