@@ -2,6 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
+const { stripPasswords } = require('../utils/sanitize');
 
 const createTeacher = async (req, res) => {
     const { userId, department, hireDate } = req.body;
@@ -24,7 +25,7 @@ const createTeacher = async (req, res) => {
     res.status(StatusCodes.CREATED).json({ 
         success: true,
         message: 'Teacher created successfully',
-        teacher: newTeacher 
+        teacher: stripPasswords(newTeacher)
     });
 }
 
@@ -35,7 +36,7 @@ const getAllTeachers = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        teachers
+        teachers: stripPasswords(teachers)
     });
 }
 
@@ -51,7 +52,7 @@ const getTeacherById = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        teacher
+        teacher: stripPasswords(teacher)
     });
 }
 
@@ -67,7 +68,7 @@ const getCurrentTeacher = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        teacher
+        teacher: stripPasswords(teacher)
     });
 }
 
@@ -92,7 +93,7 @@ const updateTeacher = async (req, res) => {
     res.status(StatusCodes.OK).json({
         success: true,
         message: 'Teacher updated successfully',
-        teacher: updatedTeacher
+        teacher: stripPasswords(updatedTeacher)
     });
 }
 

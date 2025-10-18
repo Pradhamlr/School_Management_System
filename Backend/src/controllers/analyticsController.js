@@ -130,7 +130,7 @@ const getSubjectPerformance = async (req, res) => {
     include: {
       teachers: {
         include: {
-          teacher: { include: { user: { select: { id: true, name: true, email: true } } } }
+          teacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } }
         }
       }
     }
@@ -182,5 +182,6 @@ const getSubjectPerformance = async (req, res) => {
 
 module.exports = {
   getAnalytics,
-  getClassPerformance
+  getClassPerformance,
+  getSubjectPerformance
 };

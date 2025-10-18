@@ -2,6 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
+const { stripPasswords } = require('../utils/sanitize');
 
 const createExam = async (req, res) => {
     const { name, date, classId, subjectId, totalMarks } = req.body;
@@ -20,7 +21,7 @@ const createExam = async (req, res) => {
     res.status(StatusCodes.CREATED).json({
         success: true,
         message: 'Exam created successfully',
-        data: exam
+        data: stripPasswords(exam)
     });
 }
 
@@ -37,7 +38,7 @@ const getExams = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        exams
+        exams: stripPasswords(exams)
     });
 }
 
@@ -54,7 +55,7 @@ const getExamDetails = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        exam
+        exam: stripPasswords(exam)
     });
 }
 

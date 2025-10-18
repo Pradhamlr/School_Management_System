@@ -2,6 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
+const { stripPasswords } = require('../utils/sanitize');
 
 const createClass = async (req, res) => {
     const { name, section } = req.body;
@@ -16,14 +17,14 @@ const createClass = async (req, res) => {
         include: { classTeacher: { include: { user: true } } }
     });
 
-    res.status(StatusCodes.CREATED).json({ class: newClass });
+    res.status(StatusCodes.CREATED).json({ class: stripPasswords(newClass) });
 }
 
 const getClasses = async (req, res) => {
     const classes = await prisma.class.findMany({
         include: { classTeacher: { include: { user: true } } }
     });
-    res.status(StatusCodes.OK).json({ classes });
+    res.status(StatusCodes.OK).json({ classes: stripPasswords(classes) });
 }
 
 const getClassById = async (req, res) => {
@@ -35,7 +36,7 @@ const getClassById = async (req, res) => {
     if (!classData) {
         throw new NotFoundError('Class not found');
     }
-    res.status(StatusCodes.OK).json({ class: classData });
+    res.status(StatusCodes.OK).json({ class: stripPasswords(classData) });
 }
 
 const deleteClass = async (req, res) => {
@@ -68,7 +69,7 @@ const assignClassTeacher = async (req, res) => {
         include: { classTeacher: { include: { user: true } } }
     });
 
-    res.status(StatusCodes.OK).json({ class: updatedClass });
+    res.status(StatusCodes.OK).json({ class: stripPasswords(updatedClass) });
 }
 
 const assignStudentToClass = async (req, res) => {
@@ -90,7 +91,7 @@ const assignStudentToClass = async (req, res) => {
         data: { classId },
         include: { user: true }
     });
-    res.status(StatusCodes.OK).json({ student: updatedStudent });
+    res.status(StatusCodes.OK).json({ student: stripPasswords(updatedStudent) });
 }
 
 const getStudentClass = async (req, res) => {
@@ -105,7 +106,7 @@ const getStudentClass = async (req, res) => {
         throw new NotFoundError('Student not found');
     }
 
-    res.status(StatusCodes.OK).json({ class: student.class });
+    res.status(StatusCodes.OK).json({ class: stripPasswords(student.class) });
 };
 
 module.exports = {

@@ -2,6 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
+const { stripPasswords } = require('../utils/sanitize');
 
 
 const getAttendanceStats = async (req, res) => {
@@ -149,7 +150,7 @@ const markStudentAttendance = async (req, res) => {
     success: true,
     message: 'Student attendance marked successfully',
     data: {
-      attendance,
+      attendance: stripPasswords(attendance),
       message: `Attendance marked as ${status} for ${student.user.name}`
     }
   });
@@ -212,7 +213,7 @@ const markTeacherAttendance = async (req, res) => {
     success: true,
     message: 'Teacher attendance marked successfully',
     data: {
-      attendance,
+      attendance: stripPasswords(attendance),
       message: `Attendance marked as ${status} for ${teacher.user.name}`
     }
   });
@@ -286,8 +287,8 @@ const getStudentAttendance = async (req, res) => {
     Math.round((statistics.present / statistics.total) * 100) : 0;
 
   const data = {
-    student: student,
-    attendance,
+    student: stripPasswords(student),
+    attendance: stripPasswords(attendance),
     statistics,
     pagination: {
       currentPage: Number(page),
@@ -373,8 +374,8 @@ const getTeacherAttendance = async (req, res) => {
     Math.round((statistics.present / statistics.total) * 100) : 0;
 
   const data = {
-    teacher: teacher,
-    attendance,
+    teacher: stripPasswords(teacher),
+    attendance: stripPasswords(attendance),
     statistics,
     pagination: {
       currentPage: Number(page),

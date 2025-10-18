@@ -2,6 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
+const { stripPasswords } = require('../utils/sanitize');
 
 const recordResult = async (req, res) => {
     const { examId, studentId, marks } = req.body;
@@ -28,13 +29,13 @@ const recordResult = async (req, res) => {
   res.status(StatusCodes.CREATED).json({
     success: true,
     message: 'Result recorded successfully',
-    data: result
+        data: stripPasswords(result)
   });
 };
 
 
 const getClassResults = async (req, res) => {
-    const { examId } = Number(req.params);
+    const examId = Number(req.params.examId);
     const exam = await prisma.exam.findUnique({ where: { id: examId } });
     if (!exam) {
         throw new NotFoundError('Exam not found');
@@ -48,13 +49,13 @@ const getClassResults = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        exam,
-        results
+        exam: stripPasswords(exam),
+        results: stripPasswords(results)
     });
 }
 
 const getStudentResults = async (req, res) => {
-    const studentId = Number(req.params.id);
+    const studentId = Number(req.params.studentId);
     const student = await prisma.student.findUnique({ where: { id: studentId } });
     if (!student) {
         throw new NotFoundError('Student not found');
@@ -70,8 +71,8 @@ const getStudentResults = async (req, res) => {
 
     res.status(StatusCodes.OK).json({
         success: true,
-        student,
-        results
+        student: stripPasswords(student),
+        results: stripPasswords(results)
     });
 };
 
