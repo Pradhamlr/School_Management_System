@@ -7,7 +7,7 @@ services:
     restart: always
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_PASSWORD: process.env.POSTGRES_PASSWORD
       POSTGRES_DB: school_management
     ports:
       - "5432:5432"
