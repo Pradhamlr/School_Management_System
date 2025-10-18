@@ -2,6 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
+ 
 
 
 const createStudent = async (req, res) => {
@@ -19,19 +20,19 @@ const createStudent = async (req, res) => {
 
     const newStudent = await prisma.student.create({
         data: { userId, rollNumber, classId, section, dob: new Date(dob) },
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     res.status(StatusCodes.CREATED).json({ 
         success: true,
         message: 'Student created successfully',
-        student: newStudent 
+        student: newStudent
     });
 }
 
 const getAllStudents = async (req, res) => {
     const students = await prisma.student.findMany({
-        include: { user: true },
+        include: { user: { select: { id: true, name: true, email: true, role: true } } },
     });
 
     res.status(StatusCodes.OK).json({
@@ -44,7 +45,7 @@ const getStudentById = async (req, res) => {
 
     const student = await prisma.student.findUnique({
         where: { id: Number(req.params.id) },
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     if (!student) {
@@ -60,7 +61,7 @@ const getStudentById = async (req, res) => {
 const getCurrentStudent = async (req, res) => {
     const student = await prisma.student.findUnique({
         where: { userId: req.user.id },
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     if (!student) {
@@ -102,7 +103,7 @@ const updateStudent = async (req, res) => {
     const updatedStudent = await prisma.student.update({
         where: { id: Number(req.params.id) },
         data: updateData,
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     res.status(StatusCodes.OK).json({

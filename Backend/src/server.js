@@ -30,6 +30,7 @@ const classRoutes = require('./routes/classRoutes');
 const subjectRoutes = require('./routes/subjectRoutes');
 const examRoutes = require('./routes/examRoutes');
 const resultRoutes = require('./routes/resultRoutes');
+const analyticsRoutes = require('./routes/analyticsRoutes');
 
 // ==========================================
 // MIDDLEWARE SETUP
@@ -61,6 +62,7 @@ app.use('/api/classes', authMiddleware, classRoutes);
 app.use('/api/subjects', authMiddleware, subjectRoutes);
 app.use('/api/exams', authMiddleware, examRoutes);
 app.use('/api/results', authMiddleware, resultRoutes);
+app.use('/api/analytics', authMiddleware, analyticsRoutes);
 
 // ==========================================
 // ERROR HANDLING

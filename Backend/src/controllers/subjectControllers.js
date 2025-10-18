@@ -1,6 +1,7 @@
 const prisma = require('../config/prisma');
 const {StatusCodes} = require('http-status-codes');
 const {BadRequestError, NotFoundError} = require("../errors");
+ 
 
 const createSubject = async (req, res) => {
     const {name, code} = req.body;
@@ -66,7 +67,7 @@ const assignTeacherToSubject = async (req, res) => {
         data: {
             teacherId, classId, subjectId
         },
-        include: {teacher: {include: {user: true}}, class: true, subject: true}
+        include: {teacher: {include: {user: { select: { id: true, name: true, email: true, role: true } } }}, class: true, subject: true}
     });
 
     res.status(StatusCodes.CREATED).json({assignment});
@@ -82,16 +83,16 @@ const getTeacherAssignments = async (req, res) => {
         where: { teacherId: teacher.id },
         include: { class: true, subject: true },
     });
-    res.status(StatusCodes.OK).json(assignments);
+    res.status(StatusCodes.OK).json({ assignments });
 };
 
 const getClassSubjects = async (req, res) => {
   const classId = Number(req.params.classId);
-  const subjects = await prisma.teacherClassSubject.findMany({
-    where: { classId },
-    include: { subject: true, teacher: { include: { user: true } } },
-  });
-  res.status(StatusCodes.OK).json(subjects);
+    const subjects = await prisma.teacherClassSubject.findMany({
+        where: { classId },
+        include: { subject: true, teacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } },
+    });
+    res.status(StatusCodes.OK).json({ subjects });
 }
 
 

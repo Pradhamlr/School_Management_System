@@ -2,6 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
+ 
 
 const createExam = async (req, res) => {
     const { name, date, classId, subjectId, totalMarks } = req.body;
@@ -45,7 +46,7 @@ const getExamDetails = async (req, res) => {
     const examId = Number(req.params.id);
     const exam = await prisma.exam.findUnique({
         where: { id: examId },
-        include: { class: true, subject: true, results: { include: { student: { include: { user: true } } } } }
+        include: { class: true, subject: true, results: { include: { student: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } } } }
     });
 
     if (!exam) {

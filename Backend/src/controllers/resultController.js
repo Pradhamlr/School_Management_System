@@ -2,6 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
+ 
 
 const recordResult = async (req, res) => {
     const { examId, studentId, marks } = req.body;
@@ -22,19 +23,19 @@ const recordResult = async (req, res) => {
     where: { examId_studentId: { examId, studentId } },
     update: { marks, grade },
     create: { examId, studentId, marks, grade },
-    include: { student: { include: { user: true } } }
+            include: { student: { include: { user: { select: { id: true, name: true, email: true, role: true } }, class: true } } }
   });
 
-  res.status(StatusCodes.CREATED).json({
-    success: true,
-    message: 'Result recorded successfully',
-    data: result
-  });
+    res.status(StatusCodes.CREATED).json({
+        success: true,
+        message: 'Result recorded successfully',
+                data: result
+    });
 };
 
 
 const getClassResults = async (req, res) => {
-    const { examId } = Number(req.params);
+    const examId = Number(req.params.examId);
     const exam = await prisma.exam.findUnique({ where: { id: examId } });
     if (!exam) {
         throw new NotFoundError('Exam not found');
@@ -42,7 +43,7 @@ const getClassResults = async (req, res) => {
 
     const results = await prisma.result.findMany({
         where: { examId },
-        include: { student: { include: { user: true, class: true } } },
+        include: { student: { include: { user: { select: { id: true, name: true, email: true, role: true }, }, class: true } } },
         orderBy: { marks: 'desc' }
     });
 
@@ -54,7 +55,7 @@ const getClassResults = async (req, res) => {
 }
 
 const getStudentResults = async (req, res) => {
-    const studentId = Number(req.params.id);
+    const studentId = Number(req.params.studentId);
     const student = await prisma.student.findUnique({ where: { id: studentId } });
     if (!student) {
         throw new NotFoundError('Student not found');

@@ -2,6 +2,7 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
+ 
 
 const createTeacher = async (req, res) => {
     const { userId, department, hireDate } = req.body;
@@ -18,19 +19,19 @@ const createTeacher = async (req, res) => {
 
     const newTeacher = await prisma.teacher.create({
         data: { userId, department, hireDate: new Date(hireDate) },
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     res.status(StatusCodes.CREATED).json({ 
         success: true,
         message: 'Teacher created successfully',
-        teacher: newTeacher 
+        teacher: newTeacher
     });
 }
 
 const getAllTeachers = async (req, res) => {
     const teachers = await prisma.teacher.findMany({
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     res.status(StatusCodes.OK).json({
@@ -42,7 +43,7 @@ const getAllTeachers = async (req, res) => {
 const getTeacherById = async (req, res) => {
     const teacher = await prisma.teacher.findUnique({
         where: { id: Number(req.params.id) },
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     if (!teacher) {
@@ -58,7 +59,7 @@ const getTeacherById = async (req, res) => {
 const getCurrentTeacher = async (req, res) => {
     const teacher = await prisma.teacher.findUnique({
         where: { userId: req.user.id },
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     if (!teacher) {
@@ -86,7 +87,7 @@ const updateTeacher = async (req, res) => {
     const updatedTeacher = await prisma.teacher.update({
         where: { id: Number(req.params.id) },
         data: updateData,
-        include: { user: true }
+        include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
     res.status(StatusCodes.OK).json({
