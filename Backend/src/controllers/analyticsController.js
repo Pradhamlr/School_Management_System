@@ -125,6 +125,60 @@ const getClassPerformance = async (req, res) => {
   });
 };
 
+const getSubjectPerformance = async (req, res) => {
+  const subjects = await prisma.subject.findMany({
+    include: {
+      teachers: {
+        include: {
+          teacher: { include: { user: { select: { id: true, name: true, email: true } } } }
+        }
+      }
+    }
+  });
+
+  const performanceData = [];
+
+  for (const subject of subjects) {
+    const exams = await prisma.exam.findMany({
+      where: { subjectId: subject.id },
+      include: { results: true }
+    });
+
+    let totalMarks = 0;
+    let obtainedMarks = 0;
+    let passCount = 0;
+    let totalResults = 0;
+
+    exams.forEach(exam => {
+      if (!exam.totalMarks || exam.totalMarks <= 0) return;
+      exam.results.forEach(r => {
+        obtainedMarks += r.marks;
+        totalMarks += exam.totalMarks;
+        totalResults++;
+        if (r.marks >= exam.totalMarks * 0.4) passCount++;
+      });
+    });
+
+    const avgPercentage = totalMarks > 0 ? (obtainedMarks / totalMarks) * 100 : 0;
+    const passPercentage = totalResults > 0 ? (passCount / totalResults) * 100 : 0;
+
+    performanceData.push({
+      subjectId: subject.id,
+      subjectName: subject.name,
+      avgPercentage: avgPercentage.toFixed(2),
+      passPercentage: passPercentage.toFixed(2),
+      teacherNames: subject.teachers.map(t => t.teacher.user.name)
+    });
+  }
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: 'Subject-wise performance analytics fetched successfully',
+    data: performanceData
+  });
+};
+
+
 
 module.exports = {
   getAnalytics,
