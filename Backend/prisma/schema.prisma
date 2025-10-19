@@ -27,7 +27,8 @@ model Student {
   user        User                @relation(fields: [userId], references: [id])
   class       Class               @relation(fields: [classId], references: [id])
   attendances StudentAttendance[]
-  Result      Result[]
+  results     Result[]
+  submissions AssignmentSubmission[]
 }
 
 model Teacher {
@@ -100,6 +101,8 @@ model TeacherClassSubject {
   class   Class   @relation(fields: [classId], references: [id])
   teacher Teacher @relation(fields: [teacherId], references: [id])
   subject Subject @relation(fields: [subjectId], references: [id])
+  
+  assignments Assignment[]
 
   @@unique([teacherId, subjectId])
 }
@@ -127,6 +130,40 @@ model Result {
 
   @@unique([examId, studentId])
 }
+model Assignment {
+  id            Int       @id @default(autoincrement())
+  title         String
+  description   String?
+  dueDate       DateTime
+  createdAt     DateTime  @default(now())
+
+  teacherClassSubjectId Int
+  teacherClassSubject   TeacherClassSubject @relation(fields: [teacherClassSubjectId], references: [id])
+
+  submissions AssignmentSubmission[]
+}
+model AssignmentSubmission {
+  id             Int       @id @default(autoincrement())
+  assignmentId   Int
+  studentId      Int
+  submittedAt    DateTime  @default(now())
+  fileUrl        String?   // uploaded file link
+  remarks        String?   // teacher's feedback
+  grade          String?   // e.g. "A+", "B"
+  status         SubmissionStatus @default(PENDING)
+
+  assignment     Assignment @relation(fields: [assignmentId], references: [id])
+  student        Student    @relation(fields: [studentId], references: [id])
+
+  @@unique([assignmentId, studentId])
+}
+
+enum SubmissionStatus {
+  PENDING
+  SUBMITTED
+  GRADED
+}
+
 
 enum Role {
   ADMIN
