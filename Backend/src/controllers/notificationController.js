@@ -4,7 +4,14 @@ const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
 const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
-const nodemailer = require('nodemailer');
+
+let nodemailer = null;
+try {
+  nodemailer = require('nodemailer');
+} catch (e) {
+  // nodemailer is optional at runtime; provide a clear warning and defer throwing until email is actually needed
+  console.warn('nodemailer is not installed. Email notifications will be disabled. Run `npm install nodemailer` in the Backend folder to enable email sending.');
+}
 
 /**
  * Helper: create nodemailer transporter.
@@ -18,6 +25,11 @@ const nodemailer = require('nodemailer');
  * Falls back to Ethereal test account if no SMTP config is provided (dev-friendly).
  */
 async function createTransporter() {
+  if (!nodemailer) {
+    // Throw a readable error only when createTransporter is invoked (so server can still run)
+    throw new Error('nodemailer is not installed. Run `npm install nodemailer` in the Backend directory to enable email notifications.');
+  }
+
   if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
     const port = process.env.SMTP_PORT ? Number(process.env.SMTP_PORT) : 587;
     return nodemailer.createTransport({

@@ -128,6 +128,26 @@ model Result {
   @@unique([examId, studentId])
 }
 
+model Notification {
+  id        Int       @id @default(autoincrement())
+  title     String
+  message   String
+  targetRole Role
+  createdBy Int
+  createdAt DateTime  @default(now())
+}
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  createdBy   Int
+  createdAt   DateTime  @default(now())
+}
+
 enum Role {
   ADMIN
   TEACHER
