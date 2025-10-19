@@ -13,11 +13,8 @@
     "studio:prod": "dotenv -e .env.prod -- npx prisma studio",
     "dev:prod": "cross-env NODE_ENV=production dotenv -e .env.prod -- node src/server.js",
     "migrate:local": "dotenv -e .env.local -- npx prisma migrate dev",
-<<<<<<< HEAD
-    "generate:local": "dotenv -e .env.local -- npx prisma generate"
-=======
+    "generate:local": "dotenv -e .env.local -- npx prisma generate",
     "migrate:prod": "dotenv -e .env.prod -- npx prisma migrate deploy"
->>>>>>> develop
   },
   "keywords": [],
   "author": "",
@@ -37,12 +34,9 @@
     "http-status-codes": "^2.3.0",
     "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
-<<<<<<< HEAD
     "nodemailer": "^7.0.9",
-=======
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
->>>>>>> develop
     "prisma": "^6.16.2"
   },
   "devDependencies": {
