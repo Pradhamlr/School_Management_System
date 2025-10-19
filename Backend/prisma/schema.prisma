@@ -27,7 +27,8 @@ model Student {
   user        User                @relation(fields: [userId], references: [id])
   class       Class               @relation(fields: [classId], references: [id])
   attendances StudentAttendance[]
-  Result      Result[]
+  results     Result[]
+  submissions AssignmentSubmission[]
 }
 
 model Teacher {

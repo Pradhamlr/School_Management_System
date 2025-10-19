@@ -1,3 +1,4 @@
+// Express routes: Assignment
 const express = require('express');
 const router = express.Router();
 const {
@@ -11,6 +12,7 @@ const {
     
     // Submission Controllers
     submitAssignment,
+    submitAssignmentWithFile,
     getSubmissions,
     getSubmissionById,
     gradeSubmission,
@@ -18,6 +20,8 @@ const {
     deleteSubmission,
     getAssignmentStats
 } = require('../controllers/assignmentController');
+const { uploadAssignmentFile, deleteAssignmentFile } = require('../controllers/fileUploadController');
+const { uploadAssignment } = require('../config/cloudinary');
 const authorize = require('../middlewares/roleMiddleware');
 
 // ========== ASSIGNMENT ROUTES ==========
@@ -33,20 +37,19 @@ router.get('/student/:studentId', authorize('ADMIN', 'TEACHER', 'STUDENT'), getS
 
 // Get assignment statistics
 router.get('/:assignmentId/stats', authorize('ADMIN', 'TEACHER'), getAssignmentStats);
-
-// Get assignment by ID
-router.get('/:id', authorize('ADMIN', 'TEACHER', 'STUDENT'), getAssignmentById);
-
-// Update assignment
-router.put('/:id', authorize('ADMIN', 'TEACHER'), updateAssignment);
-
-// Delete assignment
-router.delete('/:id', authorize('ADMIN', 'TEACHER'), deleteAssignment);
-
 // ========== SUBMISSION ROUTES ==========
 
-// Submit an assignment (Students)
+// Upload file endpoint (for direct file upload)
+router.post('/upload', authorize('ADMIN', 'STUDENT'), uploadAssignment.single('file'), uploadAssignmentFile);
+
+// Submit an assignment (Students) - JSON only
 router.post('/submissions', authorize('ADMIN', 'STUDENT'), submitAssignment);
+
+// Submit an assignment with file (Students) - Multipart form data
+router.post('/submissions/with-file', authorize('ADMIN', 'STUDENT'), uploadAssignment.single('file'), submitAssignmentWithFile);
+
+// Delete uploaded file
+router.delete('/upload', authorize('ADMIN', 'STUDENT', 'TEACHER'), deleteAssignmentFile);
 
 // Get all submissions with optional filters
 router.get('/submissions', authorize('ADMIN', 'TEACHER'), getSubmissions);
@@ -62,5 +65,14 @@ router.put('/submissions/:id', authorize('ADMIN', 'STUDENT'), updateSubmission);
 
 // Delete submission
 router.delete('/submissions/:id', authorize('ADMIN', 'TEACHER'), deleteSubmission);
+
+// Get assignment by ID
+router.get('/:id', authorize('ADMIN', 'TEACHER', 'STUDENT'), getAssignmentById);
+
+// Update assignment
+router.put('/:id', authorize('ADMIN', 'TEACHER'), updateAssignment);
+
+// Delete assignment
+router.delete('/:id', authorize('ADMIN', 'TEACHER'), deleteAssignment);
 
 module.exports = router;

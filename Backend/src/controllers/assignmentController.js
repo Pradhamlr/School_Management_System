@@ -335,9 +335,87 @@ const submitAssignment = async (req, res) => {
     });
 };
 
+// Submit Assignment with File Upload
+const submitAssignmentWithFile = async (req, res) => {
+    const { assignmentId, studentId, remarks } = req.body;
+
+    if (!assignmentId || !studentId) {
+        throw new BadRequestError('Assignment ID and Student ID are required');
+    }
+
+    if (!req.file) {
+        throw new BadRequestError('File is required for this endpoint');
+    }
+
+    // Check if assignment exists
+    const assignment = await prisma.assignment.findUnique({
+        where: { id: Number(assignmentId) }
+    });
+
+    if (!assignment) {
+        throw new NotFoundError('Assignment not found');
+    }
+
+    // Check if student exists
+    const student = await prisma.student.findUnique({
+        where: { id: Number(studentId) }
+    });
+
+    if (!student) {
+        throw new NotFoundError('Student not found');
+    }
+
+    // Check if already submitted
+    const existingSubmission = await prisma.assignmentSubmission.findUnique({
+        where: {
+            assignmentId_studentId: {
+                assignmentId: Number(assignmentId),
+                studentId: Number(studentId)
+            }
+        }
+    });
+
+    if (existingSubmission) {
+        throw new BadRequestError('Assignment already submitted by this student');
+    }
+
+    // Get file URL from uploaded file
+    const fileUrl = req.file.path;
+
+    const submission = await prisma.assignmentSubmission.create({
+        data: {
+            assignmentId: Number(assignmentId),
+            studentId: Number(studentId),
+            fileUrl: fileUrl,
+            remarks: remarks || null,
+            status: 'SUBMITTED'
+        },
+        include: {
+            assignment: {
+                include: {
+                    teacherClassSubject: {
+                        include: { class: true, subject: true }
+                    }
+                }
+            },
+            student: {
+                include: {
+                    user: { select: { id: true, name: true, email: true } }
+                }
+            }
+        }
+    });
+
+    res.status(StatusCodes.CREATED).json({
+        success: true,
+        message: 'Assignment submitted successfully with file',
+        data: submission
+    });
+};
+
 // Get All Submissions (for teachers)
 const getSubmissions = async (req, res) => {
-    const { assignmentId, studentId, status } = req.query;
+    const { assignmentId, studentId, status } = req.body;
 
     const whereConditions = {};
     if (assignmentId) whereConditions.assignmentId = Number(assignmentId);
@@ -581,6 +659,7 @@ module.exports = {
     
     // Submission Controllers
     submitAssignment,
+    submitAssignmentWithFile,
     getSubmissions,
     getSubmissionById,
     gradeSubmission,

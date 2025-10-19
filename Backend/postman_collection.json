@@ -1,0 +1,1176 @@
+{
+	"info": {
+		"_postman_id": "school-mgmt-api-2025",
+		"name": "School Management System API",
+		"description": "Complete API collection for School Management System with emphasis on Assignment and Submission routes",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "1. Authentication",
+			"item": [
+				{
+					"name": "Register Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('admin_token', jsonData.token);",
+									"    pm.environment.set('admin_id', jsonData.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Admin User\",\n  \"email\": \"admin@school.com\",\n  \"password\": \"admin123\",\n  \"role\": \"ADMIN\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register Teacher",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('teacher_token', jsonData.token);",
+									"    pm.environment.set('teacher_user_id', jsonData.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"John Teacher\",\n  \"email\": \"teacher@school.com\",\n  \"password\": \"teacher123\",\n  \"role\": \"TEACHER\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Register Student",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('student_token', jsonData.token);",
+									"    pm.environment.set('student_user_id', jsonData.user.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Jane Student\",\n  \"email\": \"student@school.com\",\n  \"password\": \"student123\",\n  \"role\": \"STUDENT\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/register",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "register"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Admin",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('admin_token', jsonData.token);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"email\": \"admin@school.com\",\n  \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/login",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "login"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "2. Setup - Classes & Subjects",
+			"item": [
+				{
+					"name": "Create Class (10-A)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('class_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"10\",\n  \"section\": \"A\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/classes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "classes"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Subject (Mathematics)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('subject_math_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Mathematics\",\n  \"code\": \"MATH101\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/subjects",
+							"host": ["{{base_url}}"],
+							"path": ["api", "subjects"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Subject (Science)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('subject_science_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Science\",\n  \"code\": \"SCI101\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/subjects",
+							"host": ["{{base_url}}"],
+							"path": ["api", "subjects"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Classes",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/classes",
+							"host": ["{{base_url}}"],
+							"path": ["api", "classes"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Subjects",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/subjects",
+							"host": ["{{base_url}}"],
+							"path": ["api", "subjects"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "3. Setup - Teachers & Students",
+			"item": [
+				{
+					"name": "Create Teacher Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('teacher_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{teacher_user_id}},\n  \"department\": \"Mathematics\",\n  \"hireDate\": \"2024-01-15\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/teachers",
+							"host": ["{{base_url}}"],
+							"path": ["api", "teachers"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Student Profile",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('student_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"userId\": {{student_user_id}},\n  \"classId\": {{class_id}},\n  \"dob\": \"2008-05-15\",\n  \"rollNumber\": \"2025-10A-001\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/students",
+							"host": ["{{base_url}}"],
+							"path": ["api", "students"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Assign Teacher to Class-Subject",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('teacher_class_subject_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"teacherId\": {{teacher_id}},\n  \"classId\": {{class_id}},\n  \"subjectId\": {{subject_math_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/subjects/assign-teacher",
+							"host": ["{{base_url}}"],
+							"path": ["api", "subjects", "assign-teacher"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "4. Assignment Management",
+			"item": [
+				{
+					"name": "Create Assignment - Math Homework",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('assignment_1_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Mathematics Chapter 5 - Quadratic Equations\",\n  \"description\": \"Complete all exercises from chapter 5. Include step-by-step solutions for problems 1-20. Show your work clearly.\",\n  \"dueDate\": \"2025-10-30T23:59:59Z\",\n  \"teacherClassSubjectId\": {{teacher_class_subject_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Assignment - Algebra Project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('assignment_2_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Algebra Project - Real World Applications\",\n  \"description\": \"Create a presentation showing real-world applications of algebraic equations. Minimum 10 slides with examples.\",\n  \"dueDate\": \"2025-11-15T23:59:59Z\",\n  \"teacherClassSubjectId\": {{teacher_class_subject_id}}\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Assignments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assignments by Class",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments?classId={{class_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments"],
+							"query": [
+								{
+									"key": "classId",
+									"value": "{{class_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assignments by Subject",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments?subjectId={{subject_math_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments"],
+							"query": [
+								{
+									"key": "subjectId",
+									"value": "{{subject_math_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assignments by Teacher",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments?teacherId={{teacher_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments"],
+							"query": [
+								{
+									"key": "teacherId",
+									"value": "{{teacher_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assignment by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments/{{assignment_1_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "{{assignment_1_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Student Assignments",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments/student/{{student_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "student", "{{student_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Assignment",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"title\": \"Mathematics Chapter 5 - Quadratic Equations (Updated)\",\n  \"description\": \"Complete exercises 1-25 (updated from 1-20). Include detailed solutions.\",\n  \"dueDate\": \"2025-11-05T23:59:59Z\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/assignments/{{assignment_1_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "{{assignment_1_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Assignment Statistics",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments/{{assignment_1_id}}/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "{{assignment_1_id}}", "stats"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Assignment",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments/{{assignment_2_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "{{assignment_2_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "5. Assignment Submissions",
+			"item": [
+				{
+					"name": "Submit Assignment (Student)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('submission_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"assignmentId\": {{assignment_1_id}},\n  \"studentId\": {{student_id}},\n  \"fileUrl\": \"https://storage.example.com/assignments/student-work-chapter5.pdf\",\n  \"remarks\": \"I have completed all 20 exercises. Please check the attached PDF for detailed solutions.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Submit Assignment - No File",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"assignmentId\": {{assignment_1_id}},\n  \"studentId\": {{student_id}},\n  \"remarks\": \"Submission without file attachment\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Submissions (Teacher)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Submissions by Assignment",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions?assignmentId={{assignment_1_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions"],
+							"query": [
+								{
+									"key": "assignmentId",
+									"value": "{{assignment_1_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Submissions by Student",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions?studentId={{student_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions"],
+							"query": [
+								{
+									"key": "studentId",
+									"value": "{{student_id}}"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Submissions by Status",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions?status=SUBMITTED",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions"],
+							"query": [
+								{
+									"key": "status",
+									"value": "SUBMITTED"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Submission by ID",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions/{{submission_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions", "{{submission_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Submission (Student Resubmit)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{student_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"fileUrl\": \"https://storage.example.com/assignments/student-work-chapter5-revised.pdf\",\n  \"remarks\": \"Updated submission with corrections to problems 15-20.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions/{{submission_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions", "{{submission_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Grade Submission (Teacher)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"grade\": \"A+\",\n  \"remarks\": \"Excellent work! All solutions are correct and well-presented. Keep up the good work!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions/{{submission_id}}/grade",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions", "{{submission_id}}", "grade"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Grade Submission - B Grade",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"grade\": \"B\",\n  \"remarks\": \"Good effort. Minor errors in problems 12 and 18. Review those concepts.\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions/{{submission_id}}/grade",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions", "{{submission_id}}", "grade"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Submission",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{teacher_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/assignments/submissions/{{submission_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "assignments", "submissions", "{{submission_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "6. Exams & Results",
+			"item": [
+				{
+					"name": "Create Exam",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const jsonData = pm.response.json();",
+									"    pm.environment.set('exam_id', jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"name\": \"Mid-Term Exam\",\n  \"date\": \"2025-11-20\",\n  \"classId\": {{class_id}},\n  \"subjectId\": {{subject_math_id}},\n  \"totalMarks\": 100\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/exams",
+							"host": ["{{base_url}}"],
+							"path": ["api", "exams"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Exams",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/exams",
+							"host": ["{{base_url}}"],
+							"path": ["api", "exams"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Exam Details",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/exams/{{exam_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "exams", "{{exam_id}}"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "7. Attendance",
+			"item": [
+				{
+					"name": "Mark Student Attendance",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n  \"studentId\": {{student_id}},\n  \"date\": \"2025-10-19\",\n  \"status\": \"PRESENT\",\n  \"remarks\": \"On time\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/attendance/student",
+							"host": ["{{base_url}}"],
+							"path": ["api", "attendance", "student"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Attendance Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/attendance/stats",
+							"host": ["{{base_url}}"],
+							"path": ["api", "attendance", "stats"]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "8. Analytics",
+			"item": [
+				{
+					"name": "Get Dashboard Stats",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{admin_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/analytics/dashboard",
+							"host": ["{{base_url}}"],
+							"path": ["api", "analytics", "dashboard"]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		}
+	]
+}
