@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "main": "src/server.js",
+  "prisma": {
+    "seed": "node prisma/seed.js"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node src/server.js",
@@ -14,7 +17,9 @@
     "dev:prod": "cross-env NODE_ENV=production dotenv -e .env.prod -- node src/server.js",
     "migrate:local": "dotenv -e .env.local -- npx prisma migrate dev",
     "generate:local": "dotenv -e .env.local -- npx prisma generate",
-    "migrate:prod": "dotenv -e .env.prod -- npx prisma migrate deploy"
+    "migrate:prod": "dotenv -e .env.prod -- npx prisma migrate deploy",
+    "deploy:local": "dotenv -e .env.local -- npx prisma migrate deploy",
+    "seed:local": "dotenv -e .env.local -- npx prisma db seed"
   },
   "keywords": [],
   "author": "",
@@ -37,7 +42,8 @@
     "nodemailer": "^7.0.9",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
-    "prisma": "^6.16.2"
+    "prisma": "^6.16.2",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "dotenv-cli": "^10.0.0",

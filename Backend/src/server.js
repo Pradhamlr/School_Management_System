@@ -41,6 +41,10 @@ const assignmentRoutes = require('./routes/assignmentRoutes');
 // Enable CORS for all routes
 app.use(cors());
 
+// Logging (morgan -> winston)
+const { morganMiddleware, logger } = require('./config/logger');
+app.use(morganMiddleware);
+
 // Body parsing middleware
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -83,5 +87,5 @@ app.use(errorHandlerMiddleware);
 // START SERVER
 // ==========================================
 app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+  logger.info(`Server is running on port ${PORT}`);
 });
