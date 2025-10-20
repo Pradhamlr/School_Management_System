@@ -29,10 +29,7 @@ model Student {
   attendances StudentAttendance[]
   results     Result[]
   submissions AssignmentSubmission[]
-<<<<<<< HEAD
-=======
   feeRecords  FeeRecord[]
->>>>>>> develop
 
   volunteeredEvents EventVolunteer[]
 }
