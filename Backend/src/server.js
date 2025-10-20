@@ -31,6 +31,8 @@ const subjectRoutes = require('./routes/subjectRoutes');
 const examRoutes = require('./routes/examRoutes');
 const resultRoutes = require('./routes/resultRoutes');
 const analyticsRoutes = require('./routes/analyticsRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
+const eventRoutes = require('./routes/eventRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 
 // ==========================================
@@ -68,6 +70,8 @@ app.use('/api/subjects', authMiddleware, subjectRoutes);
 app.use('/api/exams', authMiddleware, examRoutes);
 app.use('/api/results', authMiddleware, resultRoutes);
 app.use('/api/analytics', authMiddleware, analyticsRoutes);
+app.use('/api/notifications', authMiddleware, notificationRoutes);
+app.use('/api/events', authMiddleware, eventRoutes);
 app.use('/api/assignments', authMiddleware, assignmentRoutes);
 
 // ==========================================
