@@ -29,6 +29,7 @@ model Student {
   attendances StudentAttendance[]
   results     Result[]
   submissions AssignmentSubmission[]
+  feeRecords  FeeRecord[]
 }
 
 model Teacher {
@@ -156,6 +157,24 @@ model AssignmentSubmission {
   student        Student    @relation(fields: [studentId], references: [id])
 
   @@unique([assignmentId, studentId])
+}
+
+model FeeRecord {
+  id          Int      @id @default(autoincrement())
+  studentId   Int
+  amount      Float
+  dueDate     DateTime
+  status      FeeStatus @default(PENDING)
+  paidAt      DateTime?
+  transactionId String?
+
+  student Student @relation(fields: [studentId], references: [id])
+}
+
+enum FeeStatus {
+  PENDING
+  PAID
+  OVERDUE
 }
 
 enum SubmissionStatus {
