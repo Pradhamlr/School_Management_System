@@ -20,7 +20,6 @@
     "deploy:local": "dotenv -e .env.local -- npx prisma migrate deploy",
     "seed:local": "dotenv -e .env.local -- npx prisma db seed",
     "generate:local": "dotenv -e .env.local -- npx prisma generate"
-
   },
   "keywords": [],
   "author": "",
@@ -42,7 +41,8 @@
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
-    "prisma": "^6.16.2"
+    "prisma": "^6.16.2",
+    "winston": "^3.18.3"
   },
   "devDependencies": {
     "dotenv-cli": "^10.0.0",
