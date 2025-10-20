@@ -19,13 +19,13 @@ model User {
 }
 
 model Student {
-  id          Int                 @id @default(autoincrement())
-  userId      Int                 @unique
+  id          Int                    @id @default(autoincrement())
+  userId      Int                    @unique
   classId     Int
   dob         DateTime
-  rollNumber  String              @unique
-  user        User                @relation(fields: [userId], references: [id])
-  class       Class               @relation(fields: [classId], references: [id])
+  rollNumber  String                 @unique
+  user        User                   @relation(fields: [userId], references: [id])
+  class       Class                  @relation(fields: [classId], references: [id])
   attendances StudentAttendance[]
   results     Result[]
   submissions AssignmentSubmission[]
@@ -45,8 +45,8 @@ model Teacher {
   teachingAssignments TeacherClassSubject[]
   attendances         TeacherAttendance[]
 
-
-  events Event[]
+  events     Event[]
+  timetables Timetable[]
 }
 
 model StudentAttendance {
@@ -83,19 +83,21 @@ model Class {
   classTeacherId Int?
   classTeacher   Teacher? @relation("ClassTeacher", fields: [classTeacherId], references: [id])
 
-  students Student[]
-  subjects TeacherClassSubject[]
+  students   Student[]
+  subjects   TeacherClassSubject[]
+  timetables Timetable[]
 
   createdAt DateTime @default(now())
   Exam      Exam[]
 }
 
 model Subject {
-  id       Int                   @id @default(autoincrement())
-  name     String
-  code     String                @unique
-  teachers TeacherClassSubject[]
-  Exam     Exam[]
+  id         Int                   @id @default(autoincrement())
+  name       String
+  code       String                @unique
+  teachers   TeacherClassSubject[]
+  Exam       Exam[]
+  timetables Timetable[]
 }
 
 model TeacherClassSubject {
@@ -107,7 +109,7 @@ model TeacherClassSubject {
   class   Class   @relation(fields: [classId], references: [id])
   teacher Teacher @relation(fields: [teacherId], references: [id])
   subject Subject @relation(fields: [subjectId], references: [id])
-  
+
   assignments Assignment[]
 
   @@unique([teacherId, subjectId])
@@ -136,30 +138,32 @@ model Result {
 
   @@unique([examId, studentId])
 }
+
 model Assignment {
-  id            Int       @id @default(autoincrement())
-  title         String
-  description   String?
-  dueDate       DateTime
-  createdAt     DateTime  @default(now())
+  id          Int      @id @default(autoincrement())
+  title       String
+  description String?
+  dueDate     DateTime
+  createdAt   DateTime @default(now())
 
   teacherClassSubjectId Int
   teacherClassSubject   TeacherClassSubject @relation(fields: [teacherClassSubjectId], references: [id])
 
   submissions AssignmentSubmission[]
 }
-model AssignmentSubmission {
-  id             Int       @id @default(autoincrement())
-  assignmentId   Int
-  studentId      Int
-  submittedAt    DateTime  @default(now())
-  fileUrl        String?   // uploaded file link
-  remarks        String?   // teacher's feedback
-  grade          String?   // e.g. "A+", "B"
-  status         SubmissionStatus @default(PENDING)
 
-  assignment     Assignment @relation(fields: [assignmentId], references: [id])
-  student        Student    @relation(fields: [studentId], references: [id])
+model AssignmentSubmission {
+  id           Int              @id @default(autoincrement())
+  assignmentId Int
+  studentId    Int
+  submittedAt  DateTime         @default(now())
+  fileUrl      String? // uploaded file link
+  remarks      String? // teacher's feedback
+  grade        String? // e.g. "A+", "B"
+  status       SubmissionStatus @default(PENDING)
+
+  assignment Assignment @relation(fields: [assignmentId], references: [id])
+  student    Student    @relation(fields: [studentId], references: [id])
 
   @@unique([assignmentId, studentId])
 }
@@ -170,42 +174,81 @@ enum SubmissionStatus {
   GRADED
 }
 
-
 model Notification {
-  id        Int       @id @default(autoincrement())
-  title     String
-  message   String
+  id         Int      @id @default(autoincrement())
+  title      String
+  message    String
   targetRole Role
-  createdBy Int
-  createdAt DateTime  @default(now())
+  createdBy  Int
+  createdAt  DateTime @default(now())
 }
 
 model Event {
-  id          Int       @id @default(autoincrement())
+  id          Int      @id @default(autoincrement())
   title       String
   description String?
   startDate   DateTime
   endDate     DateTime
   location    String?
   createdBy   Int
-  createdAt   DateTime  @default(now())
+  createdAt   DateTime @default(now())
 
   // New relations
-  teacherId   Int?      // the teacher handling the event (nullable)
-  teacher     Teacher?  @relation(fields: [teacherId], references: [id])
-  volunteers  EventVolunteer[] // join table entries referencing Student
+  teacherId  Int? // the teacher handling the event (nullable)
+  teacher    Teacher?         @relation(fields: [teacherId], references: [id])
+  volunteers EventVolunteer[] // join table entries referencing Student
 }
 
 model EventVolunteer {
-  id        Int     @id @default(autoincrement())
+  id        Int @id @default(autoincrement())
   eventId   Int
   studentId Int
 
-  event     Event   @relation(fields: [eventId], references: [id])
-  student   Student @relation(fields: [studentId], references: [id])
+  event   Event   @relation(fields: [eventId], references: [id])
+  student Student @relation(fields: [studentId], references: [id])
 
   @@unique([eventId, studentId])
 }
+
+model Classroom {
+  id         Int         @id @default(autoincrement())
+  name       String      @unique // e.g. "A101"
+  capacity   Int?
+  // timetables referencing this classroom
+  timetables Timetable[]
+}
+
+enum DayOfWeek {
+  MON
+  TUE
+  WED
+  THU
+  FRI
+  SAT
+  SUN
+}
+
+model Timetable {
+  id          Int       @id @default(autoincrement())
+  classId     Int
+  subjectId   Int
+  teacherId   Int
+  classroomId Int
+  day         DayOfWeek
+  startMinute Int // minutes since midnight, e.g. 9:00 => 540
+  endMinute   Int
+  createdAt   DateTime  @default(now())
+
+  class     Class     @relation(fields: [classId], references: [id])
+  subject   Subject   @relation(fields: [subjectId], references: [id])
+  teacher   Teacher   @relation(fields: [teacherId], references: [id])
+  classroom Classroom @relation(fields: [classroomId], references: [id])
+
+  @@unique([classId, day, startMinute, endMinute], name: "class_time_unique")
+  @@index([day, classId])
+  @@index([day, teacherId])
+  @@index([day, classroomId])
+  }
 
 model FeeRecord {
   id          Int      @id @default(autoincrement())
