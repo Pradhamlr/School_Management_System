@@ -29,6 +29,9 @@ model Student {
   attendances StudentAttendance[]
   results     Result[]
   submissions AssignmentSubmission[]
+
+
+  volunteeredEvents EventVolunteer[]
 }
 
 model Teacher {
@@ -41,6 +44,9 @@ model Teacher {
   advisedClasses      Class[]               @relation("ClassTeacher")
   teachingAssignments TeacherClassSubject[]
   attendances         TeacherAttendance[]
+
+
+  events Event[]
 }
 
 model StudentAttendance {
@@ -164,6 +170,42 @@ enum SubmissionStatus {
   GRADED
 }
 
+
+model Notification {
+  id        Int       @id @default(autoincrement())
+  title     String
+  message   String
+  targetRole Role
+  createdBy Int
+  createdAt DateTime  @default(now())
+}
+
+model Event {
+  id          Int       @id @default(autoincrement())
+  title       String
+  description String?
+  startDate   DateTime
+  endDate     DateTime
+  location    String?
+  createdBy   Int
+  createdAt   DateTime  @default(now())
+
+  // New relations
+  teacherId   Int?      // the teacher handling the event (nullable)
+  teacher     Teacher?  @relation(fields: [teacherId], references: [id])
+  volunteers  EventVolunteer[] // join table entries referencing Student
+}
+
+model EventVolunteer {
+  id        Int     @id @default(autoincrement())
+  eventId   Int
+  studentId Int
+
+  event     Event   @relation(fields: [eventId], references: [id])
+  student   Student @relation(fields: [studentId], references: [id])
+
+  @@unique([eventId, studentId])
+}
 
 enum Role {
   ADMIN
