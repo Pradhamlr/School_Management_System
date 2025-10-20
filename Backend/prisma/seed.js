@@ -1,3 +1,19 @@
+const path = require('path');
+const fs = require('fs');
+// Load env: prefer .env.local then .env
+const dotenv = require('dotenv');
+const localEnv = path.resolve(__dirname, '../.env.local');
+const env = path.resolve(__dirname, '../.env');
+if (fs.existsSync(localEnv)) {
+  dotenv.config({ path: localEnv });
+  console.log('Loaded environment from .env.local');
+} else if (fs.existsSync(env)) {
+  dotenv.config({ path: env });
+  console.log('Loaded environment from .env');
+} else {
+  console.warn('No .env or .env.local found; DATABASE_URL must be set in environment to run seed');
+}
+
 const { PrismaClient } = require('@prisma/client');
 const bcrypt = require('bcryptjs');
 
@@ -105,6 +121,51 @@ async function main() {
     update: { fileUrl: 'https://example.com/submissions/s1_hw1.pdf', status: 'SUBMITTED' },
     create: { assignmentId: assignment.id, studentId: student1.id, fileUrl: 'https://example.com/submissions/s1_hw1.pdf', status: 'SUBMITTED' }
   });
+
+  // ---------- Timetable test data ----------
+  // Classrooms
+  const roomA = await prisma.classroom.upsert({
+    where: { name: 'A101' },
+    update: { capacity: 40 },
+    create: { name: 'A101', capacity: 40 }
+  });
+
+  const roomB = await prisma.classroom.upsert({
+    where: { name: 'B202' },
+    update: { capacity: 30 },
+    create: { name: 'B202', capacity: 30 }
+  });
+
+  // Timetable slots (minutes since midnight)
+  // Slot 1: Math for class 10A on Monday 09:00-10:00
+  let slot1 = await prisma.timetable.findFirst({ where: { classId: cls.id, day: 'MON', startMinute: 540, endMinute: 600 } });
+  if (!slot1) {
+    slot1 = await prisma.timetable.create({ data: {
+      classId: cls.id,
+      subjectId: math.id,
+      teacherId: teacher.id,
+      classroomId: roomA.id,
+      day: 'MON',
+      startMinute: 540,
+      endMinute: 600
+    }});
+  }
+
+  // Slot 2: English for class 10A on Monday 10:00-11:00 (same teacher but non-overlapping)
+  let slot2 = await prisma.timetable.findFirst({ where: { classId: cls.id, day: 'MON', startMinute: 600, endMinute: 660 } });
+  if (!slot2) {
+    slot2 = await prisma.timetable.create({ data: {
+      classId: cls.id,
+      subjectId: eng.id,
+      teacherId: teacher.id,
+      classroomId: roomB.id,
+      day: 'MON',
+      startMinute: 600,
+      endMinute: 660
+    }});
+  }
+
+  console.log('Timetable seed: created slots', { slot1Id: slot1.id, slot2Id: slot2.id });
 
   console.log('Seed finished.');
 }
