@@ -34,6 +34,7 @@ const analyticsRoutes = require('./routes/analyticsRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const eventRoutes = require('./routes/eventRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
 
 // ==========================================
 // MIDDLEWARE SETUP
@@ -73,6 +74,7 @@ app.use('/api/analytics', authMiddleware, analyticsRoutes);
 app.use('/api/notifications', authMiddleware, notificationRoutes);
 app.use('/api/events', authMiddleware, eventRoutes);
 app.use('/api/assignments', authMiddleware, assignmentRoutes);
+app.use('/api/payments', authMiddleware, paymentRoutes);
 
 // ==========================================
 // ERROR HANDLING
