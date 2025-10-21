@@ -25,7 +25,7 @@ const Login = () => {
     setLoading(true);
 
     try {
-  const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, {
+      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -42,7 +42,8 @@ const Login = () => {
             title: "Login successful",
             description: `Welcome back, ${data.user.name}!`,
           });
-          navigate("/dashboard");
+          const dashboardRoute = `/${role?.toLowerCase()}-dashboard`;
+          navigate(dashboardRoute);
         } else {
           toast({
             title: "Access denied",
@@ -102,6 +103,21 @@ const Login = () => {
             <CardDescription>
               Enter your credentials to access your account
             </CardDescription>
+            {role === 'admin' && (
+              <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                Sample: admin@school.com / admin123
+              </div>
+            )}
+            {role === 'teacher' && (
+              <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                Sample: sarah@school.com / teacher123
+              </div>
+            )}
+            {role === 'student' && (
+              <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                Sample: alex.thompson@student.school.com / student123
+              </div>
+            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -160,17 +176,7 @@ const Login = () => {
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
 
-              <div className="text-center">
-                <span className="text-sm text-gray-600">
-                  Don't have an account?{" "}
-                  <Link
-                    to={`/signup/${role}`}
-                    className="text-blue-600 hover:underline font-medium"
-                  >
-                    Sign up
-                  </Link>
-                </span>
-              </div>
+
             </form>
           </CardContent>
         </Card>

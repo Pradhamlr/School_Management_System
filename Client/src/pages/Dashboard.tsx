@@ -1,4 +1,4 @@
-import { Users, GraduationCap, BookOpen, Calendar } from "lucide-react";
+ import { Users, GraduationCap, BookOpen, Calendar } from "lucide-react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { MetricCard } from "@/components/MetricCard";
