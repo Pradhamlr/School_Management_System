@@ -1,9 +1,19 @@
-import { Search, Bell, Settings, User } from "lucide-react";
+import { Search, Bell, Settings, User, LogOut } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 export function DashboardHeader() {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
   return (
     <header className="h-20 glass-card border-b border-border/50 px-8 flex items-center justify-between">
       <div className="flex items-center gap-6">
@@ -29,16 +39,28 @@ export function DashboardHeader() {
         </Button>
 
         <div className="flex items-center gap-3 pl-4 border-l border-border/50">
-          <Avatar>
-            <AvatarImage src="/placeholder-avatar.jpg" />
-            <AvatarFallback className="bg-primary text-white">
-              <User className="w-4 h-4" />
-            </AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="text-sm font-medium text-foreground">Rajesh Kumar</p>
-            <p className="text-xs text-muted-foreground">Principal</p>
-          </div>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="flex items-center gap-3 p-2">
+                <Avatar>
+                  <AvatarImage src="/placeholder-avatar.jpg" />
+                  <AvatarFallback className="bg-primary text-white">
+                    {user?.name?.charAt(0).toUpperCase() || <User className="w-4 h-4" />}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="text-left">
+                  <p className="text-sm font-medium text-foreground">{user?.name || "User"}</p>
+                  <p className="text-xs text-muted-foreground">{user?.role || "Role"}</p>
+                </div>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={handleLogout}>
+                <LogOut className="w-4 h-4 mr-2" />
+                Logout
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
     </header>
