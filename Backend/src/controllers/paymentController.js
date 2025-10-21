@@ -2,6 +2,7 @@ const prisma = require('../config/prisma');
 const { StatusCodes } = require('http-status-codes');
 const BadRequestError = require('../errors/badRequest');
 const NotFoundError = require('../errors/notFound');
+const { createOrder, verifyPayment } = require('../services/razorpayService');
 
 // Controller contract (inputs/outputs):
 // - createFeeRecord(req.body): { studentId, amount, dueDate } -> creates FeeRecord
@@ -76,6 +77,55 @@ const getMyFees = async (req, res) => {
 	res.status(StatusCodes.OK).json({ success: true, fees });
 };
 
+const createRazorpayOrder = async (req, res) => {
+	const id = Number(req.params.id);
+	const fee = await prisma.feeRecord.findUnique({ where: { id } });
+	if (!fee) throw new NotFoundError('Fee record not found');
+
+	// Ensure only owning student (or admin) can create order
+	if (req.user.role === 'STUDENT') {
+		const student = await prisma.student.findUnique({ where: { userId: req.user.id } });
+		if (!student || student.id !== fee.studentId) {
+			return res.status(StatusCodes.FORBIDDEN).json({ message: 'Access denied' });
+		}
+	}
+
+	if (fee.status === 'PAID') {
+		throw new BadRequestError('Fee already paid');
+	}
+
+	const order = await createOrder(fee.amount);
+	res.status(StatusCodes.OK).json({ success: true, order, fee });
+};
+
+const verifyRazorpayPayment = async (req, res) => {
+	const id = Number(req.params.id);
+	const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
+
+	const fee = await prisma.feeRecord.findUnique({ where: { id } });
+	if (!fee) throw new NotFoundError('Fee record not found');
+
+	if (fee.status === 'PAID') {
+		throw new BadRequestError('Fee already paid');
+	}
+
+	const isValid = verifyPayment(razorpay_order_id, razorpay_payment_id, razorpay_signature);
+	if (!isValid) {
+		throw new BadRequestError('Invalid payment signature');
+	}
+
+	const updated = await prisma.feeRecord.update({
+		where: { id },
+		data: { 
+			status: 'PAID', 
+			paidAt: new Date(), 
+			transactionId: razorpay_payment_id 
+		}
+	});
+
+	res.status(StatusCodes.OK).json({ success: true, message: 'Payment verified and recorded', fee: updated });
+};
+
 const payFee = async (req, res) => {
 	const id = Number(req.params.id);
 	const { transactionId } = req.body; // optional
@@ -138,5 +188,7 @@ module.exports = {
 	getMyFees,
 	payFee,
 	updateFee,
-	deleteFee
+	deleteFee,
+	createRazorpayOrder,
+	verifyRazorpayPayment
 };

@@ -17,4 +17,8 @@ router.delete('/:id', auth, authorize('ADMIN'), paymentController.deleteFee);
 router.get('/me', auth, authorize('STUDENT'), paymentController.getMyFees);
 router.post('/:id/pay', auth, paymentController.payFee); // student or admin can call
 
+// Razorpay integration
+router.post('/:id/create-order', auth, paymentController.createRazorpayOrder);
+router.post('/:id/verify-payment', auth, paymentController.verifyRazorpayPayment);
+
 module.exports = router;
