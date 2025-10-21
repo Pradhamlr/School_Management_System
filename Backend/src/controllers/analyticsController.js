@@ -111,7 +111,7 @@ const getClassPerformance = async (req, res) => {
 
     performanceData.push({
       classId: cls.id,
-      className: `${cls.name}${cls.section ? `-${cls.section}` : ''}`,
+  className: `${cls.name}${cls.section ? `-${cls.section}` : ''}`,
       avgPercentage: avgPercentage.toFixed(2),
       passPercentage: passPercentage.toFixed(2),
       totalStudents: cls.students.length

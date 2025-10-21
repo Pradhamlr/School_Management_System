@@ -1,20 +1,48 @@
-import { BookOpen, Calendar, FileText, Trophy, Clock, Target } from "lucide-react";
+import { BookOpen, Calendar, FileText, Trophy, Clock, Target, Users } from "lucide-react";
 import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { MetricCard } from "@/components/MetricCard";
 import { AttendanceChart } from "@/components/AttendanceChart";
+import { useEffect, useState } from 'react';
+import api from '@/lib/api';
 
 const StudentDashboard = () => {
-  const attendanceData = [
-    { name: "Present", value: 88, color: "#10B981" },
-    { name: "Absent", value: 12, color: "#EF4444" },
+  const [analytics, setAnalytics] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const attendanceData = analytics ? [
+    { name: 'Present', value: Number(analytics.attendance.studentAttendanceRate) || 0, color: '#10B981' },
+    { name: 'Absent', value: 100 - (Number(analytics.attendance.studentAttendanceRate) || 0), color: '#EF4444' },
+  ] : [
+    { name: "Present", value: 0, color: "#10B981" },
+    { name: "Absent", value: 0, color: "#EF4444" },
   ];
 
-  const gradeDistribution = [
+  const gradeDistribution = analytics ? [
+    { name: 'Average', value: Number(analytics.academics.averageScore) || 0, color: '#10B981' }
+  ] : [
     { name: "A", value: 40, color: "#10B981" },
     { name: "B", value: 35, color: "#6366F1" },
     { name: "C", value: 25, color: "#F59E0B" },
   ];
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchAnalytics = async () => {
+      try {
+        const res = await api.get('/api/analytics');
+        if (!mounted) return;
+        setAnalytics(res.data.data);
+      } catch (e) {
+        // ignore - keep defaults
+        console.error('Failed to fetch analytics', e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchAnalytics();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="flex min-h-screen">
@@ -35,32 +63,28 @@ const StudentDashboard = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
-              title="Current GPA"
-              value="3.8"
-              icon={Trophy}
-              color="hsl(45 100% 75%)"
-              trend={{ value: "0.2", isPositive: true }}
+              title="Total Students"
+              value={loading ? '…' : analytics?.attendance?.totalStudents ?? '—'}
+              icon={Users}
+              color="hsl(142 100% 75%)"
             />
             <MetricCard
-              title="Enrolled Courses"
-              value="6"
+              title="Total Teachers"
+              value={loading ? '…' : analytics?.attendance?.totalTeachers ?? '—'}
               icon={BookOpen}
               color="hsl(210 100% 75%)"
-              trend={{ value: "0%", isPositive: true }}
             />
             <MetricCard
-              title="Pending Assignments"
-              value="3"
+              title="Average Score"
+              value={loading ? '…' : analytics?.academics?.averageScore ?? '—'}
               icon={FileText}
               color="hsl(15 100% 75%)"
-              trend={{ value: "2", isPositive: false }}
             />
             <MetricCard
               title="Attendance Rate"
-              value="88%"
+              value={loading ? '…' : `${analytics?.attendance?.studentAttendanceRate ?? '—'}%`}
               icon={Target}
               color="hsl(142 100% 75%)"
-              trend={{ value: "2%", isPositive: true }}
             />
           </div>
 

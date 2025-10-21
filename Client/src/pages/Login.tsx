@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import api from "@/lib/api";
 
 const Login = () => {
   const { role } = useParams<{ role: string }>();
@@ -25,17 +26,10 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/login`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+      const res = await api.post('/api/auth/login', formData);
+      const data = res.data;
 
-      const data = await response.json();
-
-      if (response.ok) {
+      if (res.status >= 200 && res.status < 300) {
         if (data.user.role.toLowerCase() === role?.toLowerCase()) {
           login(data.user, data.token);
           toast({
