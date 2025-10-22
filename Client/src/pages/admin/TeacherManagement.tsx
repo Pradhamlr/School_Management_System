@@ -13,6 +13,7 @@ import {
   MoreHorizontal,
   Mail,
   Phone
+  ,ToggleLeft, CheckCircle
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -36,16 +37,21 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import TeacherFormModal from '@/components/admin/TeacherFormModal';
+import TeacherDetailsModal from '@/components/admin/TeacherDetailsModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import api from '@/lib/api';
 
 const TeacherManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [teachers, setTeachers] = useState<any[]>([]);
+  const [departments, setDepartments] = useState<Array<{name:string,count:number}>>([]);
+  const [selectedDepartment, setSelectedDepartment] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [selectedTeacher, setSelectedTeacher] = useState<any | null>(null);
   const [deletingTeacherId, setDeletingTeacherId] = useState<number | null>(null);
+  const [statusLoading, setStatusLoading] = useState<Record<number, boolean>>({});
   const { toast } = useToast();
 
   const fetchTeachers = async () => {
@@ -54,6 +60,8 @@ const TeacherManagement = () => {
       const api = await import('@/lib/api').then(m => m.default);
       const res = await api.get('/api/teachers');
       setTeachers(res.data.teachers || []);
+      // also refresh analytics after fetching teachers to keep totals in sync
+      try { const a = await api.get('/api/analytics'); setAnalytics(a.data.data); } catch(e){}
     } catch (err: any) {
       toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load teachers', variant: 'destructive' });
     } finally {
@@ -63,6 +71,31 @@ const TeacherManagement = () => {
 
   useEffect(() => {
     fetchTeachers();
+  }, []);
+
+  useEffect(() => {
+    const loadDepartments = async () => {
+      try {
+        const api = await import('@/lib/api').then(m => m.default);
+        const res = await api.get('/api/departments');
+        setDepartments(res.data.departments || []);
+      } catch (e) {
+        console.warn('Failed to load departments', e);
+      }
+    };
+    loadDepartments();
+  }, []);
+
+  useEffect(() => {
+    const handler = () => fetchTeachers();
+    window.addEventListener('subject-assigned', handler as EventListener);
+    // also refresh when attendance changes elsewhere in the app
+    const attendanceHandler = () => fetchTeachers();
+    window.addEventListener('attendance-changed', attendanceHandler as EventListener);
+    return () => {
+      window.removeEventListener('subject-assigned', handler as EventListener);
+      window.removeEventListener('attendance-changed', attendanceHandler as EventListener);
+    };
   }, []);
 
   const [analytics, setAnalytics] = React.useState<any | null>(null);
@@ -81,11 +114,21 @@ const TeacherManagement = () => {
     return () => { mounted = false; };
   }, []);
 
+  // simple debounced search: apply filter only after user stops typing for 180ms
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 180);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
   const filteredTeachers = teachers.filter(teacher =>
-    (teacher.user?.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (teacher.user?.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (teacher.department || '').toLowerCase().includes(searchTerm.toLowerCase())
+    ((teacher.user?.name || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    (teacher.user?.email || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    (teacher.department || '').toLowerCase().includes(debouncedSearch.toLowerCase()))
+    && (selectedDepartment ? (teacher.department === selectedDepartment) : true)
   );
+
+  const activeTeachersCount = teachers.filter(t => (t.status || 'Active') === 'Active').length;
 
   const deleteTeacher = async (id: number) => {
     setDeletingTeacherId(id);
@@ -102,6 +145,43 @@ const TeacherManagement = () => {
       toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to remove teacher', variant: 'destructive' });
     } finally {
       setDeletingTeacherId(null);
+    }
+  };
+
+  const toggleTeacherStatus = async (teacher: any) => {
+    const id = teacher.id;
+    // prevent double clicks
+    if (statusLoading[id]) return;
+    setStatusLoading(prev => ({ ...prev, [id]: true }));
+    // optimistic UI update: flip status locally while request is in-flight
+    const prevTeachers = teachers;
+    try {
+      const newStatus = (teacher.status || 'Active') === 'Active' ? 'Inactive' : 'Active';
+      setTeachers((t) => t.map((x) => (x.id === id ? { ...x, status: newStatus } : x)));
+
+      // dynamically import api like other handlers to ensure runtime config/token is applied
+      const apiClient = await import('@/lib/api').then(m => m.default);
+      const res = await apiClient.patch(`/api/teachers/${id}`, { status: newStatus });
+      if (res?.data?.success) {
+        toast({ title: 'Updated', description: `Teacher marked ${newStatus}` });
+      } else {
+        // treat non-success as error
+        throw new Error(res?.data?.message || 'Update failed');
+      }
+
+      // refresh serverside data and analytics to ensure consistency
+      await fetchTeachers();
+      window.dispatchEvent(new CustomEvent('attendance-changed', { detail: { teacherId: id, status: newStatus } }));
+      return res.data;
+    } catch (err: any) {
+      // rollback optimistic update
+      setTeachers(prevTeachers);
+      console.error('Failed to toggle status', err);
+      const msg = err?.response?.data?.message || err?.message || 'Failed to update status';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+      return null;
+    } finally {
+      setStatusLoading(prev => ({ ...prev, [id]: false }));
     }
   };
 
@@ -134,7 +214,7 @@ const TeacherManagement = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white border-0">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
@@ -150,8 +230,8 @@ const TeacherManagement = () => {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-blue-100">Active Teachers</p>
-                    <p className="text-3xl font-bold">{analytics ? analytics.attendance.teachersPresentToday : '…'}</p>
+                      <p className="text-blue-100">Active Teachers</p>
+                      <p className="text-3xl font-bold">{typeof activeTeachersCount === 'number' ? activeTeachersCount : (analytics ? analytics.attendance.teachersPresentToday : '…')}</p>
                   </div>
                   <GraduationCap className="w-8 h-8 text-blue-200" />
                 </div>
@@ -162,23 +242,13 @@ const TeacherManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100">Departments</p>
-                    <p className="text-3xl font-bold">12</p>
+                    <p className="text-3xl font-bold">{departments && departments.length > 0 ? departments.length : (analytics ? analytics.meta?.departmentCount ?? '—' : '…')}</p>
                   </div>
                   <GraduationCap className="w-8 h-8 text-purple-200" />
                 </div>
               </CardContent>
             </Card>
-            <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white border-0">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-orange-100">Avg. Experience</p>
-                    <p className="text-3xl font-bold">7.2y</p>
-                  </div>
-                  <GraduationCap className="w-8 h-8 text-orange-200" />
-                </div>
-              </CardContent>
-            </Card>
+            {/* Removed Avg. Experience card - not used by backend */}
           </div>
 
           <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
@@ -216,7 +286,6 @@ const TeacherManagement = () => {
                     <TableHead>Department</TableHead>
                     <TableHead>Subjects</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead>Experience</TableHead>
                     <TableHead>Classes</TableHead>
                     <TableHead>Actions</TableHead>
                   </TableRow>
@@ -242,14 +311,14 @@ const TeacherManagement = () => {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="bg-green-50 text-green-700">
-                          {teacher.department}
+                          {(!teacher.department || teacher.department === '_') ? '\u2014' : teacher.department}
                         </Badge>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-wrap gap-1">
                           {(teacher.subjects || []).map((subject: any, index: number) => (
                             <Badge key={index} variant="secondary" className="text-xs">
-                              {subject.name || subject}
+                              {typeof subject === 'string' ? subject : (subject?.name || subject?.code || 'Subject')}
                             </Badge>
                           ))}
                         </div>
@@ -266,10 +335,28 @@ const TeacherManagement = () => {
                             {teacher.status || 'Active'}
                           </Badge>
                       </TableCell>
-                      <TableCell className="font-medium">{teacher.experience}</TableCell>
                       <TableCell>
-                        <span className="font-medium">{teacher.classes || 0}</span>
-                        <span className="text-muted-foreground text-sm ml-1">classes</span>
+                        <div className="flex flex-wrap gap-1">
+                          {/* show advised classes (class teacher) */}
+                          {(teacher.advisedClasses || []).map((c: any) => (
+                            <Badge key={`adv-${c.id}`} variant="secondary" className="text-xs bg-indigo-50 text-indigo-700">
+                              CT • {c.name}{c.section ? ` ${c.section}` : ''}
+                            </Badge>
+                          ))}
+                          {/* show classes from teachingAssignments (subject teacher) - unique by class id */}
+                          {((teacher.teachingAssignments || [])
+                            .map((ta: any) => ta.class)
+                            .filter(Boolean)
+                            .reduce((acc: any[], cls: any) => {
+                              if (!acc.find((x) => x?.id === cls.id)) acc.push(cls);
+                              return acc;
+                            }, [])
+                            .map((c: any) => (
+                              <Badge key={`sub-${c.id}`} variant="outline" className="text-xs">
+                                {c.name}{c.section ? ` ${c.section}` : ''}
+                              </Badge>
+                            )))}
+                        </div>
                       </TableCell>
                       <TableCell>
                         <DropdownMenu>
@@ -279,10 +366,14 @@ const TeacherManagement = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => setSelectedTeacher(teacher)}>
                               <Eye className="w-4 h-4" />
                               View Profile
                             </DropdownMenuItem>
+                              <DropdownMenuItem className="gap-2" onClick={() => toggleTeacherStatus(teacher)}>
+                                <ToggleLeft className="w-4 h-4 mr-2" />
+                                {(statusLoading[teacher.id]) ? 'Updating…' : ((teacher.status || 'Active') === 'Active' ? 'Mark Inactive' : 'Mark Active')}
+                              </DropdownMenuItem>
                             <DropdownMenuItem className="gap-2" onClick={() => { setEditing(teacher); setIsModalOpen(true); }}>
                               <Edit className="w-4 h-4" />
                               Edit Teacher
@@ -314,6 +405,11 @@ const TeacherManagement = () => {
               />
             </React.Suspense>
           )}
+          <TeacherDetailsModal
+            open={Boolean(selectedTeacher)}
+            onOpenChange={(v) => { if (!v) setSelectedTeacher(null); }}
+            teacher={selectedTeacher}
+          />
           <Dialog open={Boolean(deletingTeacherId)} onOpenChange={(v) => { if (!v) setDeletingTeacherId(null); }}>
             <DialogContent>
               <DialogHeader>

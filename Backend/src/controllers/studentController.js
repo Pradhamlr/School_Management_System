@@ -9,8 +9,13 @@ const createStudent = async (req, res) => {
     const { userId, rollNumber, classId, dob } = req.body;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.role !== 'STUDENT') {
-        throw new BadRequestError('Invalid user ID or user is not a student');
+    if (!user) {
+        throw new BadRequestError('Invalid user ID');
+    }
+
+    // If user exists but not STUDENT, promote to STUDENT role
+    if (user.role !== 'STUDENT') {
+        await prisma.user.update({ where: { id: userId }, data: { role: 'STUDENT' } });
     }
 
     const existingStudent = await prisma.student.findUnique({ where: { userId } });

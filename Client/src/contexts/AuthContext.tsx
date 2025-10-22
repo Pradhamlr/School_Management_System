@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (user: User, token: string) => void;
   logout: () => void;
   isAuthenticated: boolean;
+  initialized: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -33,6 +34,7 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
     const storedToken = localStorage.getItem('token');
@@ -42,6 +44,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       setToken(storedToken);
       setUser(JSON.parse(storedUser));
     }
+    setInitialized(true);
   }, []);
 
   const login = (userData: User, userToken: string) => {
@@ -69,6 +72,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     login,
     logout,
     isAuthenticated: !!user && !!token,
+    initialized,
   };
 
   return (

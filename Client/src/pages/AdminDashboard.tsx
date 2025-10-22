@@ -15,6 +15,7 @@ import {
   Activity
 } from "lucide-react";
 import api from '@/lib/api';
+import { useNavigate } from 'react-router-dom';
 import AdminSidebar from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { MetricCard } from "@/components/MetricCard";
@@ -75,6 +76,30 @@ const AdminDashboard = () => {
     { title: "Schedule Event", description: "Plan school event", icon: Calendar, color: "bg-orange-500" },
   ];
 
+  function QuickActionButton({ action }: { action: any }) {
+    const navigate = useNavigate();
+    const handleClick = () => {
+      switch (action.title) {
+        case 'Add Student': return navigate('/admin/students');
+        case 'Add Teacher': return navigate('/admin/teachers');
+        case 'Create Class': return navigate('/admin/classes');
+        case 'Schedule Event': return navigate('/admin/events');
+        default: return;
+      }
+    };
+    return (
+      <Button onClick={handleClick} variant="outline" className="h-20 flex-col gap-2 hover:shadow-md transition-all">
+        <div className={`w-8 h-8 rounded-full ${action.color} flex items-center justify-center`}>
+          <action.icon className="w-4 h-4 text-white" />
+        </div>
+        <div className="text-center">
+          <div className="font-medium text-sm">{action.title}</div>
+          <div className="text-xs text-muted-foreground">{action.description}</div>
+        </div>
+      </Button>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <AdminSidebar />
@@ -126,9 +151,9 @@ const AdminDashboard = () => {
               color="hsl(262 83% 58%)"
             />
             <MetricCard
-              title="Monthly Revenue"
-              value="$125K"
-              icon={DollarSign}
+              title="New Students (Month)"
+              value={loading ? '…' : analytics?.monthlyNewStudents ?? '—'}
+              icon={UserPlus}
               color="hsl(25 95% 53%)"
             />
           </div>
@@ -173,24 +198,12 @@ const AdminDashboard = () => {
                     <CardDescription>Frequently used administrative tasks</CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-2 gap-4">
-                      {quickActions.map((action, index) => (
-                        <Button
-                          key={index}
-                          variant="outline"
-                          className="h-20 flex-col gap-2 hover:shadow-md transition-all"
-                        >
-                          <div className={`w-8 h-8 rounded-full ${action.color} flex items-center justify-center`}>
-                            <action.icon className="w-4 h-4 text-white" />
-                          </div>
-                          <div className="text-center">
-                            <div className="font-medium text-sm">{action.title}</div>
-                            <div className="text-xs text-muted-foreground">{action.description}</div>
-                          </div>
-                        </Button>
-                      ))}
-                    </div>
-                  </CardContent>
+                      <div className="grid grid-cols-2 gap-4">
+                        {quickActions.map((action, index) => (
+                          <QuickActionButton key={index} action={action} />
+                        ))}
+                      </div>
+                    </CardContent>
                 </Card>
 
                 <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
