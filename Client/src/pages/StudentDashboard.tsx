@@ -7,11 +7,13 @@ import { Button } from "@/components/ui/button";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api, { studentAPI, timetableAPI } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const StudentDashboard = () => {
   const [analytics, setAnalytics] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const attendanceData = analytics ? [
     { name: 'Present', value: Number(analytics.attendance.studentAttendanceRate) || 0, color: '#10B981' },
@@ -32,6 +34,11 @@ const StudentDashboard = () => {
   useEffect(() => {
     let mounted = true;
     const fetchAnalytics = async () => {
+      // Only attempt analytics if the authenticated user is STAFF (ADMIN or TEACHER)
+      if (!user || (user.role !== 'ADMIN' && user.role !== 'TEACHER')) {
+        setLoading(false);
+        return;
+      }
       try {
         const res = await api.get('/api/analytics');
         if (!mounted) return;

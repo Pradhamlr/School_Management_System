@@ -20,6 +20,7 @@ import StudentTimetable from "./pages/StudentTimetable";
 import StudentCourses from "./pages/StudentCourses";
 import StudentExams from "./pages/StudentExams";
 import StudentNotifications from "./pages/StudentNotifications";
+import StudentAttendance from "./pages/StudentAttendance";
 import StudentManagement from "./pages/admin/StudentManagement";
 import TeacherManagement from "./pages/admin/TeacherManagement";
 import Analytics from "./pages/admin/Analytics";
@@ -67,15 +68,16 @@ const App = () => (
           <Route path="/admin/notifications" element={<ProtectedRoute><NotificationManagement /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
           <Route path="/teacher-dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
-          <Route path="/student-dashboard" element={<ProtectedRoute><StudentDashboardNew /></ProtectedRoute>} />
-          <Route path="/student-dashboard-new" element={<ProtectedRoute><StudentDashboardNew /></ProtectedRoute>} />
-          <Route path="/student/profile" element={<ProtectedRoute><StudentProfile /></ProtectedRoute>} />
-          <Route path="/student/assignments" element={<ProtectedRoute><StudentAssignments /></ProtectedRoute>} />
-          <Route path="/student/grades" element={<ProtectedRoute><StudentGrades /></ProtectedRoute>} />
-          <Route path="/student/timetable" element={<ProtectedRoute><StudentTimetable /></ProtectedRoute>} />
-          <Route path="/student/courses" element={<ProtectedRoute><StudentCourses /></ProtectedRoute>} />
-          <Route path="/student/exams" element={<ProtectedRoute><StudentExams /></ProtectedRoute>} />
-          <Route path="/student/notifications" element={<ProtectedRoute><StudentNotifications /></ProtectedRoute>} />
+          <Route path="/student-dashboard" element={<ProtectedRoute requiredRole="student"><StudentDashboardNew /></ProtectedRoute>} />
+          <Route path="/student-dashboard-new" element={<ProtectedRoute requiredRole="student"><StudentDashboardNew /></ProtectedRoute>} />
+          <Route path="/student/profile" element={<ProtectedRoute requiredRole="student"><StudentProfile /></ProtectedRoute>} />
+          <Route path="/student/assignments" element={<ProtectedRoute requiredRole="student"><StudentAssignments /></ProtectedRoute>} />
+          <Route path="/student/grades" element={<ProtectedRoute requiredRole="student"><StudentGrades /></ProtectedRoute>} />
+          <Route path="/student/timetable" element={<ProtectedRoute requiredRole="student"><StudentTimetable /></ProtectedRoute>} />
+          <Route path="/student/courses" element={<ProtectedRoute requiredRole="student"><StudentCourses /></ProtectedRoute>} />
+          <Route path="/student/exams" element={<ProtectedRoute requiredRole="student"><StudentExams /></ProtectedRoute>} />
+          <Route path="/student/notifications" element={<ProtectedRoute requiredRole="student"><StudentNotifications /></ProtectedRoute>} />
+          <Route path="/student/attendance" element={<ProtectedRoute requiredRole="student"><StudentAttendance /></ProtectedRoute>} />
           <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
           <Route path="/teachers" element={<ProtectedRoute><Teachers /></ProtectedRoute>} />
           <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />

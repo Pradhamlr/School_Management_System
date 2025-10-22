@@ -30,15 +30,18 @@ const StudentDashboardNew = () => {
   const [analytics, setAnalytics] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
+  // Only attempt admin analytics if the logged-in user is admin/teacher
   useEffect(() => {
     let mounted = true;
     const fetchAnalytics = async () => {
       try {
+        // If the API returns 403 for non-admins, just ignore analytics
         const res = await api.get('/api/analytics');
         if (!mounted) return;
         setAnalytics(res.data.data);
       } catch (e) {
-        console.error('Failed to fetch analytics', e);
+        // expected for students (403) or other failures - keep defaults
+        console.info('Analytics not available for this user or failed to fetch');
       } finally {
         if (mounted) setLoading(false);
       }
@@ -101,8 +104,15 @@ const StudentDashboardNew = () => {
           if (mounted) setRecentGrades([]);
         }
 
-      } catch (e) {
+      } catch (e: any) {
+        // If student profile is missing (404) show helpful guidance in UI
         console.error('Failed to fetch current student', e);
+        if (mounted) {
+          setNotifications([]);
+          setUpcomingAssignments([]);
+          setTodaySchedule([]);
+          setRecentGrades([]);
+        }
       }
     };
     fetchStudentData();

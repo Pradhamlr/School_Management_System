@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import api from '@/lib/api';
+import { examAPI, studentAPI } from '@/lib/api';
 
 const StudentExams = () => {
   const [exams, setExams] = useState([]);
@@ -15,10 +15,26 @@ const StudentExams = () => {
   useEffect(() => {
     const fetchExams = async () => {
       try {
-        const response = await api.get('/api/exams');
-        setExams(response.data.exams || []);
+        const examResponse = await examAPI.getExams();
+        const apiExams = (examResponse.data.exams || examResponse.data || []).map(exam => ({
+          id: exam.id,
+          subject: exam.subject?.name || 'Unknown',
+          type: 'Written Exam',
+          date: exam.date,
+          time: '10:00 AM',
+          room: 'Room 101',
+          duration: '2 hours',
+          syllabus: 'Complete syllabus',
+          status: new Date(exam.date) > new Date() ? 'scheduled' : 'completed',
+          score: exam.results?.[0]?.marks || 0,
+          maxScore: exam.totalMarks || 100,
+          grade: exam.results?.[0]?.grade || 'N/A'
+        }));
+        
+        setExams(apiExams);
       } catch (error) {
         console.error('Failed to fetch exams:', error);
+        setExams([]);
       } finally {
         setLoading(false);
       }
@@ -78,7 +94,9 @@ const StudentExams = () => {
             </TabsList>
 
             <TabsContent value="upcoming" className="space-y-4">
-              {upcomingExams.map((exam) => {
+              {upcomingExams.length === 0 ? (
+                <div className="p-6 text-center text-sm text-muted-foreground">Exams schedule is not available for students via this interface. Please check notifications or contact your teacher for exam details.</div>
+              ) : upcomingExams.map((exam) => {
                 const daysUntil = getDaysUntilExam(exam.date);
                 const isUrgent = daysUntil <= 3;
                 

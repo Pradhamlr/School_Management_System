@@ -28,6 +28,20 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Response interceptor to handle auth errors
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      // Clear auth data on 401
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      window.location.href = '/login/student';
+    }
+    return Promise.reject(error);
+  }
+);
+
 // API functions matching backend routes
 export const studentAPI = {
   getCurrentStudent: () => api.get('/api/students/me'),
@@ -48,6 +62,52 @@ export const notificationAPI = {
 
 export const examAPI = {
   getExams: () => api.get('/api/exams'),
+};
+
+export const authAPI = {
+  login: (credentials: {email: string, password: string}) => api.post('/api/auth/login', credentials),
+};
+
+export const assignmentAPI = {
+  getStudentAssignments: (studentId: number) => api.get(`/api/assignments/student/${studentId}`),
+
+  submitAssignment: (assignmentId: number, studentId: number, remarks?: string) => 
+    api.post('/api/assignments/submissions', { assignmentId, studentId, remarks }),
+
+  submitAssignmentWithFile: (assignmentId: number, studentId: number, file: File, remarks?: string) => {
+    const formData = new FormData();
+    formData.append('assignmentId', assignmentId.toString());
+    formData.append('studentId', studentId.toString());
+    formData.append('file', file);
+    if (remarks) formData.append('remarks', remarks);
+
+    return api.post('/api/assignments/submissions/with-file', formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+  },
+
+  getSubmissions: () => api.get('/api/assignments/submissions'),
+};
+
+
+export const attendanceAPI = {
+  getStudentAttendance: (studentId: number, params?: any) => 
+    api.get(`/api/attendance/students/${studentId}`, { params }),
+  getAttendanceStats: () => api.get('/api/attendance/stats'),
+  getAllStudentsAttendanceToday: () => api.get('/api/attendance/students/today'),
+  getAllTeachersAttendanceToday: () => api.get('/api/attendance/teachers/today'),
+  markStudentAttendance: (payload: any) => api.post('/api/attendance/students', payload),
+};
+
+export const resultAPI = {
+  getStudentResults: (studentId: number) => api.get(`/api/results/student/${studentId}`),
+};
+
+export const classAPI = {
+  getStudentClass: () => api.get('/api/classes/me'),
+  getClasses: () => api.get('/api/classes'),
 };
 
 export default api;

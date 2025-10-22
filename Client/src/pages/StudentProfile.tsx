@@ -30,9 +30,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { studentAPI } from '@/lib/api';
 
 const StudentProfile = () => {
   const [isEditing, setIsEditing] = useState(false);
+  const [student, setStudent] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [profileData, setProfileData] = useState({
     name: "Alex Thompson",
     email: "alex.thompson@school.edu",
@@ -46,6 +49,53 @@ const StudentProfile = () => {
     guardianPhone: "+1 (555) 987-6543",
     bio: "Passionate about mathematics and science. Aspiring to pursue engineering in college."
   });
+
+  useEffect(() => {
+    const fetchStudentProfile = async () => {
+      try {
+        const response = await studentAPI.getCurrentStudent();
+        const studentData = response.data.student;
+        setStudent(studentData);
+        
+        setProfileData({
+          name: studentData.user?.name || 'N/A',
+          email: studentData.user?.email || 'N/A',
+          phone: '+1 (555) 123-4567',
+          address: '123 Main Street, City, State 12345',
+          dateOfBirth: studentData.dob ? new Date(studentData.dob).toISOString().split('T')[0] : '2005-03-15',
+          rollNumber: studentData.rollNumber || 'N/A',
+          class: studentData.class ? `${studentData.class.name} - Section ${studentData.class.section || 'A'}` : 'N/A',
+          admissionDate: studentData.createdAt ? new Date(studentData.createdAt).toISOString().split('T')[0] : '2022-08-15',
+          guardianName: 'John Thompson',
+          guardianPhone: '+1 (555) 987-6543',
+          bio: 'Passionate about mathematics and science. Aspiring to pursue engineering in college.'
+        });
+      } catch (error) {
+        console.error('Failed to fetch student profile:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStudentProfile();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+        <StudentSidebar />
+        <div className="flex-1">
+          <DashboardHeader />
+          <main className="p-6">
+            <div className="animate-pulse space-y-6">
+              <div className="h-8 bg-gray-200 rounded w-1/4"></div>
+              <div className="h-64 bg-gray-200 rounded"></div>
+            </div>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   const academicStats = {
     currentGPA: 3.85,

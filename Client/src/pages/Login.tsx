@@ -53,9 +53,10 @@ const Login = () => {
         });
       }
     } catch (error) {
+      const serverMessage = error?.response?.data?.message || error?.message;
       toast({
-        title: "Error",
-        description: "Something went wrong. Please try again.",
+        title: "Login failed",
+        description: serverMessage || "Something went wrong. Please try again.",
         variant: "destructive",
       });
     } finally {

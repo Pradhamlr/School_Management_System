@@ -81,7 +81,12 @@ const StudentSidebar = () => {
       path: "/student/notifications",
       color: "text-red-600"
     },
-
+    {
+      title: "Attendance",
+      icon: Clock,
+      path: "/student/attendance",
+      color: "text-purple-600"
+    },
     {
       title: "Settings",
       icon: Settings,

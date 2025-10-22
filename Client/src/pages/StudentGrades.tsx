@@ -44,12 +44,45 @@ import {
   Pie,
   Cell
 } from 'recharts';
+import { studentAPI, resultAPI } from '@/lib/api';
 
 const StudentGrades = () => {
   const [selectedSemester, setSelectedSemester] = useState("current");
   const [selectedSubject, setSelectedSubject] = useState("all");
+  const [grades, setGrades] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const currentGrades = [
+  useEffect(() => {
+    const fetchGrades = async () => {
+      try {
+        const studentResponse = await studentAPI.getCurrentStudent();
+        const studentId = studentResponse.data.student.id;
+        
+        const gradesResponse = await resultAPI.getStudentResults(studentId);
+        const apiGrades = (gradesResponse.data.results || []).map(result => ({
+          subject: result.exam?.subject?.name || 'Unknown',
+          teacher: 'Teacher',
+          currentGrade: result.grade || 'N/A',
+          percentage: Math.round((result.marks / result.exam?.totalMarks) * 100) || 0,
+          credits: 4,
+          assignments: [],
+          trend: 'stable',
+          trendValue: 0
+        }));
+        
+        setGrades(apiGrades.length > 0 ? apiGrades : mockGrades);
+      } catch (error) {
+        console.error('Failed to fetch grades:', error);
+        setGrades(mockGrades);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchGrades();
+  }, []);
+
+  const mockGrades = [
     {
       subject: "Mathematics",
       teacher: "Dr. Sarah Johnson",
@@ -212,6 +245,7 @@ const StudentGrades = () => {
     return gradeMap[grade] || 0;
   };
 
+  const currentGrades = grades.length > 0 ? grades : mockGrades;
   const filteredGrades = selectedSubject === "all" 
     ? currentGrades 
     : currentGrades.filter(grade => grade.subject === selectedSubject);

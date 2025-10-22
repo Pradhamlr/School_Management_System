@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/table";
 import StudentFormModal from '@/components/admin/StudentFormModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import api from '@/lib/api';
+import api, { studentAPI } from '@/lib/api';
 
 const StudentManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -49,8 +49,7 @@ const StudentManagement = () => {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const api = await import('@/lib/api').then(m => m.default);
-      const res = await api.get('/api/students');
+      const res = await studentAPI.getAllStudents();
       // backend returns { success: true, students }
       setStudents(res.data.students || []);
     } catch (err: any) {
@@ -99,8 +98,7 @@ const StudentManagement = () => {
   const confirmDeleteStudent = async () => {
     if (!deletingStudentId) return;
     try {
-      const api = await import('@/lib/api').then(m => m.default);
-      await api.delete(`/api/students/${deletingStudentId}`);
+      await studentAPI.deleteStudent(deletingStudentId);
       toast({ title: 'Deleted', description: 'Student deleted successfully' });
       fetchStudents();
     } catch (err: any) {

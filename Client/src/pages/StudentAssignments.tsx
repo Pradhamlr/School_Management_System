@@ -42,6 +42,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { studentAPI } from '@/lib/api';
+import AssignmentSubmit from '@/components/AssignmentSubmit';
 
 const StudentAssignments = () => {
   const [assignments, setAssignments] = useState([]);
@@ -57,7 +58,7 @@ const StudentAssignments = () => {
         // First get current student data
         const studentResponse = await studentAPI.getCurrentStudent();
         const studentId = studentResponse.data.student.id;
-        
+
         // Then get assignments for this student
         const assignmentsResponse = await studentAPI.getStudentAssignments(studentId);
         const apiAssignments = (assignmentsResponse.data.data || []).map(assignment => ({
@@ -81,6 +82,7 @@ const StudentAssignments = () => {
         setAssignments(apiAssignments);
       } catch (error) {
         console.error('Failed to fetch assignments:', error);
+        // If student profile is missing (404), show an actionable message in UI
         setAssignments([]);
       } finally {
         setLoading(false);
@@ -178,15 +180,42 @@ const StudentAssignments = () => {
               <h1 className="text-3xl font-bold text-gray-900">My Assignments</h1>
               <p className="text-gray-600 mt-1">Track and manage your academic assignments</p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-3 items-center">
               <Button variant="outline" className="gap-2">
                 <Download className="w-4 h-4" />
                 Export
               </Button>
-              <Button className="gap-2 bg-gradient-to-r from-blue-600 to-blue-700">
-                <Plus className="w-4 h-4" />
-                Submit Assignment
-              </Button>
+              <AssignmentSubmit assignments={assignments} onSubmitted={async () => {
+                // refresh assignments list after submission
+                try {
+                  setLoading(true);
+                  const studentResponse = await studentAPI.getCurrentStudent();
+                  const studentId = studentResponse.data.student.id;
+                  const assignmentsResponse = await studentAPI.getStudentAssignments(studentId);
+                  const apiAssignments = (assignmentsResponse.data.data || []).map(assignment => ({
+                    id: assignment.id,
+                    title: assignment.title,
+                    subject: assignment.teacherClassSubject?.subject?.name || 'Unknown',
+                    teacher: assignment.teacherClassSubject?.teacher?.user?.name || 'Unknown',
+                    dueDate: assignment.dueDate,
+                    assignedDate: assignment.createdAt,
+                    status: assignment.submissions?.length > 0 ? 'submitted' : 'pending',
+                    priority: 'medium',
+                    progress: assignment.submissions?.length > 0 ? 100 : 0,
+                    maxScore: 100,
+                    description: assignment.description || 'No description available',
+                    attachments: [],
+                    submissionType: 'file',
+                    estimatedTime: '2 hours',
+                    score: assignment.submissions?.[0]?.grade || null
+                  }));
+                  setAssignments(apiAssignments);
+                } catch (error) {
+                  console.error('Failed to refresh assignments after submit', error);
+                } finally {
+                  setLoading(false);
+                }
+              }} />
             </div>
           </div>
 

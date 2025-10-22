@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
-import api from '@/lib/api';
+import api, { studentAPI } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 type Props = {
@@ -46,9 +46,9 @@ export default function StudentFormModal({ initial, open, onOpenChange, onSaved 
       };
 
       if (initial && initial.id) {
-        await api.patch(`/api/students/${initial.id}`, payload);
+        await studentAPI.updateStudent(initial.id, payload);
       } else {
-        await api.post('/api/students', payload);
+        await studentAPI.createStudent(payload);
       }
 
       toast({ title: 'Saved', description: 'Student saved successfully' });
