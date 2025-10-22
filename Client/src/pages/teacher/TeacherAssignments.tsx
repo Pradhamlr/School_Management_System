@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   FileText, 
   Plus, 
@@ -12,7 +12,9 @@ import {
   Eye,
   Edit,
   Trash2,
-  Download
+  Download,
+  Loader2,
+  GraduationCap
 } from "lucide-react";
 import { TeacherSidebar } from "@/components/TeacherSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -22,67 +24,157 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
+import { useToast } from "@/components/ui/use-toast";
+import { CreateAssignmentModal } from "@/components/CreateAssignmentModal";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import api from '@/lib/api';
 
 const TeacherAssignments = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [assignments, setAssignments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({ total: 0, submissions: 0, graded: 0, active: 0 });
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [viewData, setViewData] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [gradeData, setGradeData] = useState([]);
+  const [showGradeModal, setShowGradeModal] = useState(false);
+  const [editData, setEditData] = useState(null);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
+  const [editDescription, setEditDescription] = useState("");
+  const [editDueDate, setEditDueDate] = useState("");
+  const { toast } = useToast();
 
-  const assignments = [
-    {
-      id: 1,
-      title: "Quadratic Equations Practice",
-      subject: "Mathematics",
-      class: "10-A",
-      dueDate: "2024-01-15",
-      createdDate: "2024-01-08",
-      totalStudents: 25,
-      submitted: 18,
-      graded: 12,
-      status: "active",
-      priority: "medium"
-    },
-    {
-      id: 2,
-      title: "Newton's Laws Lab Report",
-      subject: "Physics",
-      class: "11-B",
-      dueDate: "2024-01-20",
-      createdDate: "2024-01-10",
-      totalStudents: 20,
-      submitted: 8,
-      graded: 0,
-      status: "active",
-      priority: "high"
-    },
-    {
-      id: 3,
-      title: "Chemical Bonding Essay",
-      subject: "Chemistry",
-      class: "12-A",
-      dueDate: "2024-01-12",
-      createdDate: "2024-01-05",
-      totalStudents: 28,
-      submitted: 28,
-      graded: 25,
-      status: "completed",
-      priority: "low"
-    },
-    {
-      id: 4,
-      title: "Algebra Word Problems",
-      subject: "Mathematics",
-      class: "9-C",
-      dueDate: "2024-01-18",
-      createdDate: "2024-01-11",
-      totalStudents: 22,
-      submitted: 5,
-      graded: 0,
-      status: "active",
-      priority: "medium"
+  const handleView = async (assignmentId: number) => {
+    try {
+      const response = await api.get(`/api/assignments/${assignmentId}`);
+      setViewData(response.data.data);
+      setShowViewModal(true);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to fetch assignment details", variant: "destructive" });
     }
-  ];
+  };
 
-  const filteredAssignments = assignments.filter(assignment => 
+  const handleEdit = async (assignmentId: number) => {
+    try {
+      const response = await api.get(`/api/assignments/${assignmentId}`);
+      const assignment = response.data.data;
+      setEditData(assignment);
+      setEditTitle(assignment.title);
+      setEditDescription(assignment.description || "");
+      setEditDueDate(new Date(assignment.dueDate).toISOString().slice(0, 16));
+      setShowEditModal(true);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to fetch assignment details", variant: "destructive" });
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    try {
+      await api.put(`/api/assignments/${editData.id}`, {
+        title: editTitle,
+        description: editDescription,
+        dueDate: editDueDate
+      });
+      toast({ title: "Success", description: "Assignment updated successfully" });
+      setShowEditModal(false);
+      fetchAssignments();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to update assignment", variant: "destructive" });
+    }
+  };
+
+  const handleExport = async (assignmentId: number) => {
+    try {
+      const response = await api.get(`/api/assignments/${assignmentId}/stats`);
+      const stats = response.data.data;
+      const csvContent = `Assignment,Class,Total Students,Submitted,Graded,Submission Rate,Grading Rate\n${stats.assignmentTitle},${stats.class}-${stats.section},${stats.totalStudents},${stats.submitted},${stats.graded},${stats.submissionRate}%,${stats.gradingRate}%`;
+      const blob = new Blob([csvContent], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${stats.assignmentTitle}_stats.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to export assignment", variant: "destructive" });
+    }
+  };
+
+  const handleDelete = async (assignmentId: number) => {
+    try {
+      await api.delete(`/api/assignments/${assignmentId}`);
+      toast({ title: "Success", description: "Assignment deleted successfully" });
+      fetchAssignments();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete assignment", variant: "destructive" });
+    }
+  };
+
+  const handleGrade = async (assignmentId: number) => {
+    try {
+      const response = await api.get('/api/assignments/submissions', {
+        params: { assignmentId }
+      });
+      setGradeData(response.data.data);
+      setShowGradeModal(true);
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to fetch submissions", variant: "destructive" });
+    }
+  };
+
+  useEffect(() => {
+    fetchAssignments();
+  }, []);
+
+  const fetchAssignments = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/api/assignments');
+      const assignmentsData = response.data.data || [];
+      setAssignments(assignmentsData);
+      
+      const totalSubmissions = assignmentsData.reduce((sum, assignment) => 
+        sum + (assignment.submissions?.length || 0), 0);
+      const totalGraded = assignmentsData.reduce((sum, assignment) => 
+        sum + (assignment.submissions?.filter(s => s.status === 'GRADED').length || 0), 0);
+      const activeCount = assignmentsData.filter(a => 
+        new Date(a.dueDate) > new Date()).length;
+      
+      setStats({ total: assignmentsData.length, submissions: totalSubmissions, graded: totalGraded, active: activeCount });
+    } catch (error) {
+      console.error('Error fetching assignments:', error);
+      toast({ title: "Error", description: "Failed to fetch assignments", variant: "destructive" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+
+  const processedAssignments = assignments.map(assignment => {
+    const totalStudents = assignment.teacherClassSubject?.class?.students?.length || 0;
+    const submitted = assignment.submissions?.length || 0;
+    const graded = assignment.submissions?.filter(s => s.status === 'GRADED').length || 0;
+    const isOverdue = new Date(assignment.dueDate) < new Date();
+    const isCompleted = submitted === totalStudents && graded === submitted;
+    
+    return {
+      ...assignment,
+      totalStudents,
+      submitted,
+      graded,
+      status: isOverdue ? 'overdue' : isCompleted ? 'completed' : 'active',
+      subject: assignment.teacherClassSubject?.subject?.name || 'Unknown',
+      class: `${assignment.teacherClassSubject?.class?.name || 'Unknown'}-${assignment.teacherClassSubject?.class?.section || ''}`,
+      priority: isOverdue ? 'high' : submitted < totalStudents * 0.5 ? 'medium' : 'low'
+    };
+  });
+
+  const filteredAssignments = processedAssignments.filter(assignment => 
     assignment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     assignment.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
     assignment.class.toLowerCase().includes(searchTerm.toLowerCase())
@@ -120,7 +212,10 @@ const TeacherAssignments = () => {
               <h1 className="text-3xl font-bold text-foreground">Assignments</h1>
               <p className="text-muted-foreground mt-1">Create and manage assignments for your classes</p>
             </div>
-            <Button className="bg-green-600 hover:bg-green-700">
+            <Button 
+              className="bg-green-600 hover:bg-green-700"
+              onClick={() => setShowCreateModal(true)}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Create Assignment
             </Button>
@@ -152,7 +247,7 @@ const TeacherAssignments = () => {
                     <FileText className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{assignments.length}</p>
+                    <p className="text-2xl font-bold">{loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.total}</p>
                     <p className="text-sm text-muted-foreground">Total Assignments</p>
                   </div>
                 </div>
@@ -166,7 +261,7 @@ const TeacherAssignments = () => {
                     <CheckCircle className="w-5 h-5 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">59</p>
+                    <p className="text-2xl font-bold">{loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.submissions}</p>
                     <p className="text-sm text-muted-foreground">Submissions</p>
                   </div>
                 </div>
@@ -180,7 +275,7 @@ const TeacherAssignments = () => {
                     <Eye className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">37</p>
+                    <p className="text-2xl font-bold">{loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.graded}</p>
                     <p className="text-sm text-muted-foreground">Graded</p>
                   </div>
                 </div>
@@ -194,7 +289,7 @@ const TeacherAssignments = () => {
                     <Clock className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">3</p>
+                    <p className="text-2xl font-bold">{loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.active}</p>
                     <p className="text-sm text-muted-foreground">Active</p>
                   </div>
                 </div>
@@ -212,7 +307,18 @@ const TeacherAssignments = () => {
             </TabsList>
 
             <TabsContent value="all" className="space-y-6">
-              {/* Assignments List */}
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                  <span className="ml-2">Loading assignments...</span>
+                </div>
+              ) : filteredAssignments.length === 0 ? (
+                <div className="text-center py-12">
+                  <FileText className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold mb-2">No Assignments Found</h3>
+                  <p className="text-muted-foreground">Create your first assignment to get started</p>
+                </div>
+              ) : (
               <div className="space-y-4">
                 {filteredAssignments.map((assignment) => (
                   <Card key={assignment.id} className="shadow-lg border-0 bg-white/80 backdrop-blur hover:shadow-xl transition-all duration-200">
@@ -271,30 +377,58 @@ const TeacherAssignments = () => {
                         </div>
 
                         <div className="flex items-center gap-2 ml-4">
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => handleView(assignment.id)}>
                             <Eye className="w-4 h-4 mr-2" />
                             View
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => handleEdit(assignment.id)}>
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
                           </Button>
-                          <Button variant="outline" size="sm">
+                          <Button variant="outline" size="sm" onClick={() => handleGrade(assignment.id)}>
+                            <GraduationCap className="w-4 h-4 mr-2" />
+                            Grade
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={() => handleExport(assignment.id)}>
                             <Download className="w-4 h-4 mr-2" />
                             Export
                           </Button>
-                          <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Assignment</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Are you sure you want to delete "{assignment.title}"? This action cannot be undone and will also delete all submissions.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={() => handleDelete(assignment.id)} className="bg-red-600 hover:bg-red-700">
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       </div>
                     </CardContent>
                   </Card>
                 ))}
               </div>
+              )}
             </TabsContent>
 
             <TabsContent value="active">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                </div>
+              ) : (
               <div className="space-y-4">
                 {filteredAssignments.filter(a => a.status === 'active').map((assignment) => (
                   <Card key={assignment.id} className="shadow-lg border-0 bg-white/80 backdrop-blur">
@@ -305,9 +439,15 @@ const TeacherAssignments = () => {
                   </Card>
                 ))}
               </div>
+              )}
             </TabsContent>
 
             <TabsContent value="completed">
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin" />
+                </div>
+              ) : (
               <div className="space-y-4">
                 {filteredAssignments.filter(a => a.status === 'completed').map((assignment) => (
                   <Card key={assignment.id} className="shadow-lg border-0 bg-white/80 backdrop-blur">
@@ -318,6 +458,7 @@ const TeacherAssignments = () => {
                   </Card>
                 ))}
               </div>
+              )}
             </TabsContent>
 
             <TabsContent value="overdue">
@@ -330,6 +471,125 @@ const TeacherAssignments = () => {
           </Tabs>
         </main>
       </div>
+      
+      <CreateAssignmentModal
+        open={showCreateModal}
+        onOpenChange={setShowCreateModal}
+        onSuccess={fetchAssignments}
+      />
+      
+      {/* View Assignment Modal */}
+      <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Assignment Details</DialogTitle>
+            <DialogDescription>View assignment information</DialogDescription>
+          </DialogHeader>
+          {viewData && (
+            <div className="space-y-4">
+              <div><strong>Title:</strong> {viewData.title}</div>
+              <div><strong>Description:</strong> {viewData.description || 'No description'}</div>
+              <div><strong>Due Date:</strong> {new Date(viewData.dueDate).toLocaleDateString()}</div>
+              <div><strong>Subject:</strong> {viewData.teacherClassSubject?.subject?.name}</div>
+              <div><strong>Class:</strong> {viewData.teacherClassSubject?.class?.name}-{viewData.teacherClassSubject?.class?.section}</div>
+              <div><strong>Submissions:</strong> {viewData.submissions?.length || 0}</div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+      
+      {/* Grade Submissions Modal */}
+      <Dialog open={showGradeModal} onOpenChange={setShowGradeModal}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>Grade Submissions</DialogTitle>
+            <DialogDescription>Review and grade student submissions</DialogDescription>
+          </DialogHeader>
+          <div className="max-h-96 overflow-y-auto">
+            {gradeData.length === 0 ? (
+              <p>No submissions found for this assignment.</p>
+            ) : (
+              <div className="space-y-4">
+                {gradeData.map((submission) => (
+                  <div key={submission.id} className="border p-4 rounded">
+                    <div><strong>Student:</strong> {submission.student?.user?.name}</div>
+                    <div><strong>Status:</strong> {submission.status}</div>
+                    <div><strong>Submitted:</strong> {new Date(submission.submittedAt).toLocaleDateString()}</div>
+                    {submission.fileUrl && <div><strong>File:</strong> <a href={submission.fileUrl} target="_blank" className="text-blue-600">View File</a></div>}
+                    {submission.remarks && <div><strong>Remarks:</strong> {submission.remarks}</div>}
+                    {submission.grade && <div><strong>Grade:</strong> {submission.grade}</div>}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Edit Assignment Modal */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+              ✨ Edit Assignment
+            </DialogTitle>
+            <DialogDescription className="text-lg">
+              Update your assignment details with style!
+            </DialogDescription>
+          </DialogHeader>
+          {editData && (
+            <div className="space-y-6 p-4">
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-green-700">📝 Title</label>
+                <input
+                  type="text"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  className="w-full p-3 border-2 border-green-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                  placeholder="Enter assignment title..."
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-green-700">📄 Description</label>
+                <textarea
+                  value={editDescription}
+                  onChange={(e) => setEditDescription(e.target.value)}
+                  rows={4}
+                  className="w-full p-3 border-2 border-green-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200 resize-none"
+                  placeholder="Describe your assignment..."
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <label className="text-sm font-semibold text-green-700">📅 Due Date</label>
+                <input
+                  type="datetime-local"
+                  value={editDueDate}
+                  onChange={(e) => setEditDueDate(e.target.value)}
+                  className="w-full p-3 border-2 border-green-200 rounded-lg focus:border-green-500 focus:ring-2 focus:ring-green-200 transition-all duration-200"
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-4">
+                <Button 
+                  onClick={handleEditSubmit}
+                  className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 rounded-lg shadow-lg hover:shadow-xl transition-all duration-200 transform hover:scale-105"
+                >
+                  ✅ Update Assignment
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setShowEditModal(false)}
+                  className="flex-1 border-2 border-gray-300 hover:border-gray-400 py-3 rounded-lg transition-all duration-200"
+                >
+                  ❌ Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

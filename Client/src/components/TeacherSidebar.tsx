@@ -19,8 +19,6 @@ const teacherNavigationItems = [
   { name: "Attendance", icon: CheckSquare, href: "/teacher/attendance" },
   { name: "Timetable", icon: Clock, href: "/teacher/timetable" },
   { name: "Grades", icon: BarChart3, href: "/teacher/grades" },
-  { name: "Events", icon: Calendar, href: "/teacher/events" },
-  { name: "Resources", icon: BookOpen, href: "/teacher/resources" },
 ];
 
 export function TeacherSidebar() {

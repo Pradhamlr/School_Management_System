@@ -59,16 +59,30 @@ const getTeacherById = async (req, res) => {
 const getCurrentTeacher = async (req, res) => {
     const teacher = await prisma.teacher.findUnique({
         where: { userId: req.user.id },
-        include: { user: { select: { id: true, name: true, email: true, role: true } } }
+        include: { 
+            user: { select: { id: true, name: true, email: true, role: true } }
+        }
     });
 
     if (!teacher) {
         throw new NotFoundError('Teacher not found');
     }
 
+    // Get teacher class subjects separately
+    const teacherClassSubjects = await prisma.teacherClassSubject.findMany({
+        where: { teacherId: teacher.id },
+        include: {
+            class: true,
+            subject: true
+        }
+    });
+
     res.status(StatusCodes.OK).json({
         success: true,
-        teacher
+        data: {
+            ...teacher,
+            teacherClassSubjects
+        }
     });
 }
 
