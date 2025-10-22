@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { emailRegex } from '@/lib/validation';
 
 type Props = {
   initial?: any;
@@ -17,7 +18,7 @@ type Props = {
 export default function StudentFormModal({ initial, open, onOpenChange, onSaved }: Props) {
   const { toast } = useToast();
   const form = useForm({ defaultValues: {
-    userId: initial?.userId || '',
+    userId: initial?.userId ? String(initial.userId) : '',
     // user create fields
     name: '',
     email: '',
@@ -27,19 +28,24 @@ export default function StudentFormModal({ initial, open, onOpenChange, onSaved 
     dob: initial?.dob ? new Date(initial.dob).toISOString().slice(0,10) : ''
   }});
 
+  const userIdValue = form.watch('userId');
+
   const onSubmit = async (values: any) => {
     try {
       let userId = values.userId;
 
       // If no userId provided but name/email/password present, create user first
-      if (!userId && values.email && values.password && values.name) {
+      if (!userId) {
+        if (!(values.email && values.password && values.name)) {
+          throw new Error('Provide existing userId or name/email/password to create user');
+        }
         const res = await api.post('/api/auth/signup', { name: values.name, email: values.email, password: values.password, role: 'STUDENT' });
         userId = res.data.user.id;
         toast({ title: 'User created', description: `Created user ${values.email}` });
       }
 
       const payload: any = {
-        userId: Number(userId),
+        userId: userId ? Number(userId) : undefined,
         rollNumber: values.rollNumber || undefined,
         classId: values.classId ? Number(values.classId) : undefined,
         dob: values.dob || undefined
@@ -77,30 +83,47 @@ export default function StudentFormModal({ initial, open, onOpenChange, onSaved 
               <FormMessage />
             </FormItem>
 
-            <div className="p-2 border rounded bg-gray-50">
-              <p className="text-sm font-medium mb-2">If the student does not have a user account yet, create one here</p>
-              <FormItem>
-                <FormLabel>Name</FormLabel>
-                <FormControl>
-                  <Input {...form.register('name')} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-              <FormItem>
-                <FormLabel>Email</FormLabel>
-                <FormControl>
-                  <Input {...form.register('email')} type="email" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-              <FormItem>
-                <FormLabel>Password</FormLabel>
-                <FormControl>
-                  <Input {...form.register('password')} type="password" />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            </div>
+            {/* Only show create-user block when adding a new student (no initial) */}
+            {!initial && (
+              <div className="p-2 border rounded bg-gray-50">
+                <p className="text-sm font-medium mb-2">If the student does not have a user account yet, create one here</p>
+                <FormItem>
+                  <FormLabel>Name</FormLabel>
+                  <FormControl>
+                    <Input {...form.register('name', { validate: (v) => { return form.getValues('userId') || v ? true : 'Name is required when creating user' } })} />
+                  </FormControl>
+                  <FormMessage>{form.formState.errors.name?.message as string}</FormMessage>
+                </FormItem>
+
+                <FormItem>
+                  <FormLabel>Email</FormLabel>
+                  <FormControl>
+                    <Input {...form.register('email', {
+                      validate: (v) => {
+                        if (form.getValues('userId')) return true;
+                        if (!v) return 'Email is required when creating user';
+                        return emailRegex.test(v) || 'Invalid email format';
+                      }
+                    })} type="email" />
+                  </FormControl>
+                  <FormMessage>{form.formState.errors.email?.message as string}</FormMessage>
+                </FormItem>
+
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <Input {...form.register('password', {
+                      validate: (v) => {
+                        if (form.getValues('userId')) return true;
+                        if (!v) return 'Password is required when creating user';
+                        return v.length >= 6 || 'Password must be at least 6 characters';
+                      }
+                    })} type="password" />
+                  </FormControl>
+                  <FormMessage>{form.formState.errors.password?.message as string}</FormMessage>
+                </FormItem>
+              </div>
+            )}
 
             <FormItem>
               <FormLabel>Roll Number</FormLabel>

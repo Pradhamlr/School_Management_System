@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import api from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
+import { emailRegex } from '@/lib/validation';
 
 type Props = {
   initial?: any;
@@ -17,7 +18,7 @@ type Props = {
 export default function TeacherFormModal({ initial, open, onOpenChange, onSaved }: Props) {
   const { toast } = useToast();
   const form = useForm({ defaultValues: {
-    userId: initial?.userId || '',
+    userId: initial?.userId ? String(initial.userId) : '',
     name: '',
     email: '',
     password: '',
@@ -25,17 +26,23 @@ export default function TeacherFormModal({ initial, open, onOpenChange, onSaved 
     hireDate: initial?.hireDate ? new Date(initial.hireDate).toISOString().slice(0,10) : ''
   }});
 
+  const userIdValue = form.watch('userId');
+
   const onSubmit = async (values: any) => {
     try {
       let userId = values.userId;
-      if (!userId && values.email && values.password && values.name) {
+      // If no userId provided, require name/email/password and create user
+      if (!userId) {
+        if (!(values.email && values.password && values.name)) {
+          throw new Error('Provide existing userId or name/email/password to create user');
+        }
         const res = await api.post('/api/auth/signup', { name: values.name, email: values.email, password: values.password, role: 'TEACHER' });
         userId = res.data.user.id;
         toast({ title: 'User created', description: `Created user ${values.email}` });
       }
 
       const payload: any = {
-        userId: Number(userId),
+        userId: userId ? Number(userId) : undefined,
         department: values.department || undefined,
         hireDate: values.hireDate || undefined
       };
@@ -79,21 +86,33 @@ export default function TeacherFormModal({ initial, open, onOpenChange, onSaved 
                   <FormItem>
                     <FormLabel>Name</FormLabel>
                     <FormControl>
-                      <Input {...form.register('name', { required: 'Name is required when creating user' })} />
+                      <Input {...form.register('name', { validate: (v) => { return form.getValues('userId') || v ? true : 'Name is required when creating user' } })} />
                     </FormControl>
                     <FormMessage>{form.formState.errors.name?.message as string}</FormMessage>
                   </FormItem>
                   <FormItem>
                     <FormLabel>Email</FormLabel>
                     <FormControl>
-                      <Input {...form.register('email', { required: 'Email is required when creating user' })} type="email" />
+                      <Input {...form.register('email', {
+                        validate: (v) => {
+                          if (form.getValues('userId')) return true;
+                          if (!v) return 'Email is required when creating user';
+                            return emailRegex.test(v) || 'Invalid email format';
+                        }
+                      })} type="email" />
                     </FormControl>
                     <FormMessage>{form.formState.errors.email?.message as string}</FormMessage>
                   </FormItem>
                   <FormItem>
                     <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input {...form.register('password', { required: 'Password required when creating user' })} type="password" />
+                      <Input {...form.register('password', {
+                        validate: (v) => {
+                          if (form.getValues('userId')) return true;
+                          if (!v) return 'Password required when creating user';
+                          return v.length >= 6 || 'Password must be at least 6 characters';
+                        }
+                      })} type="password" />
                     </FormControl>
                     <FormMessage>{form.formState.errors.password?.message as string}</FormMessage>
                   </FormItem>

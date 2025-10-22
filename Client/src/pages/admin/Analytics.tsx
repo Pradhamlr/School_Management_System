@@ -158,7 +158,7 @@ const Analytics = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100">Monthly Revenue</p>
-                    <p className="text-3xl font-bold">$140K</p>
+                    <p className="text-3xl font-bold">{loading ? '…' : `$${(analytics?.meta?.monthlyRevenue ?? 0).toLocaleString()}`}</p>
                     <p className="text-orange-200 text-sm flex items-center gap-1 mt-1">
                       <TrendingUp className="w-3 h-3" />
                       +8.7% from last month

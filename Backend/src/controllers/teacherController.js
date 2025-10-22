@@ -8,8 +8,13 @@ const createTeacher = async (req, res) => {
     const { userId, department, hireDate } = req.body;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.role !== 'TEACHER') {
-        throw new BadRequestError('Invalid user ID or user is not a teacher');
+    if (!user) {
+        throw new BadRequestError('Invalid user ID');
+    }
+
+    // If the user exists but role is not TEACHER, promote them to TEACHER
+    if (user.role !== 'TEACHER') {
+        await prisma.user.update({ where: { id: userId }, data: { role: 'TEACHER' } });
     }
 
     const existingTeacher = await prisma.teacher.findUnique({ where: { userId } });
@@ -31,44 +36,103 @@ const createTeacher = async (req, res) => {
 
 const getAllTeachers = async (req, res) => {
     const teachers = await prisma.teacher.findMany({
-        include: { user: { select: { id: true, name: true, email: true, role: true } } }
+        include: {
+            user: { select: { id: true, name: true, email: true, role: true } },
+            teachingAssignments: { include: { subject: true, class: true } },
+            advisedClasses: true,
+        }
+    });
+
+    // Shape response to include convenient fields expected by frontend
+    const shaped = teachers.map((t) => {
+        const subjects = (t.teachingAssignments || []).map((ta) => ta.subject).filter(Boolean);
+        // collect unique classes from advisedClasses and teachingAssignments
+        const classIds = new Set();
+        (t.advisedClasses || []).forEach((c) => classIds.add(c.id));
+        (t.teachingAssignments || []).forEach((ta) => { if (ta.class) classIds.add(ta.class.id); });
+
+        return {
+            id: t.id,
+            department: t.department,
+            hireDate: t.hireDate,
+            user: t.user,
+            subjects,
+            classes: classIds.size,
+            // preserve optional fields if present
+            status: t.status || 'Active',
+            experience: t.experience || null,
+            teachingAssignments: t.teachingAssignments,
+            advisedClasses: t.advisedClasses,
+        };
     });
 
     res.status(StatusCodes.OK).json({
         success: true,
-        teachers
+        teachers: shaped
     });
-}
+};
 
 const getTeacherById = async (req, res) => {
     const teacher = await prisma.teacher.findUnique({
         where: { id: Number(req.params.id) },
-        include: { user: { select: { id: true, name: true, email: true, role: true } } }
+        include: { user: { select: { id: true, name: true, email: true, role: true } }, teachingAssignments: { include: { subject: true, class: true } }, advisedClasses: true }
     });
 
     if (!teacher) {
         throw new NotFoundError('Teacher not found');
     }
 
+    const subjects = (teacher.teachingAssignments || []).map(ta => ta.subject).filter(Boolean);
+    const classIds = new Set();
+    (teacher.advisedClasses || []).forEach(c => classIds.add(c.id));
+    (teacher.teachingAssignments || []).forEach(ta => { if (ta.class) classIds.add(ta.class.id); });
+
+    const shaped = {
+        id: teacher.id,
+        user: teacher.user,
+        department: teacher.department,
+        hireDate: teacher.hireDate,
+        subjects,
+        classes: classIds.size,
+        teachingAssignments: teacher.teachingAssignments,
+        advisedClasses: teacher.advisedClasses,
+    };
+
     res.status(StatusCodes.OK).json({
         success: true,
-        teacher
+        teacher: shaped
     });
 }
 
 const getCurrentTeacher = async (req, res) => {
     const teacher = await prisma.teacher.findUnique({
         where: { userId: req.user.id },
-        include: { user: { select: { id: true, name: true, email: true, role: true } } }
+        include: { user: { select: { id: true, name: true, email: true, role: true } }, teachingAssignments: { include: { subject: true, class: true } }, advisedClasses: true }
     });
 
     if (!teacher) {
         throw new NotFoundError('Teacher not found');
     }
 
+    const subjects = (teacher.teachingAssignments || []).map(ta => ta.subject).filter(Boolean);
+    const classIds = new Set();
+    (teacher.advisedClasses || []).forEach(c => classIds.add(c.id));
+    (teacher.teachingAssignments || []).forEach(ta => { if (ta.class) classIds.add(ta.class.id); });
+
+    const shaped = {
+        id: teacher.id,
+        user: teacher.user,
+        department: teacher.department,
+        hireDate: teacher.hireDate,
+        subjects,
+        classes: classIds.size,
+        teachingAssignments: teacher.teachingAssignments,
+        advisedClasses: teacher.advisedClasses,
+    };
+
     res.status(StatusCodes.OK).json({
         success: true,
-        teacher
+        teacher: shaped
     });
 }
 

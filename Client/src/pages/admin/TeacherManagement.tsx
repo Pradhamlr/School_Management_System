@@ -54,6 +54,8 @@ const TeacherManagement = () => {
       const api = await import('@/lib/api').then(m => m.default);
       const res = await api.get('/api/teachers');
       setTeachers(res.data.teachers || []);
+      // also refresh analytics after fetching teachers to keep totals in sync
+      try { const a = await api.get('/api/analytics'); setAnalytics(a.data.data); } catch(e){}
     } catch (err: any) {
       toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load teachers', variant: 'destructive' });
     } finally {
@@ -63,6 +65,12 @@ const TeacherManagement = () => {
 
   useEffect(() => {
     fetchTeachers();
+  }, []);
+
+  useEffect(() => {
+    const handler = () => fetchTeachers();
+    window.addEventListener('subject-assigned', handler as EventListener);
+    return () => { window.removeEventListener('subject-assigned', handler as EventListener); };
   }, []);
 
   const [analytics, setAnalytics] = React.useState<any | null>(null);
@@ -162,7 +170,7 @@ const TeacherManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100">Departments</p>
-                    <p className="text-3xl font-bold">{analytics ? analytics.departmentCount ?? '—' : '…'}</p>
+                    <p className="text-3xl font-bold">{analytics ? analytics.meta?.departmentCount ?? '—' : '…'}</p>
                   </div>
                   <GraduationCap className="w-8 h-8 text-purple-200" />
                 </div>
@@ -173,7 +181,7 @@ const TeacherManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100">Avg. Experience</p>
-                    <p className="text-3xl font-bold">{analytics ? (analytics.avgTeacherExperience ? `${analytics.avgTeacherExperience}y` : '—') : '…'}</p>
+                    <p className="text-3xl font-bold">{analytics ? (analytics.meta?.avgTeacherExperience ? `${analytics.meta.avgTeacherExperience}y` : '—') : '…'}</p>
                   </div>
                   <GraduationCap className="w-8 h-8 text-orange-200" />
                 </div>
@@ -249,7 +257,7 @@ const TeacherManagement = () => {
                         <div className="flex flex-wrap gap-1">
                           {(teacher.subjects || []).map((subject: any, index: number) => (
                             <Badge key={index} variant="secondary" className="text-xs">
-                              {subject.name || subject}
+                              {typeof subject === 'string' ? subject : (subject?.name || subject?.code || 'Subject')}
                             </Badge>
                           ))}
                         </div>
@@ -268,7 +276,7 @@ const TeacherManagement = () => {
                       </TableCell>
                       <TableCell className="font-medium">{teacher.experience}</TableCell>
                       <TableCell>
-                        <span className="font-medium">{teacher.classes || 0}</span>
+                        <span className="font-medium">{typeof teacher.classes === 'number' ? teacher.classes : (teacher.classes || 0)}</span>
                         <span className="text-muted-foreground text-sm ml-1">classes</span>
                       </TableCell>
                       <TableCell>

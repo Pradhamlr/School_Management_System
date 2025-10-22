@@ -8,6 +8,7 @@ interface ProtectedRouteProps {
 
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated, user } = useAuth();
+  const { initialized } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -30,6 +31,11 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
       }
     }
   }, [isAuthenticated, user, location, navigate]);
+
+  // Don't redirect during initial auth bootstrap (prevents flash redirect on reload)
+  if (!initialized) {
+    return null;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;

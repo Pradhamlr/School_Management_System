@@ -66,12 +66,12 @@ const StudentManagement = () => {
 
   // fetch analytics totals for cards
   useEffect(() => {
+    // fetch analytics and set state; expose function to allow manual refresh after CRUD
     let mounted = true;
     const fetchAnalytics = async () => {
       try {
         const res = await api.get('/api/analytics');
         if (!mounted) return;
-        // we don't store globally; just set values into DOM state below if needed
         setAnalytics(res.data.data);
       } catch (e) {
         console.error('Failed to fetch analytics', e);
@@ -103,6 +103,8 @@ const StudentManagement = () => {
       await api.delete(`/api/students/${deletingStudentId}`);
       toast({ title: 'Deleted', description: 'Student deleted successfully' });
       fetchStudents();
+      // refresh analytics when list changes
+      try { await api.get('/api/analytics').then(r => setAnalytics(r.data.data)); } catch(e){}
     } catch (err: any) {
       toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to delete student', variant: 'destructive' });
     } finally {
@@ -167,7 +169,7 @@ const StudentManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100">New This Month</p>
-                    <p className="text-3xl font-bold">{analytics ? (analytics.monthlyNewStudents ?? '—') : '…'}</p>
+                    <p className="text-3xl font-bold">{analytics ? (analytics.academics?.monthlyNewStudents ?? '—') : '…'}</p>
                   </div>
                   <Plus className="w-8 h-8 text-orange-200" />
                 </div>
