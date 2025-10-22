@@ -1,4 +1,4 @@
-import { Navigate, useLocation } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useEffect } from 'react';
 
@@ -9,22 +9,27 @@ interface ProtectedRouteProps {
 const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { isAuthenticated, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
 
   useEffect(() => {
     // Check if user is trying to access wrong dashboard
     if (isAuthenticated && user) {
-      const currentPath = location.pathname;
       const userRole = user.role.toLowerCase();
-      
-      if (currentPath.includes('admin') && userRole !== 'admin') {
-        window.location.href = `/${userRole}-dashboard`;
-      } else if (currentPath.includes('teacher') && userRole !== 'teacher') {
-        window.location.href = `/${userRole}-dashboard`;
-      } else if (currentPath.includes('student') && userRole !== 'student') {
-        window.location.href = `/${userRole}-dashboard`;
+
+      // Use the first path segment (e.g. '/admin/students' -> 'admin') to avoid
+      // substring matches (e.g. 'students' includes 'student').
+      const segments = location.pathname.split('/').filter(Boolean);
+      const firstSegment = segments[0] || '';
+
+      if (firstSegment === 'admin' && userRole !== 'admin') {
+        navigate(`/${userRole}-dashboard`, { replace: true });
+      } else if (firstSegment === 'teacher' && userRole !== 'teacher') {
+        navigate(`/${userRole}-dashboard`, { replace: true });
+      } else if (firstSegment === 'student' && userRole !== 'student') {
+        navigate(`/${userRole}-dashboard`, { replace: true });
       }
     }
-  }, [isAuthenticated, user, location]);
+  }, [isAuthenticated, user, location, navigate]);
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;

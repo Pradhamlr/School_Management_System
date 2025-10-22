@@ -45,8 +45,36 @@ const deleteClass = async (req, res) => {
     if (!classData) {
         throw new NotFoundError('Class not found');
     }
+    // Prevent deletion if there are students assigned to this class
+    const studentCount = await prisma.student.count({ where: { classId } });
+    if (studentCount > 0) {
+        throw new BadRequestError('Cannot delete class with assigned students. Reassign or remove students first.');
+    }
+
     await prisma.class.delete({ where: { id: classId } });
     res.status(StatusCodes.NO_CONTENT).send();
+}
+
+const updateClass = async (req, res) => {
+    const classId = Number(req.params.id);
+    const { name, section } = req.body;
+
+    const classData = await prisma.class.findUnique({ where: { id: classId } });
+    if (!classData) {
+        throw new NotFoundError('Class not found');
+    }
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (section !== undefined) updateData.section = section;
+
+    const updatedClass = await prisma.class.update({
+        where: { id: classId },
+        data: updateData,
+        include: { classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } }
+    });
+
+    res.status(StatusCodes.OK).json({ class: updatedClass });
 }
 
 const assignClassTeacher = async (req, res) => {
@@ -116,5 +144,6 @@ module.exports = {
     deleteClass,
     assignClassTeacher,
     assignStudentToClass,
-    getStudentClass
+    getStudentClass,
+    updateClass
 };

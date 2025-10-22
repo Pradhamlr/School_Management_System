@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { setTokenGetter } from '@/lib/api';
 
 interface User {
   id: number;
@@ -49,6 +50,11 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     localStorage.setItem('token', userToken);
     localStorage.setItem('user', JSON.stringify(userData));
   };
+
+  // update registered getter whenever token state changes
+  useEffect(() => {
+    setTokenGetter(() => token);
+  }, [token]);
 
   const logout = () => {
     setUser(null);
