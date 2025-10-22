@@ -162,7 +162,7 @@ const TeacherManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100">Departments</p>
-                    <p className="text-3xl font-bold">12</p>
+                    <p className="text-3xl font-bold">{analytics ? analytics.departmentCount ?? '—' : '…'}</p>
                   </div>
                   <GraduationCap className="w-8 h-8 text-purple-200" />
                 </div>
@@ -173,7 +173,7 @@ const TeacherManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100">Avg. Experience</p>
-                    <p className="text-3xl font-bold">7.2y</p>
+                    <p className="text-3xl font-bold">{analytics ? (analytics.avgTeacherExperience ? `${analytics.avgTeacherExperience}y` : '—') : '…'}</p>
                   </div>
                   <GraduationCap className="w-8 h-8 text-orange-200" />
                 </div>

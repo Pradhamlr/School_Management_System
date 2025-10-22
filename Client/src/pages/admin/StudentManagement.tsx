@@ -167,7 +167,7 @@ const StudentManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100">New This Month</p>
-                    <p className="text-3xl font-bold">127</p>
+                    <p className="text-3xl font-bold">{analytics ? (analytics.monthlyNewStudents ?? '—') : '…'}</p>
                   </div>
                   <Plus className="w-8 h-8 text-orange-200" />
                 </div>
@@ -178,7 +178,7 @@ const StudentManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100">Avg. Attendance</p>
-                    <p className="text-3xl font-bold">89%</p>
+                    <p className="text-3xl font-bold">{analytics ? `${analytics.attendance.studentAttendanceRate ?? '—'}%` : '…'}</p>
                   </div>
                   <Eye className="w-8 h-8 text-purple-200" />
                 </div>

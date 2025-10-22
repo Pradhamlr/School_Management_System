@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { 
   BarChart3, 
   TrendingUp, 
@@ -18,8 +18,29 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AttendanceChart } from "@/components/AttendanceChart";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+import api from '@/lib/api';
+
 const Analytics = () => {
   const [timeRange, setTimeRange] = useState("month");
+  const [analytics, setAnalytics] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchAnalytics = async () => {
+      try {
+        const res = await api.get('/api/analytics');
+        if (!mounted) return;
+        setAnalytics(res.data.data);
+      } catch (e) {
+        console.error('Failed to fetch analytics', e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchAnalytics();
+    return () => { mounted = false; };
+  }, []);
 
   const attendanceData = [
     { name: "Present", value: 85, color: "#10B981" },
@@ -92,10 +113,10 @@ const Analytics = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-blue-100">Total Enrollment</p>
-                    <p className="text-3xl font-bold">2,847</p>
+                    <p className="text-3xl font-bold">{loading ? '…' : analytics?.attendance?.totalStudents ?? '—'}</p>
                     <p className="text-blue-200 text-sm flex items-center gap-1 mt-1">
                       <TrendingUp className="w-3 h-3" />
-                      +5.2% from last month
+                      {loading ? '' : `Present today: ${analytics?.attendance?.studentsPresentToday ?? '—'}`}
                     </p>
                   </div>
                   <Users className="w-8 h-8 text-blue-200" />
@@ -107,10 +128,10 @@ const Analytics = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-100">Avg. Attendance</p>
-                    <p className="text-3xl font-bold">89.5%</p>
+                    <p className="text-3xl font-bold">{loading ? '…' : `${analytics?.attendance?.studentAttendanceRate ?? '—'}%`}</p>
                     <p className="text-green-200 text-sm flex items-center gap-1 mt-1">
                       <TrendingUp className="w-3 h-3" />
-                      +2.1% from last month
+                      {loading ? '' : `Teachers present: ${analytics?.attendance?.teachersPresentToday ?? '—'}`}
                     </p>
                   </div>
                   <Calendar className="w-8 h-8 text-green-200" />
@@ -122,10 +143,10 @@ const Analytics = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100">Academic Score</p>
-                    <p className="text-3xl font-bold">3.7</p>
+                    <p className="text-3xl font-bold">{loading ? '…' : analytics?.academics?.averageScore ?? '—'}</p>
                     <p className="text-purple-200 text-sm flex items-center gap-1 mt-1">
                       <TrendingUp className="w-3 h-3" />
-                      +0.3 from last term
+                      {loading ? '' : `${analytics?.academics?.totalResults ?? 0} results`}
                     </p>
                   </div>
                   <GraduationCap className="w-8 h-8 text-purple-200" />
