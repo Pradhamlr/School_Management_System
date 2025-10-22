@@ -49,7 +49,7 @@ async function destructiveSeedAssignments() {
         userId: student1User.id,
         rollNumber: '10A001',
         classId: class10A.id,
-        admissionDate: new Date('2023-01-01')
+        dob: new Date('2008-05-15')
       }
     });
 
@@ -58,7 +58,7 @@ async function destructiveSeedAssignments() {
         userId: student2User.id,
         rollNumber: '10A002',
         classId: class10A.id,
-        admissionDate: new Date('2023-01-01')
+        dob: new Date('2008-03-22')
       }
     });
 
@@ -67,7 +67,7 @@ async function destructiveSeedAssignments() {
         userId: student3User.id,
         rollNumber: '10A003',
         classId: class10A.id,
-        admissionDate: new Date('2023-01-01')
+        dob: new Date('2008-07-10')
       }
     });
 
@@ -113,7 +113,7 @@ async function destructiveSeedAssignments() {
         fileUrl: 'https://example.com/bob-math-test.pdf',
         remarks: 'Excellent understanding of concepts',
         status: 'GRADED',
-        grade: 88
+        grade: '88'
       }
     });
 
@@ -124,7 +124,7 @@ async function destructiveSeedAssignments() {
         fileUrl: 'https://example.com/alice-algebra.pdf',
         remarks: 'Perfect solutions',
         status: 'GRADED',
-        grade: 95
+        grade: '95'
       }
     });
 
@@ -135,7 +135,7 @@ async function destructiveSeedAssignments() {
         fileUrl: 'https://example.com/carol-algebra.pdf',
         remarks: 'Good effort, minor errors',
         status: 'GRADED',
-        grade: 78
+        grade: '78'
       }
     });
 

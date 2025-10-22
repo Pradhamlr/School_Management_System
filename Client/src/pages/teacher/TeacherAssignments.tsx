@@ -41,6 +41,7 @@ const TeacherAssignments = () => {
   const [showViewModal, setShowViewModal] = useState(false);
   const [gradeData, setGradeData] = useState([]);
   const [showGradeModal, setShowGradeModal] = useState(false);
+  const [gradingSubmissions, setGradingSubmissions] = useState({});
   const [editData, setEditData] = useState(null);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editTitle, setEditTitle] = useState("");
@@ -126,6 +127,44 @@ const TeacherAssignments = () => {
     }
   };
 
+  const handleGradeSubmission = async (submissionId: number, grade: string, remarks: string) => {
+    try {
+      await api.put(`/api/assignments/submissions/${submissionId}/grade`, {
+        grade,
+        remarks
+      });
+      toast({ title: "Success", description: "Submission graded successfully" });
+      
+      // Update local state
+      setGradeData(prev => prev.map(sub => 
+        sub.id === submissionId 
+          ? { ...sub, grade, remarks, status: 'GRADED' }
+          : sub
+      ));
+      
+      // Clear grading inputs
+      setGradingSubmissions(prev => {
+        const updated = { ...prev };
+        delete updated[submissionId];
+        return updated;
+      });
+      
+      fetchAssignments();
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to grade submission", variant: "destructive" });
+    }
+  };
+
+  const updateGradingInput = (submissionId: number, field: string, value: string) => {
+    setGradingSubmissions(prev => ({
+      ...prev,
+      [submissionId]: {
+        ...prev[submissionId],
+        [field]: value
+      }
+    }));
+  };
+
   useEffect(() => {
     fetchAssignments();
   }, []);
@@ -156,11 +195,11 @@ const TeacherAssignments = () => {
 
 
   const processedAssignments = assignments.map(assignment => {
-    const totalStudents = assignment.teacherClassSubject?.class?.students?.length || 0;
     const submitted = assignment.submissions?.length || 0;
     const graded = assignment.submissions?.filter(s => s.status === 'GRADED').length || 0;
+    const totalStudents = submitted; // Use actual submissions as total for now
     const isOverdue = new Date(assignment.dueDate) < new Date();
-    const isCompleted = submitted === totalStudents && graded === submitted;
+    const isCompleted = graded === submitted && submitted > 0;
     
     return {
       ...assignment,
@@ -170,7 +209,7 @@ const TeacherAssignments = () => {
       status: isOverdue ? 'overdue' : isCompleted ? 'completed' : 'active',
       subject: assignment.teacherClassSubject?.subject?.name || 'Unknown',
       class: `${assignment.teacherClassSubject?.class?.name || 'Unknown'}-${assignment.teacherClassSubject?.class?.section || ''}`,
-      priority: isOverdue ? 'high' : submitted < totalStudents * 0.5 ? 'medium' : 'low'
+      priority: isOverdue ? 'high' : graded < submitted * 0.5 ? 'medium' : 'low'
     };
   });
 
@@ -355,22 +394,22 @@ const TeacherAssignments = () => {
                             <div>
                               <p className="text-sm text-muted-foreground">Submissions</p>
                               <div className="flex items-center gap-2">
-                                <Progress value={(assignment.submitted / assignment.totalStudents) * 100} className="flex-1" />
-                                <span className="text-sm font-medium">{assignment.submitted}/{assignment.totalStudents}</span>
+                                <Progress value={100} className="flex-1" />
+                                <span className="text-sm font-medium">{assignment.submitted}/{assignment.submitted}</span>
                               </div>
                             </div>
                             <div>
                               <p className="text-sm text-muted-foreground">Graded</p>
                               <div className="flex items-center gap-2">
-                                <Progress value={(assignment.graded / assignment.submitted) * 100} className="flex-1" />
+                                <Progress value={assignment.submitted > 0 ? (assignment.graded / assignment.submitted) * 100 : 0} className="flex-1" />
                                 <span className="text-sm font-medium">{assignment.graded}/{assignment.submitted}</span>
                               </div>
                             </div>
                             <div>
-                              <p className="text-sm text-muted-foreground">Completion</p>
+                              <p className="text-sm text-muted-foreground">Grading Rate</p>
                               <div className="flex items-center gap-2">
-                                <Progress value={(assignment.submitted / assignment.totalStudents) * 100} className="flex-1" />
-                                <span className="text-sm font-medium">{Math.round((assignment.submitted / assignment.totalStudents) * 100)}%</span>
+                                <Progress value={assignment.submitted > 0 ? (assignment.graded / assignment.submitted) * 100 : 0} className="flex-1" />
+                                <span className="text-sm font-medium">{assignment.submitted > 0 ? Math.round((assignment.graded / assignment.submitted) * 100) : 0}%</span>
                               </div>
                             </div>
                           </div>
@@ -511,13 +550,57 @@ const TeacherAssignments = () => {
             ) : (
               <div className="space-y-4">
                 {gradeData.map((submission) => (
-                  <div key={submission.id} className="border p-4 rounded">
-                    <div><strong>Student:</strong> {submission.student?.user?.name}</div>
-                    <div><strong>Status:</strong> {submission.status}</div>
-                    <div><strong>Submitted:</strong> {new Date(submission.submittedAt).toLocaleDateString()}</div>
-                    {submission.fileUrl && <div><strong>File:</strong> <a href={submission.fileUrl} target="_blank" className="text-blue-600">View File</a></div>}
-                    {submission.remarks && <div><strong>Remarks:</strong> {submission.remarks}</div>}
-                    {submission.grade && <div><strong>Grade:</strong> {submission.grade}</div>}
+                  <div key={submission.id} className="border p-4 rounded bg-white">
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <div><strong>Student:</strong> {submission.student?.user?.name}</div>
+                        <div><strong>Status:</strong> <Badge className={submission.status === 'GRADED' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}>{submission.status}</Badge></div>
+                        <div><strong>Submitted:</strong> {new Date(submission.submittedAt).toLocaleDateString()}</div>
+                        {submission.fileUrl && <div><strong>File:</strong> <a href={submission.fileUrl} target="_blank" className="text-blue-600 hover:underline">View File</a></div>}
+                      </div>
+                      <div>
+                        {submission.status === 'GRADED' ? (
+                          <div>
+                            <div><strong>Grade:</strong> {submission.grade}</div>
+                            <div><strong>Remarks:</strong> {submission.remarks}</div>
+                          </div>
+                        ) : (
+                          <div className="space-y-3">
+                            <div>
+                              <label className="text-sm font-medium">Grade:</label>
+                              <Input
+                                placeholder="Enter grade (e.g., A+, 85, B)"
+                                value={gradingSubmissions[submission.id]?.grade || ''}
+                                onChange={(e) => updateGradingInput(submission.id, 'grade', e.target.value)}
+                                className="mt-1"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-sm font-medium">Remarks:</label>
+                              <Input
+                                placeholder="Enter feedback/remarks"
+                                value={gradingSubmissions[submission.id]?.remarks || ''}
+                                onChange={(e) => updateGradingInput(submission.id, 'remarks', e.target.value)}
+                                className="mt-1"
+                              />
+                            </div>
+                            <Button
+                              onClick={() => handleGradeSubmission(
+                                submission.id,
+                                gradingSubmissions[submission.id]?.grade || '',
+                                gradingSubmissions[submission.id]?.remarks || ''
+                              )}
+                              disabled={!gradingSubmissions[submission.id]?.grade}
+                              className="bg-green-600 hover:bg-green-700 w-full"
+                              size="sm"
+                            >
+                              <GraduationCap className="w-4 h-4 mr-2" />
+                              Grade Submission
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 ))}
               </div>

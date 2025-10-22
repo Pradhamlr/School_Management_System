@@ -415,7 +415,7 @@ const submitAssignmentWithFile = async (req, res) => {
 
 // Get All Submissions (for teachers)
 const getSubmissions = async (req, res) => {
-    const { assignmentId, studentId, status } = req.body;
+    const { assignmentId, studentId, status } = req.query;
 
     const whereConditions = {};
     if (assignmentId) whereConditions.assignmentId = Number(assignmentId);
