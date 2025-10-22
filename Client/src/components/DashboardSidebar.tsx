@@ -12,9 +12,10 @@ import {
 import { NavLink } from "react-router-dom";
 
 const navigationItems = [
-  { name: "Dashboard", icon: LayoutDashboard, href: "/" },
-  { name: "Students", icon: Users, href: "/students" },
-  { name: "Teachers", icon: GraduationCap, href: "/teachers" },
+  { name: "Dashboard", icon: LayoutDashboard, href: "/student-dashboard-new" },
+  { name: "My Profile", icon: Users, href: "/student/profile" },
+  { name: "Assignments", icon: BookOpen, href: "/student/assignments" },
+  { name: "Grades", icon: BarChart3, href: "/student/grades" },
   { name: "Courses", icon: BookOpen, href: "/courses" },
   { name: "Events", icon: Calendar, href: "/events" },
   { name: "Fee and Payments", icon: CreditCard, href: "/payments" },

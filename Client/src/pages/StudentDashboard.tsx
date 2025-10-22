@@ -1,14 +1,17 @@
 import { BookOpen, Calendar, FileText, Trophy, Clock, Target, Users } from "lucide-react";
-import { DashboardSidebar } from "@/components/DashboardSidebar";
+import StudentSidebar from "@/components/StudentSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { MetricCard } from "@/components/MetricCard";
 import { AttendanceChart } from "@/components/AttendanceChart";
+import { Button } from "@/components/ui/button";
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import api from '@/lib/api';
 
 const StudentDashboard = () => {
   const [analytics, setAnalytics] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   const attendanceData = analytics ? [
     { name: 'Present', value: Number(analytics.attendance.studentAttendanceRate) || 0, color: '#10B981' },
@@ -46,7 +49,7 @@ const StudentDashboard = () => {
 
   return (
     <div className="flex min-h-screen">
-      <DashboardSidebar />
+      <StudentSidebar />
       
       <div className="flex-1">
         <DashboardHeader />
@@ -56,9 +59,15 @@ const StudentDashboard = () => {
             <h1 className="text-4xl font-bold text-blue-800 mb-4">
               Student Dashboard
             </h1>
-            <p className="text-lg text-blue-600">
+            <p className="text-lg text-blue-600 mb-4">
               Track your academic progress and assignments
             </p>
+            <Button 
+              onClick={() => navigate('/student-dashboard-new')}
+              className="bg-white text-blue-600 hover:bg-blue-50"
+            >
+              🚀 Try New Enhanced Dashboard
+            </Button>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
