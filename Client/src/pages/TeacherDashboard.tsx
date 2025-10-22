@@ -3,17 +3,42 @@ import { DashboardSidebar } from "@/components/DashboardSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { MetricCard } from "@/components/MetricCard";
 import { AttendanceChart } from "@/components/AttendanceChart";
+import { useEffect, useState } from 'react';
+import api from '@/lib/api';
 
 const TeacherDashboard = () => {
-  const classAttendanceData = [
-    { name: "Present", value: 85, color: "#10B981" },
-    { name: "Absent", value: 15, color: "#EF4444" },
+  const [analytics, setAnalytics] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  const classAttendanceData = analytics ? [
+    { name: 'Present', value: Number(analytics.attendance.studentAttendanceRate) || 0, color: '#10B981' },
+    { name: 'Absent', value: 100 - (Number(analytics.attendance.studentAttendanceRate) || 0), color: '#EF4444' },
+  ] : [
+    { name: "Present", value: 0, color: "#10B981" },
+    { name: "Absent", value: 0, color: "#EF4444" },
   ];
 
   const assignmentStatusData = [
     { name: "Submitted", value: 70, color: "#6366F1" },
     { name: "Pending", value: 30, color: "#F59E0B" },
   ];
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchAnalytics = async () => {
+      try {
+        const res = await api.get('/api/analytics');
+        if (!mounted) return;
+        setAnalytics(res.data.data);
+      } catch (e) {
+        console.error('Failed to fetch analytics', e);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+    fetchAnalytics();
+    return () => { mounted = false; };
+  }, []);
 
   return (
     <div className="flex min-h-screen">
@@ -34,32 +59,28 @@ const TeacherDashboard = () => {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
-              title="My Students"
-              value="156"
+              title="Total Students"
+              value={loading ? '…' : analytics?.attendance?.totalStudents ?? '—'}
               icon={Users}
               color="hsl(142 100% 75%)"
-              trend={{ value: "5.2%", isPositive: true }}
             />
             <MetricCard
-              title="Active Courses"
-              value="4"
+              title="Total Teachers"
+              value={loading ? '…' : analytics?.attendance?.totalTeachers ?? '—'}
               icon={BookOpen}
               color="hsl(210 100% 75%)"
-              trend={{ value: "0%", isPositive: true }}
             />
             <MetricCard
-              title="Pending Assignments"
-              value="12"
+              title="Avg. Attendance"
+              value={loading ? '…' : `${analytics?.attendance?.studentAttendanceRate ?? '—'}%`}
               icon={FileText}
               color="hsl(45 100% 75%)"
-              trend={{ value: "8.3%", isPositive: false }}
             />
             <MetricCard
-              title="Classes Today"
-              value="6"
+              title="Classes"
+              value={loading ? '…' : analytics?.attendance?.totalClasses ?? '—'}
               icon={Clock}
               color="hsl(330 100% 75%)"
-              trend={{ value: "0%", isPositive: true }}
             />
           </div>
 

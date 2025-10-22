@@ -422,8 +422,8 @@ const getAllStudentsAttendanceToday = async (req, res) => {
     name: student.user.name,
     email: student.user.email,
     rollNumber: student.rollNumber,
-    class: student.class || null,
-    section: student.section,
+  class: student.class || null,
+  section: student.class?.section || null,
     attendanceStatus: student.attendances[0]?.status || 'NOT_MARKED',
     remarks: student.attendances[0]?.remarks || null,
     attendanceId: student.attendances[0]?.id || null

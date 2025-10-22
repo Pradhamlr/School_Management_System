@@ -6,7 +6,7 @@ const { StatusCodes } = require('http-status-codes');
 
 
 const createStudent = async (req, res) => {
-    const { userId, rollNumber, classId, section, dob } = req.body;
+    const { userId, rollNumber, classId, dob } = req.body;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user || user.role !== 'STUDENT') {
@@ -19,7 +19,7 @@ const createStudent = async (req, res) => {
     }
 
     const newStudent = await prisma.student.create({
-        data: { userId, rollNumber, classId, section, dob: new Date(dob) },
+    data: { userId, rollNumber, classId, dob: new Date(dob) },
         include: { user: { select: { id: true, name: true, email: true, role: true } } }
     });
 
@@ -75,7 +75,7 @@ const getCurrentStudent = async (req, res) => {
 }
 
 const updateStudent = async (req, res) => {
-    const { rollNumber, classId, section, dob } = req.body;
+    const { rollNumber, classId, dob } = req.body;
 
     const existingStudent = await prisma.student.findUnique({ where: { id: Number(req.params.id) } });
     if (!existingStudent) {
@@ -97,7 +97,7 @@ const updateStudent = async (req, res) => {
     const updateData = {};
     if (rollNumber !== undefined) updateData.rollNumber = rollNumber;
     if (classId !== undefined) updateData.classId = classId;
-    if (section !== undefined) updateData.section = section;
+    // 'section' removed from Student model; section lives on Class. Use classId to associate.
     if (dob !== undefined) updateData.dob = new Date(dob);
 
     const updatedStudent = await prisma.student.update({

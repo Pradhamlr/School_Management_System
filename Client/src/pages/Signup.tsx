@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import api from "@/lib/api";
 
 const Signup = () => {
   const { role } = useParams<{ role: string }>();
@@ -36,22 +37,16 @@ const Signup = () => {
     setLoading(true);
 
     try {
-  const response = await fetch(`${import.meta.env.VITE_BACKEND_URL}/api/auth/signup`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: role?.toUpperCase()
-        }),
+      const res = await api.post('/api/auth/signup', {
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+        role: role?.toUpperCase()
       });
 
-      const data = await response.json();
+      const data = res.data;
 
-      if (response.ok) {
+      if (res.status >= 200 && res.status < 300) {
         toast({
           title: "Account created successfully",
           description: "Please login with your credentials",
