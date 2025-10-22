@@ -25,10 +25,10 @@ const StudentNotifications = () => {
           unread: true,
           priority: 'medium'
         }));
-        setNotifications(apiNotifications.length > 0 ? apiNotifications : mockNotifications);
+        setNotifications(apiNotifications);
       } catch (error) {
         console.error('Failed to fetch notifications:', error);
-        setNotifications(mockNotifications);
+        setNotifications([]);
       } finally {
         setLoading(false);
       }
@@ -37,62 +37,7 @@ const StudentNotifications = () => {
     fetchNotifications();
   }, []);
 
-  const mockNotifications = [
-    {
-      id: 1,
-      type: "assignment",
-      title: "New Assignment Posted",
-      message: "Mathematics - Calculus Problem Set has been assigned. Due date: February 15, 2024",
-      time: "2 hours ago",
-      unread: true,
-      priority: "high"
-    },
-    {
-      id: 2,
-      type: "grade",
-      title: "Grade Updated",
-      message: "Your Physics Lab Report has been graded. Score: 87/100 (B+)",
-      time: "4 hours ago",
-      unread: true,
-      priority: "medium"
-    },
-    {
-      id: 3,
-      type: "exam",
-      title: "Exam Reminder",
-      message: "Chemistry Quiz scheduled for tomorrow at 11:00 AM in Lab 2",
-      time: "6 hours ago",
-      unread: true,
-      priority: "high"
-    },
-    {
-      id: 4,
-      type: "event",
-      title: "School Event",
-      message: "Science Fair registration is now open. Register before February 20, 2024",
-      time: "1 day ago",
-      unread: false,
-      priority: "low"
-    },
-    {
-      id: 5,
-      type: "announcement",
-      title: "Class Schedule Change",
-      message: "English Literature class moved to Room 301 for this week",
-      time: "2 days ago",
-      unread: false,
-      priority: "medium"
-    },
-    {
-      id: 6,
-      type: "assignment",
-      title: "Assignment Reminder",
-      message: "Computer Science Project submission deadline is approaching (Due: Feb 10)",
-      time: "3 days ago",
-      unread: false,
-      priority: "high"
-    }
-  ];
+  
 
   const getNotificationIcon = (type: string) => {
     switch (type) {

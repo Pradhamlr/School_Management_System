@@ -26,13 +26,9 @@ const StudentTimetable = () => {
     fetchTimetables();
   }, []);
 
-  const groupedTimetable = [
-    { day: "Monday", classes: timetables.filter(t => t.day === 'MON') },
-    { day: "Tuesday", classes: timetables.filter(t => t.day === 'TUE') },
-    { day: "Wednesday", classes: timetables.filter(t => t.day === 'WED') },
-    { day: "Thursday", classes: timetables.filter(t => t.day === 'THU') },
-    { day: "Friday", classes: timetables.filter(t => t.day === 'FRI') }
-  ];
+  // Normalize timetable day codes to readable names
+  const dayMap: Record<string, string> = { MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday', SAT: 'Saturday', SUN: 'Sunday' };
+  const groupedTimetable = Object.entries(dayMap).map(([code, name]) => ({ day: name, classes: timetables.filter(t => (t.day || '').toUpperCase() === code) }));
 
   const formatTime = (minutes) => {
     const hours = Math.floor(minutes / 60);
@@ -40,48 +36,7 @@ const StudentTimetable = () => {
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
   };
 
-  const mockTimetable = [
-    {
-      day: "Monday",
-      classes: [
-        { time: "09:00 - 10:30", subject: "Mathematics", teacher: "Dr. Sarah Johnson", room: "Room 101", type: "Lecture" },
-        { time: "11:00 - 12:30", subject: "Physics", teacher: "Prof. Michael Chen", room: "Lab 1", type: "Lab" },
-        { time: "14:00 - 15:30", subject: "English", teacher: "Ms. Jennifer Wilson", room: "Room 205", type: "Discussion" }
-      ]
-    },
-    {
-      day: "Tuesday", 
-      classes: [
-        { time: "09:00 - 10:30", subject: "Chemistry", teacher: "Dr. Emily Davis", room: "Lab 2", type: "Lab" },
-        { time: "11:00 - 12:30", subject: "Computer Science", teacher: "Mr. David Brown", room: "Computer Lab", type: "Practical" },
-        { time: "14:00 - 15:30", subject: "Biology", teacher: "Dr. Lisa Anderson", room: "Room 301", type: "Lecture" }
-      ]
-    },
-    {
-      day: "Wednesday",
-      classes: [
-        { time: "09:00 - 10:30", subject: "Mathematics", teacher: "Dr. Sarah Johnson", room: "Room 101", type: "Tutorial" },
-        { time: "11:00 - 12:30", subject: "Physics", teacher: "Prof. Michael Chen", room: "Room 102", type: "Lecture" },
-        { time: "14:00 - 15:30", subject: "Free Period", teacher: "", room: "", type: "Break" }
-      ]
-    },
-    {
-      day: "Thursday",
-      classes: [
-        { time: "09:00 - 10:30", subject: "English", teacher: "Ms. Jennifer Wilson", room: "Room 205", type: "Lecture" },
-        { time: "11:00 - 12:30", subject: "Chemistry", teacher: "Dr. Emily Davis", room: "Room 302", type: "Lecture" },
-        { time: "14:00 - 15:30", subject: "Computer Science", teacher: "Mr. David Brown", room: "Computer Lab", type: "Project" }
-      ]
-    },
-    {
-      day: "Friday",
-      classes: [
-        { time: "09:00 - 10:30", subject: "Biology", teacher: "Dr. Lisa Anderson", room: "Lab 3", type: "Lab" },
-        { time: "11:00 - 12:30", subject: "Mathematics", teacher: "Dr. Sarah Johnson", room: "Room 101", type: "Test" },
-        { time: "14:00 - 15:30", subject: "Study Hall", teacher: "", room: "Library", type: "Study" }
-      ]
-    }
-  ];
+  
 
   const getTypeColor = (type: string) => {
     switch (type) {

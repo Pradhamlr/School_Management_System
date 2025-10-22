@@ -24,7 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import api from '@/lib/api';
+import api, { studentAPI, timetableAPI, notificationAPI } from '@/lib/api';
 
 const StudentDashboardNew = () => {
   const [analytics, setAnalytics] = useState<any | null>(null);
@@ -47,95 +47,67 @@ const StudentDashboardNew = () => {
     return () => { mounted = false; };
   }, []);
 
-  const upcomingAssignments = [
-    { 
-      id: 1,
-      subject: "Mathematics", 
-      title: "Calculus Problem Set", 
-      due: "Tomorrow", 
-      priority: "high",
-      progress: 60,
-      type: "Assignment"
-    },
-    { 
-      id: 2,
-      subject: "Physics", 
-      title: "Lab Report - Motion Analysis", 
-      due: "3 days", 
-      priority: "medium",
-      progress: 30,
-      type: "Lab Report"
-    },
-    { 
-      id: 3,
-      subject: "English", 
-      title: "Essay on Modern Literature", 
-      due: "1 week", 
-      priority: "low",
-      progress: 10,
-      type: "Essay"
-    },
-  ];
+  const [upcomingAssignments, setUpcomingAssignments] = useState<any[]>([]);
+  const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
+  const [recentGrades, setRecentGrades] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
 
-  const todaySchedule = [
-    { 
-      time: "09:00 AM", 
-      subject: "Mathematics", 
-      room: "Room 101", 
-      teacher: "Dr. Sarah Johnson",
-      type: "Lecture",
-      status: "upcoming"
-    },
-    { 
-      time: "11:00 AM", 
-      subject: "Physics", 
-      room: "Lab 1", 
-      teacher: "Prof. Michael Chen",
-      type: "Lab",
-      status: "current"
-    },
-    { 
-      time: "02:00 PM", 
-      subject: "English", 
-      room: "Room 205", 
-      teacher: "Ms. Jennifer Wilson",
-      type: "Discussion",
-      status: "upcoming"
-    },
-  ];
+  // Fetch student-specific info
+  useEffect(() => {
+    let mounted = true;
+    const fetchStudentData = async () => {
+      try {
+        const meRes = await studentAPI.getCurrentStudent();
+        const student = meRes.data.student;
 
-  const recentGrades = [
-    { subject: "Mathematics", grade: "A", score: 92, date: "2 days ago" },
-    { subject: "Physics", grade: "B+", score: 87, date: "1 week ago" },
-    { subject: "Chemistry", grade: "A-", score: 89, date: "1 week ago" },
-  ];
+        // Assignments
+        try {
+          const aRes = await studentAPI.getStudentAssignments(student.id);
+          if (mounted) setUpcomingAssignments(aRes.data.data || aRes.data || []);
+        } catch (e) {
+          console.error('Failed to fetch student assignments', e);
+          if (mounted) setUpcomingAssignments([]);
+        }
 
-  const notifications = [
-    { 
-      id: 1,
-      type: "assignment",
-      title: "New Assignment Posted",
-      message: "Mathematics - Calculus Problem Set due tomorrow",
-      time: "2 hours ago",
-      unread: true
-    },
-    { 
-      id: 2,
-      type: "grade",
-      title: "Grade Updated",
-      message: "Physics Lab Report - Grade: B+",
-      time: "1 day ago",
-      unread: true
-    },
-    { 
-      id: 3,
-      type: "event",
-      title: "Upcoming Event",
-      message: "Science Fair registration opens next week",
-      time: "2 days ago",
-      unread: false
-    },
-  ];
+        // Timetable -> today
+        try {
+          const tRes = await timetableAPI.getTimetables();
+          const all = tRes.data.data || tRes.data || [];
+          const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+          const todayName = dayNames[new Date().getDay()];
+          const classId = student.classId || student.class?.id;
+          const filtered = all.filter((slot: any) => slot.day === todayName && (!classId || Number(slot.classId) === Number(classId)));
+          if (mounted) setTodaySchedule(filtered);
+        } catch (e) {
+          console.error('Failed to fetch timetables', e);
+          if (mounted) setTodaySchedule([]);
+        }
+
+        // Notifications
+        try {
+          const nRes = await notificationAPI.getNotifications();
+          if (mounted) setNotifications(nRes.data.data || nRes.data || []);
+        } catch (e) {
+          console.error('Failed to fetch notifications', e);
+          if (mounted) setNotifications([]);
+        }
+
+        // Recent grades (if you have an endpoint, fallback to analytics)
+        try {
+          const analyticsRes = await api.get('/api/analytics');
+          if (mounted) setRecentGrades(analyticsRes.data.data?.topStudents || []);
+        } catch (e) {
+          console.error('Failed to fetch analytics for grades', e);
+          if (mounted) setRecentGrades([]);
+        }
+
+      } catch (e) {
+        console.error('Failed to fetch current student', e);
+      }
+    };
+    fetchStudentData();
+    return () => { mounted = false; };
+  }, []);
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -269,43 +241,38 @@ const StudentDashboardNew = () => {
                 <CardDescription>Your classes and activities for today</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {todaySchedule.map((class_, index) => (
-                  <div key={index} className={`flex items-center gap-4 p-4 rounded-xl transition-all ${
-                    class_.status === 'current' 
-                      ? 'bg-blue-50 border-2 border-blue-200' 
-                      : 'bg-gray-50 hover:bg-gray-100'
-                  }`}>
-                    <div className="flex flex-col items-center">
-                      <div className={`w-3 h-3 rounded-full ${
-                        class_.status === 'current' ? 'bg-blue-500' : 'bg-gray-300'
-                      }`} />
-                      <div className="w-px h-8 bg-gray-200 mt-2" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-gray-900">{class_.subject}</p>
-                          <p className="text-sm text-gray-600">{class_.teacher}</p>
+                {todaySchedule.length === 0 ? (
+                  <div className="p-4 text-sm text-gray-500">No classes scheduled for today.</div>
+                ) : (
+                  todaySchedule.map((slot, index) => (
+                    <div key={slot.id || index} className={`flex items-center gap-4 p-4 rounded-xl transition-all ${
+                      slot.isCurrent ? 'bg-blue-50 border-2 border-blue-200' : 'bg-gray-50 hover:bg-gray-100'
+                    }`}>
+                      <div className="flex flex-col items-center">
+                        <div className={`w-3 h-3 rounded-full ${slot.isCurrent ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                        <div className="w-px h-8 bg-gray-200 mt-2" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-gray-900">{slot.subject?.name || slot.subjectName || 'Untitled'}</p>
+                            <p className="text-sm text-gray-600">{slot.teacher?.user?.name || slot.teacherName || 'TBA'}</p>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-medium text-blue-600">{slot.startMinute && slot.endMinute ? `${Math.floor(slot.startMinute/60).toString().padStart(2,'0')}:${(slot.startMinute%60).toString().padStart(2,'0')}` : slot.time || ''} - {slot.endMinute ? `${Math.floor(slot.endMinute/60).toString().padStart(2,'0')}:${(slot.endMinute%60).toString().padStart(2,'0')}` : ''}</p>
+                            <p className="text-sm text-gray-500">{slot.classroom?.name || slot.room || ''}</p>
+                          </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-medium text-blue-600">{class_.time}</p>
-                          <p className="text-sm text-gray-500">{class_.room}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="outline" className="text-xs">{slot.type || 'Class'}</Badge>
+                          {slot.isCurrent && (
+                            <Badge className="text-xs bg-blue-500"><Play className="w-3 h-3 mr-1" />In Progress</Badge>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge variant="outline" className="text-xs">
-                          {class_.type}
-                        </Badge>
-                        {class_.status === 'current' && (
-                          <Badge className="text-xs bg-blue-500">
-                            <Play className="w-3 h-3 mr-1" />
-                            In Progress
-                          </Badge>
-                        )}
-                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </CardContent>
             </Card>
 
@@ -319,7 +286,9 @@ const StudentDashboardNew = () => {
                 <CardDescription>Recent updates and alerts</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                {notifications.map((notification) => (
+                {notifications.length === 0 ? (
+                  <div className="p-4 text-sm text-gray-500">No notifications</div>
+                ) : notifications.map((notification) => (
                   <div key={notification.id} className={`p-3 rounded-lg transition-all cursor-pointer ${
                     notification.unread ? 'bg-blue-50 border border-blue-200' : 'bg-gray-50'
                   }`}>
@@ -354,7 +323,9 @@ const StudentDashboardNew = () => {
                 <CardDescription>Track your pending work</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {upcomingAssignments.map((assignment) => (
+                {upcomingAssignments.length === 0 ? (
+                  <div className="p-4 text-sm text-gray-500">No upcoming assignments</div>
+                ) : upcomingAssignments.map((assignment: any) => (
                   <div key={assignment.id} className="p-4 rounded-xl bg-gray-50 hover:bg-gray-100 transition-all">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3">
@@ -394,7 +365,9 @@ const StudentDashboardNew = () => {
                 <CardDescription>Your latest academic performance</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {recentGrades.map((grade, index) => (
+                {recentGrades.length === 0 ? (
+                  <div className="p-4 text-sm text-gray-500">No recent grades available</div>
+                ) : recentGrades.map((grade, index) => (
                   <div key={index} className="flex items-center justify-between p-4 rounded-xl bg-gray-50">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center">

@@ -78,10 +78,10 @@ const StudentAssignments = () => {
           score: assignment.submissions?.[0]?.grade || null
         }));
         
-        setAssignments(apiAssignments.length > 0 ? apiAssignments : mockAssignments);
+        setAssignments(apiAssignments);
       } catch (error) {
         console.error('Failed to fetch assignments:', error);
-        setAssignments(mockAssignments);
+        setAssignments([]);
       } finally {
         setLoading(false);
       }
@@ -90,89 +90,7 @@ const StudentAssignments = () => {
     fetchAssignments();
   }, []);
 
-  const mockAssignments = [
-    {
-      id: 1,
-      title: "Calculus Problem Set - Chapter 5",
-      subject: "Mathematics",
-      teacher: "Dr. Sarah Johnson",
-      dueDate: "2024-01-25",
-      assignedDate: "2024-01-18",
-      status: "pending",
-      priority: "high",
-      progress: 60,
-      maxScore: 100,
-      description: "Solve problems 1-20 from Chapter 5: Derivatives and Applications",
-      attachments: ["calculus_problems.pdf", "formula_sheet.pdf"],
-      submissionType: "file",
-      estimatedTime: "3 hours"
-    },
-    {
-      id: 2,
-      title: "Lab Report - Motion Analysis",
-      subject: "Physics",
-      teacher: "Prof. Michael Chen",
-      dueDate: "2024-01-28",
-      assignedDate: "2024-01-20",
-      status: "in-progress",
-      priority: "medium",
-      progress: 30,
-      maxScore: 50,
-      description: "Analyze the motion data collected in Lab 3 and write a comprehensive report",
-      attachments: ["lab_data.xlsx", "report_template.docx"],
-      submissionType: "file",
-      estimatedTime: "4 hours"
-    },
-    {
-      id: 3,
-      title: "Essay on Modern Literature",
-      subject: "English",
-      teacher: "Ms. Jennifer Wilson",
-      dueDate: "2024-02-02",
-      assignedDate: "2024-01-22",
-      status: "not-started",
-      priority: "low",
-      progress: 0,
-      maxScore: 75,
-      description: "Write a 1500-word essay analyzing themes in contemporary literature",
-      attachments: ["essay_guidelines.pdf", "reading_list.pdf"],
-      submissionType: "text",
-      estimatedTime: "5 hours"
-    },
-    {
-      id: 4,
-      title: "Chemical Reactions Quiz",
-      subject: "Chemistry",
-      teacher: "Dr. Emily Davis",
-      dueDate: "2024-01-24",
-      assignedDate: "2024-01-22",
-      status: "submitted",
-      priority: "medium",
-      progress: 100,
-      maxScore: 25,
-      score: 23,
-      description: "Online quiz covering Chapter 8: Chemical Reactions and Equations",
-      attachments: [],
-      submissionType: "online",
-      estimatedTime: "1 hour"
-    },
-    {
-      id: 5,
-      title: "Programming Project - Web App",
-      subject: "Computer Science",
-      teacher: "Mr. David Brown",
-      dueDate: "2024-02-10",
-      assignedDate: "2024-01-15",
-      status: "in-progress",
-      priority: "high",
-      progress: 75,
-      maxScore: 150,
-      description: "Build a full-stack web application using React and Node.js",
-      attachments: ["project_requirements.pdf", "starter_code.zip"],
-      submissionType: "link",
-      estimatedTime: "20 hours"
-    }
-  ];
+  
 
   const subjects = ["Mathematics", "Physics", "English", "Chemistry", "Computer Science"];
   

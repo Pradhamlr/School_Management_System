@@ -30,74 +30,7 @@ const StudentExams = () => {
   const upcomingExams = exams.filter(exam => new Date(exam.date) > new Date());
   const pastExams = exams.filter(exam => new Date(exam.date) <= new Date());
 
-  const mockUpcomingExams = [
-    {
-      id: 1,
-      subject: "Mathematics",
-      type: "Final Exam",
-      date: "2024-02-15",
-      time: "09:00 AM - 12:00 PM",
-      room: "Hall A",
-      duration: "3 hours",
-      syllabus: "Chapters 1-12",
-      status: "scheduled"
-    },
-    {
-      id: 2,
-      subject: "Physics",
-      type: "Midterm Exam",
-      date: "2024-02-10",
-      time: "02:00 PM - 04:00 PM", 
-      room: "Room 201",
-      duration: "2 hours",
-      syllabus: "Chapters 1-6",
-      status: "scheduled"
-    },
-    {
-      id: 3,
-      subject: "Chemistry",
-      type: "Quiz",
-      date: "2024-02-08",
-      time: "11:00 AM - 12:00 PM",
-      room: "Lab 2",
-      duration: "1 hour",
-      syllabus: "Chapter 4-5",
-      status: "scheduled"
-    }
-  ];
-
-  const completedExams = [
-    {
-      id: 4,
-      subject: "English",
-      type: "Essay Exam",
-      date: "2024-01-25",
-      score: 94,
-      maxScore: 100,
-      grade: "A",
-      status: "completed"
-    },
-    {
-      id: 5,
-      subject: "Computer Science",
-      type: "Practical Exam",
-      date: "2024-01-20",
-      score: 98,
-      maxScore: 100,
-      grade: "A+",
-      status: "completed"
-    },
-    {
-      id: 6,
-      subject: "Biology",
-      type: "Lab Test",
-      date: "2024-01-18",
-      score: 87,
-      maxScore: 100,
-      grade: "B+",
-      status: "completed"
-    }
-  ];
+  // Using API-provided exams (upcomingExams and pastExams derived from exams array)
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -223,7 +156,7 @@ const StudentExams = () => {
             </TabsContent>
 
             <TabsContent value="results" className="space-y-4">
-              {completedExams.map((exam) => (
+              {pastExams.map((exam) => (
                 <Card key={exam.id} className="border-0 shadow-lg bg-white/80 backdrop-blur">
                   <CardContent className="p-6">
                     <div className="flex flex-col lg:flex-row lg:items-center gap-4">

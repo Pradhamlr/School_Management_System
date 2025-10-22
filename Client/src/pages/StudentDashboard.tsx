@@ -6,7 +6,7 @@ import { AttendanceChart } from "@/components/AttendanceChart";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import api from '@/lib/api';
+import api, { studentAPI, timetableAPI } from '@/lib/api';
 
 const StudentDashboard = () => {
   const [analytics, setAnalytics] = useState<any | null>(null);
@@ -44,6 +44,56 @@ const StudentDashboard = () => {
       }
     };
     fetchAnalytics();
+    return () => { mounted = false; };
+  }, []);
+
+  // Fetch student-specific data: assignments and today's timetable
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [todayClasses, setTodayClasses] = useState<any[]>([]);
+  const [studentLoading, setStudentLoading] = useState(true);
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchStudentData = async () => {
+      setStudentLoading(true);
+      try {
+        const meRes = await studentAPI.getCurrentStudent();
+        const student = meRes.data.student;
+        if (!mounted) return;
+
+        // assignments for this student
+        try {
+          const aRes = await studentAPI.getStudentAssignments(student.id);
+          if (mounted) setAssignments(aRes.data.data || aRes.data || []);
+        } catch (e) {
+          console.error('Failed to fetch student assignments', e);
+          if (mounted) setAssignments([]);
+        }
+
+        // timetables filtered by student's class and today's day name
+        try {
+          const tRes = await timetableAPI.getTimetables();
+          const all = tRes.data.data || tRes.data || [];
+          const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+          const todayName = dayNames[new Date().getDay()];
+          const classId = student.classId || student.class?.id;
+          const filtered = all.filter((slot: any) => {
+            if (!classId) return slot.day === todayName;
+            return slot.day === todayName && Number(slot.classId) === Number(classId);
+          });
+          if (mounted) setTodayClasses(filtered);
+        } catch (e) {
+          console.error('Failed to fetch timetables', e);
+          if (mounted) setTodayClasses([]);
+        }
+
+      } catch (e) {
+        console.error('Failed to fetch current student', e);
+      } finally {
+        if (mounted) setStudentLoading(false);
+      }
+    };
+    fetchStudentData();
     return () => { mounted = false; };
   }, []);
 
@@ -114,41 +164,42 @@ const StudentDashboard = () => {
             <div className="glass-card rounded-2xl p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">Upcoming Assignments</h3>
               <div className="space-y-4">
-                {[
-                  { subject: "Mathematics", title: "Calculus Problem Set", due: "Tomorrow", priority: "high" },
-                  { subject: "Physics", title: "Lab Report", due: "3 days", priority: "medium" },
-                  { subject: "English", title: "Essay on Literature", due: "1 week", priority: "low" },
-                ].map((assignment, index) => (
-                  <div key={index} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
-                    <div className={`w-3 h-3 rounded-full ${
-                      assignment.priority === 'high' ? 'bg-red-500' :
-                      assignment.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'
-                    }`} />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">{assignment.title}</p>
-                      <p className="text-xs text-muted-foreground">{assignment.subject} • Due in {assignment.due}</p>
+                {studentLoading ? (
+                  <div>Loading assignments...</div>
+                ) : assignments.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">No upcoming assignments</div>
+                ) : (
+                  assignments.map((assignment: any) => (
+                    <div key={assignment.id} className="flex items-center gap-3 p-3 rounded-xl bg-muted/30">
+                      <div className={`w-3 h-3 rounded-full ${assignment.priority === 'high' ? 'bg-red-500' : assignment.priority === 'medium' ? 'bg-yellow-500' : 'bg-green-500'}`} />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{assignment.title || assignment.data?.title || 'Untitled'}</p>
+                        <p className="text-xs text-muted-foreground">{assignment.teacherClassSubject?.subject?.name || assignment.subject || ''} • Due {assignment.dueDate ? new Date(assignment.dueDate).toLocaleDateString() : '—'}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
 
             <div className="glass-card rounded-2xl p-6">
               <h3 className="text-lg font-semibold text-foreground mb-4">Today's Classes</h3>
               <div className="space-y-4">
-                {[
-                  { time: "09:00 AM", subject: "Mathematics", room: "Room 101", teacher: "Dr. Sarah Johnson" },
-                  { time: "11:00 AM", subject: "Physics", room: "Lab 1", teacher: "Prof. Michael Chen" },
-                  { time: "02:00 PM", subject: "English", room: "Room 205", teacher: "Ms. Jennifer Wilson" },
-                ].map((class_, index) => (
-                  <div key={index} className="flex items-center gap-4 p-3 rounded-xl bg-muted/30">
-                    <div className="w-16 text-sm font-medium text-blue-600">{class_.time}</div>
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-foreground">{class_.subject}</p>
-                      <p className="text-xs text-muted-foreground">{class_.room} • {class_.teacher}</p>
+                {studentLoading ? (
+                  <div>Loading classes...</div>
+                ) : todayClasses.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">No classes scheduled for today</div>
+                ) : (
+                  todayClasses.map((slot: any) => (
+                    <div key={slot.id} className="flex items-center gap-4 p-3 rounded-xl bg-muted/30">
+                      <div className="w-16 text-sm font-medium text-blue-600">{slot.startMinute && slot.endMinute ? `${Math.floor(slot.startMinute/60).toString().padStart(2,'0')}:${(slot.startMinute%60).toString().padStart(2,'0')} - ${Math.floor(slot.endMinute/60).toString().padStart(2,'0')}:${(slot.endMinute%60).toString().padStart(2,'0')}` : slot.time || '—'}</div>
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-foreground">{slot.subject?.name || slot.subject || slot.subjectName || 'Untitled'}</p>
+                        <p className="text-xs text-muted-foreground">{slot.class?.name || `Class ${slot.classId}`} • {slot.teacher?.user?.name || slot.teacherName || 'TBA'}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </div>
           </div>
