@@ -6,7 +6,7 @@ const { createEvent, getEvents, getEventById, updateEvent, deleteEvent } = requi
 // Create event: allow ADMIN, TEACHER, STUDENT (example)
 router.post('/', authorize('ADMIN', 'TEACHER', 'STUDENT'), createEvent);
 
-// Read events
+// Read events (public)
 router.get('/', getEvents);
 router.get('/:id', getEventById);
 

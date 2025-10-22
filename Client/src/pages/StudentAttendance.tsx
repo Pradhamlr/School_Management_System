@@ -9,6 +9,7 @@ import { attendanceAPI, studentAPI } from '@/lib/api';
 
 const StudentAttendance = () => {
   const [attendance, setAttendance] = useState([]);
+  const [recentAttendance, setRecentAttendance] = useState([]);
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -19,18 +20,15 @@ const StudentAttendance = () => {
         const studentResponse = await studentAPI.getCurrentStudent();
         const studentId = studentResponse.data.student.id;
 
-        // Get attendance data
+        // Get attendance data with statistics
         const attendanceResponse = await attendanceAPI.getStudentAttendance(studentId);
         setAttendance(attendanceResponse.data.data?.attendance || []);
+        setRecentAttendance(attendanceResponse.data.data?.recentAttendance || []);
         setStats(attendanceResponse.data.data?.statistics || null);
-
-        // Get overall stats
-        const statsResponse = await attendanceAPI.getAttendanceStats();
-        if (!stats) {
-          setStats(statsResponse.data.data?.summary || {});
-        }
       } catch (error) {
         console.error('Failed to fetch attendance:', error);
+        // Set default stats if API fails
+        setStats({ total: 0, present: 0, absent: 0, late: 0, excused: 0, attendanceRate: 0 });
       } finally {
         setLoading(false);
       }
@@ -162,41 +160,61 @@ const StudentAttendance = () => {
           </div>
 
           {/* Attendance Progress */}
-          <Card className="border-0 shadow-lg bg-white/80 backdrop-blur">
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <TrendingUp className="w-5 h-5 text-blue-600" />
-                Attendance Progress
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Overall Attendance</span>
-                  <span className="font-medium">{stats?.attendanceRate || 0}%</span>
-                </div>
-                <Progress value={stats?.attendanceRate || 0} className="h-3" />
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div className="text-center">
-                    <p className="font-medium text-green-600">{stats?.present || 0}</p>
-                    <p className="text-gray-500">Present</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card className="border-0 shadow-lg bg-white/80 backdrop-blur">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <TrendingUp className="w-5 h-5 text-blue-600" />
+                  Attendance Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Overall Attendance</span>
+                    <span className="font-medium">{stats?.attendanceRate || 0}%</span>
                   </div>
-                  <div className="text-center">
-                    <p className="font-medium text-red-600">{stats?.absent || 0}</p>
-                    <p className="text-gray-500">Absent</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-medium text-yellow-600">{stats?.late || 0}</p>
-                    <p className="text-gray-500">Late</p>
-                  </div>
-                  <div className="text-center">
-                    <p className="font-medium text-blue-600">{stats?.excused || 0}</p>
-                    <p className="text-gray-500">Excused</p>
+                  <Progress value={stats?.attendanceRate || 0} className="h-3" />
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div className="text-center">
+                      <p className="font-medium text-green-600">{stats?.present || 0}</p>
+                      <p className="text-gray-500">Present</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="font-medium text-red-600">{stats?.absent || 0}</p>
+                      <p className="text-gray-500">Absent</p>
+                    </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-purple-800">
+                  <AlertCircle className="w-5 h-5" />
+                  Improvement Metrics
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {(stats?.attendanceRate || 0) < 90 ? (
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-purple-800">{stats?.daysToImprove || 0}</p>
+                      <p className="text-sm text-purple-600">Days needed to reach 90%</p>
+                      <p className="text-xs text-gray-600 mt-1">Attend continuously to improve</p>
+                    </div>
+                  ) : (
+                    <div className="text-center">
+                      <p className="text-2xl font-bold text-green-800">{stats?.canBunk || 0}</p>
+                      <p className="text-sm text-green-600">Classes you can miss</p>
+                      <p className="text-xs text-gray-600 mt-1">Before falling below 90%</p>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {/* Attendance Records */}
           <Card className="border-0 shadow-lg bg-white/80 backdrop-blur">
@@ -207,7 +225,7 @@ const StudentAttendance = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              {attendance.length === 0 ? (
+              {recentAttendance.length === 0 ? (
                 <div className="p-8 text-center text-gray-500">
                   <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">No attendance records</h3>
@@ -215,7 +233,7 @@ const StudentAttendance = () => {
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {attendance.map((record: any, index) => {
+                  {recentAttendance.map((record: any, index) => {
                     const StatusIcon = getStatusIcon(record.status);
                     
                     return (

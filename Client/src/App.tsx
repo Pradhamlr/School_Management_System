@@ -21,6 +21,7 @@ import StudentCourses from "./pages/StudentCourses";
 import StudentExams from "./pages/StudentExams";
 import StudentNotifications from "./pages/StudentNotifications";
 import StudentAttendance from "./pages/StudentAttendance";
+import StudentEvents from "./pages/StudentEvents";
 import StudentManagement from "./pages/admin/StudentManagement";
 import TeacherManagement from "./pages/admin/TeacherManagement";
 import Analytics from "./pages/admin/Analytics";
@@ -78,6 +79,7 @@ const App = () => (
           <Route path="/student/exams" element={<ProtectedRoute requiredRole="student"><StudentExams /></ProtectedRoute>} />
           <Route path="/student/notifications" element={<ProtectedRoute requiredRole="student"><StudentNotifications /></ProtectedRoute>} />
           <Route path="/student/attendance" element={<ProtectedRoute requiredRole="student"><StudentAttendance /></ProtectedRoute>} />
+          <Route path="/student/events" element={<ProtectedRoute requiredRole="student"><StudentEvents /></ProtectedRoute>} />
           <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
           <Route path="/teachers" element={<ProtectedRoute><Teachers /></ProtectedRoute>} />
           <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />

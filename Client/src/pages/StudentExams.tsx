@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { examAPI, studentAPI } from '@/lib/api';
+import { examAPI, studentAPI, resultAPI } from '@/lib/api';
 
 const StudentExams = () => {
   const [exams, setExams] = useState([]);
@@ -15,21 +15,63 @@ const StudentExams = () => {
   useEffect(() => {
     const fetchExams = async () => {
       try {
+        // Get current student
+        const studentResponse = await studentAPI.getCurrentStudent();
+        const studentId = studentResponse.data.student.id;
+        const studentClassId = studentResponse.data.student.classId;
+        
+        // Get all exams
         const examResponse = await examAPI.getExams();
-        const apiExams = (examResponse.data.exams || examResponse.data || []).map(exam => ({
-          id: exam.id,
-          subject: exam.subject?.name || 'Unknown',
-          type: 'Written Exam',
-          date: exam.date,
-          time: '10:00 AM',
-          room: 'Room 101',
-          duration: '2 hours',
-          syllabus: 'Complete syllabus',
-          status: new Date(exam.date) > new Date() ? 'scheduled' : 'completed',
-          score: exam.results?.[0]?.marks || 0,
-          maxScore: exam.totalMarks || 100,
-          grade: exam.results?.[0]?.grade || 'N/A'
-        }));
+        const allExams = examResponse.data.exams || [];
+        
+        // Filter exams for student's class
+        const classExams = allExams.filter(exam => exam.classId === studentClassId);
+        
+        // Fetch exam details with results for each exam
+        const apiExams = await Promise.all(
+          classExams.map(async (exam) => {
+            try {
+              const detailsResponse = await examAPI.getExamDetails(exam.id);
+              const examDetails = detailsResponse.data.exam;
+              
+              // Find student's result in the exam details
+              const studentResult = examDetails.results?.find(result => result.studentId === studentId);
+              
+              return {
+                id: exam.id,
+                subject: exam.subject?.name || 'Unknown',
+                type: exam.name || 'Exam',
+                date: exam.date,
+                time: '10:00 AM',
+                room: 'Room 101',
+                duration: '2 hours',
+                syllabus: 'Complete syllabus',
+                status: new Date(exam.date) > new Date() ? 'scheduled' : 'completed',
+                score: studentResult?.marks || 0,
+                maxScore: exam.totalMarks || 100,
+                grade: studentResult?.grade || 'N/A',
+                hasResult: !!studentResult
+              };
+            } catch (error) {
+              console.error(`Failed to fetch details for exam ${exam.id}:`, error);
+              return {
+                id: exam.id,
+                subject: exam.subject?.name || 'Unknown',
+                type: exam.name || 'Exam',
+                date: exam.date,
+                time: '10:00 AM',
+                room: 'Room 101',
+                duration: '2 hours',
+                syllabus: 'Complete syllabus',
+                status: new Date(exam.date) > new Date() ? 'scheduled' : 'completed',
+                score: 0,
+                maxScore: exam.totalMarks || 100,
+                grade: 'N/A',
+                hasResult: false
+              };
+            }
+          })
+        );
         
         setExams(apiExams);
       } catch (error) {
@@ -94,8 +136,30 @@ const StudentExams = () => {
             </TabsList>
 
             <TabsContent value="upcoming" className="space-y-4">
-              {upcomingExams.length === 0 ? (
-                <div className="p-6 text-center text-sm text-muted-foreground">Exams schedule is not available for students via this interface. Please check notifications or contact your teacher for exam details.</div>
+              {loading ? (
+                <div className="space-y-4">
+                  {[1,2,3].map((i) => (
+                    <Card key={i} className="border-0 shadow-lg bg-white/80 backdrop-blur animate-pulse">
+                      <CardContent className="p-6">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 bg-gray-200 rounded-lg"></div>
+                          <div className="flex-1 space-y-2">
+                            <div className="h-4 bg-gray-200 rounded w-3/4"></div>
+                            <div className="h-3 bg-gray-200 rounded w-1/2"></div>
+                          </div>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              ) : upcomingExams.length === 0 ? (
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur">
+                  <CardContent className="p-12 text-center">
+                    <Calendar className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No upcoming exams</h3>
+                    <p className="text-gray-600">Your upcoming exams will appear here.</p>
+                  </CardContent>
+                </Card>
               ) : upcomingExams.map((exam) => {
                 const daysUntil = getDaysUntilExam(exam.date);
                 const isUrgent = daysUntil <= 3;
@@ -174,47 +238,57 @@ const StudentExams = () => {
             </TabsContent>
 
             <TabsContent value="results" className="space-y-4">
-              {pastExams.map((exam) => (
-                <Card key={exam.id} className="border-0 shadow-lg bg-white/80 backdrop-blur">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center gap-4">
-                      <div className="flex items-start gap-4 flex-1">
-                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
-                          <CheckCircle className="w-6 h-6 text-white" />
-                        </div>
-                        
-                        <div className="flex-1">
-                          <div className="flex items-start justify-between">
-                            <div>
-                              <h3 className="font-semibold text-gray-900 text-lg">{exam.subject}</h3>
-                              <p className="text-gray-600">{exam.type}</p>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {new Date(exam.date).toLocaleDateString()}
-                              </p>
-                            </div>
-                            
-                            <Badge className={`${getStatusColor(exam.status)} border`}>
-                              {exam.status}
-                            </Badge>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <Badge className={`${getGradeColor(exam.grade)} border text-lg px-3 py-1 mb-2`}>
-                          {exam.grade}
-                        </Badge>
-                        <div className="text-lg font-bold text-gray-900">
-                          {exam.score}/{exam.maxScore}
-                        </div>
-                        <p className="text-sm text-gray-500">
-                          {Math.round((exam.score / exam.maxScore) * 100)}%
-                        </p>
-                      </div>
-                    </div>
+              {pastExams.filter(exam => exam.hasResult).length === 0 ? (
+                <Card className="border-0 shadow-lg bg-white/80 backdrop-blur">
+                  <CardContent className="p-12 text-center">
+                    <Trophy className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No results available</h3>
+                    <p className="text-gray-600">Your exam results will appear here once published.</p>
                   </CardContent>
                 </Card>
-              ))}
+              ) : (
+                pastExams.filter(exam => exam.hasResult).map((exam) => (
+                  <Card key={exam.id} className="border-0 shadow-lg bg-white/80 backdrop-blur">
+                    <CardContent className="p-6">
+                      <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                        <div className="flex items-start gap-4 flex-1">
+                          <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-blue-500 rounded-lg flex items-center justify-center">
+                            <CheckCircle className="w-6 h-6 text-white" />
+                          </div>
+                          
+                          <div className="flex-1">
+                            <div className="flex items-start justify-between">
+                              <div>
+                                <h3 className="font-semibold text-gray-900 text-lg">{exam.subject}</h3>
+                                <p className="text-gray-600">{exam.type}</p>
+                                <p className="text-sm text-gray-500 mt-1">
+                                  {new Date(exam.date).toLocaleDateString()}
+                                </p>
+                              </div>
+                              
+                              <Badge className={`${getStatusColor(exam.status)} border`}>
+                                {exam.status}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <Badge className={`${getGradeColor(exam.grade)} border text-lg px-3 py-1 mb-2`}>
+                            {exam.grade}
+                          </Badge>
+                          <div className="text-lg font-bold text-gray-900">
+                            {exam.score}/{exam.maxScore}
+                          </div>
+                          <p className="text-sm text-gray-500">
+                            {Math.round((exam.score / exam.maxScore) * 100)}%
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              )}
             </TabsContent>
           </Tabs>
         </main>

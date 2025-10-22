@@ -41,16 +41,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { studentAPI } from '@/lib/api';
+import { studentAPI, subjectAPI } from '@/lib/api';
 import AssignmentSubmit from '@/components/AssignmentSubmit';
 
 const StudentAssignments = () => {
   const [assignments, setAssignments] = useState([]);
+  const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterSubject, setFilterSubject] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
-  const [sortBy, setSortBy] = useState("dueDate");
+  const [filterDueDate, setFilterDueDate] = useState("all");
 
   useEffect(() => {
     const fetchAssignments = async () => {
@@ -59,25 +60,34 @@ const StudentAssignments = () => {
         const studentResponse = await studentAPI.getCurrentStudent();
         const studentId = studentResponse.data.student.id;
 
+        // Get subjects from API
+        const subjectsResponse = await subjectAPI.getSubjects();
+        setSubjects(subjectsResponse.data.subjects || []);
+
         // Then get assignments for this student
         const assignmentsResponse = await studentAPI.getStudentAssignments(studentId);
-        const apiAssignments = (assignmentsResponse.data.data || []).map(assignment => ({
-          id: assignment.id,
-          title: assignment.title,
-          subject: assignment.teacherClassSubject?.subject?.name || 'Unknown',
-          teacher: assignment.teacherClassSubject?.teacher?.user?.name || 'Unknown',
-          dueDate: assignment.dueDate,
-          assignedDate: assignment.createdAt,
-          status: assignment.submissions?.length > 0 ? 'submitted' : 'pending',
-          priority: 'medium',
-          progress: assignment.submissions?.length > 0 ? 100 : 0,
-          maxScore: 100,
-          description: assignment.description || 'No description available',
-          attachments: [],
-          submissionType: 'file',
-          estimatedTime: '2 hours',
-          score: assignment.submissions?.[0]?.grade || null
-        }));
+        const apiAssignments = (assignmentsResponse.data.data || []).map(assignment => {
+          const submission = assignment.submissions?.[0];
+          const status = submission ? submission.status.toLowerCase() : 'pending';
+          
+          return {
+            id: assignment.id,
+            title: assignment.title,
+            subject: assignment.teacherClassSubject?.subject?.name || 'Unknown',
+            teacher: assignment.teacherClassSubject?.teacher?.user?.name || 'Unknown',
+            dueDate: assignment.dueDate,
+            assignedDate: assignment.createdAt,
+            status: status,
+            priority: 'medium',
+            progress: status === 'submitted' || status === 'graded' ? 100 : 0,
+            maxScore: 100,
+            description: assignment.description || 'No description available',
+            attachments: [],
+            submissionType: 'file',
+            estimatedTime: '2 hours',
+            score: submission?.grade || null
+          };
+        });
         
         setAssignments(apiAssignments);
       } catch (error) {
@@ -94,14 +104,30 @@ const StudentAssignments = () => {
 
   
 
-  const subjects = ["Mathematics", "Physics", "English", "Chemistry", "Computer Science"];
+  // subjects is already fetched from API in useEffect
+  
+  const getDueDateLabel = (dueDate: string) => {
+    const due = new Date(dueDate);
+    const today = new Date();
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    
+    const thisWeekStart = new Date(today);
+    thisWeekStart.setDate(today.getDate() - today.getDay());
+    const thisWeekEnd = new Date(thisWeekStart);
+    thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
+    
+    if (due.toDateString() === today.toDateString()) return 'Today';
+    if (due.toDateString() === tomorrow.toDateString()) return 'Tomorrow';
+    if (due >= thisWeekStart && due <= thisWeekEnd) return 'This Week';
+    return due.toLocaleDateString();
+  };
   
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'submitted': return 'bg-green-100 text-green-800 border-green-200';
-      case 'in-progress': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'submitted': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'graded': return 'bg-green-100 text-green-800 border-green-200';
       case 'pending': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case 'not-started': return 'bg-gray-100 text-gray-800 border-gray-200';
       case 'overdue': return 'bg-red-100 text-red-800 border-red-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -118,10 +144,9 @@ const StudentAssignments = () => {
 
   const getStatusIcon = (status: string) => {
     switch (status) {
-      case 'submitted': return CheckCircle;
-      case 'in-progress': return Clock;
+      case 'submitted': return Upload;
+      case 'graded': return CheckCircle;
       case 'pending': return AlertCircle;
-      case 'not-started': return FileText;
       case 'overdue': return AlertCircle;
       default: return FileText;
     }
@@ -141,29 +166,40 @@ const StudentAssignments = () => {
     const matchesSubject = filterSubject === "all" || assignment.subject === filterSubject;
     const matchesStatus = filterStatus === "all" || assignment.status === filterStatus;
     
-    return matchesSearch && matchesSubject && matchesStatus;
+    let matchesDueDate = true;
+    if (filterDueDate !== "all") {
+      const due = new Date(assignment.dueDate);
+      const today = new Date();
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      
+      const thisWeekStart = new Date(today);
+      thisWeekStart.setDate(today.getDate() - today.getDay());
+      const thisWeekEnd = new Date(thisWeekStart);
+      thisWeekEnd.setDate(thisWeekStart.getDate() + 6);
+      
+      if (filterDueDate === "today") {
+        matchesDueDate = due.toDateString() === today.toDateString();
+      } else if (filterDueDate === "tomorrow") {
+        matchesDueDate = due.toDateString() === tomorrow.toDateString();
+      } else if (filterDueDate === "thisweek") {
+        matchesDueDate = due >= thisWeekStart && due <= thisWeekEnd;
+      }
+    }
+    
+    return matchesSearch && matchesSubject && matchesStatus && matchesDueDate;
   });
 
   const sortedAssignments = [...filteredAssignments].sort((a, b) => {
-    switch (sortBy) {
-      case 'dueDate':
-        return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
-      case 'subject':
-        return a.subject.localeCompare(b.subject);
-      case 'priority':
-        const priorityOrder = { high: 3, medium: 2, low: 1 };
-        return priorityOrder[b.priority as keyof typeof priorityOrder] - priorityOrder[a.priority as keyof typeof priorityOrder];
-      default:
-        return 0;
-    }
+    return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
   });
 
   const stats = {
     total: assignments.length,
-    pending: assignments.filter(a => a.status === 'pending' || a.status === 'not-started').length,
-    inProgress: assignments.filter(a => a.status === 'in-progress').length,
+    pending: assignments.filter(a => a.status === 'pending').length,
     submitted: assignments.filter(a => a.status === 'submitted').length,
-    overdue: assignments.filter(a => getDaysUntilDue(a.dueDate) < 0 && a.status !== 'submitted').length
+    graded: assignments.filter(a => a.status === 'graded').length,
+    overdue: assignments.filter(a => getDaysUntilDue(a.dueDate) < 0 && a.status === 'pending').length
   };
 
   return (
@@ -181,10 +217,6 @@ const StudentAssignments = () => {
               <p className="text-gray-600 mt-1">Track and manage your academic assignments</p>
             </div>
             <div className="flex gap-3 items-center">
-              <Button variant="outline" className="gap-2">
-                <Download className="w-4 h-4" />
-                Export
-              </Button>
               <AssignmentSubmit assignments={assignments} onSubmitted={async () => {
                 // refresh assignments list after submission
                 try {
@@ -245,14 +277,14 @@ const StudentAssignments = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-purple-50 to-purple-100">
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-blue-50 to-blue-100">
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-purple-600 font-medium text-sm">In Progress</p>
-                    <p className="text-2xl font-bold text-purple-800">{stats.inProgress}</p>
+                    <p className="text-blue-600 font-medium text-sm">Submitted</p>
+                    <p className="text-2xl font-bold text-blue-800">{stats.submitted}</p>
                   </div>
-                  <Edit className="w-8 h-8 text-purple-500" />
+                  <Upload className="w-8 h-8 text-blue-500" />
                 </div>
               </CardContent>
             </Card>
@@ -261,8 +293,8 @@ const StudentAssignments = () => {
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-green-600 font-medium text-sm">Submitted</p>
-                    <p className="text-2xl font-bold text-green-800">{stats.submitted}</p>
+                    <p className="text-green-600 font-medium text-sm">Graded</p>
+                    <p className="text-2xl font-bold text-green-800">{stats.graded}</p>
                   </div>
                   <CheckCircle className="w-8 h-8 text-green-500" />
                 </div>
@@ -303,7 +335,7 @@ const StudentAssignments = () => {
                   <SelectContent>
                     <SelectItem value="all">All Subjects</SelectItem>
                     {subjects.map(subject => (
-                      <SelectItem key={subject} value={subject}>{subject}</SelectItem>
+                      <SelectItem key={subject.id} value={subject.name}>{subject.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -314,21 +346,21 @@ const StudentAssignments = () => {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Status</SelectItem>
-                    <SelectItem value="not-started">Not Started</SelectItem>
-                    <SelectItem value="in-progress">In Progress</SelectItem>
                     <SelectItem value="pending">Pending</SelectItem>
                     <SelectItem value="submitted">Submitted</SelectItem>
+                    <SelectItem value="graded">Graded</SelectItem>
                   </SelectContent>
                 </Select>
 
-                <Select value={sortBy} onValueChange={setSortBy}>
+                <Select value={filterDueDate} onValueChange={setFilterDueDate}>
                   <SelectTrigger className="w-full lg:w-48">
-                    <SelectValue placeholder="Sort by" />
+                    <SelectValue placeholder="Due Dates" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="dueDate">Due Date</SelectItem>
-                    <SelectItem value="subject">Subject</SelectItem>
-                    <SelectItem value="priority">Priority</SelectItem>
+                    <SelectItem value="all">Due Dates</SelectItem>
+                    <SelectItem value="today">Today</SelectItem>
+                    <SelectItem value="tomorrow">Tomorrow</SelectItem>
+                    <SelectItem value="thisweek">This Week</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -444,7 +476,7 @@ const StudentAssignments = () => {
                         
                         <div className="text-right">
                           <p className="text-sm font-medium text-gray-900">
-                            Due: {new Date(assignment.dueDate).toLocaleDateString()}
+                            Due: {getDueDateLabel(assignment.dueDate)}
                           </p>
                           <p className={`text-xs ${
                             isOverdue ? 'text-red-600' : 
@@ -457,7 +489,7 @@ const StudentAssignments = () => {
                           </p>
                         </div>
 
-                        {assignment.status === 'submitted' && assignment.score && (
+                        {assignment.status === 'graded' && assignment.score && (
                           <div className="text-right">
                             <p className="text-sm font-medium text-green-600">
                               Score: {assignment.score}/{assignment.maxScore}

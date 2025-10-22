@@ -54,6 +54,7 @@ export const subjectAPI = {
 
 export const timetableAPI = {
   getTimetables: () => api.get('/api/timetables'),
+  getStudentTimetables: (studentId: number) => api.get(`/api/timetables/student/${studentId}`),
 };
 
 export const notificationAPI = {
@@ -62,6 +63,7 @@ export const notificationAPI = {
 
 export const examAPI = {
   getExams: () => api.get('/api/exams'),
+  getExamDetails: (examId: number) => api.get(`/api/exams/${examId}`),
 };
 
 export const authAPI = {
@@ -109,5 +111,14 @@ export const classAPI = {
   getStudentClass: () => api.get('/api/classes/me'),
   getClasses: () => api.get('/api/classes'),
 };
+
+export const eventAPI = {
+  getEvents: () => api.get('/api/events'),
+  getEventById: (eventId: number) => api.get(`/api/events/${eventId}`),
+};
+
+// Convenience functions
+export const getEvents = () => eventAPI.getEvents();
+export const getEventById = (eventId: number) => eventAPI.getEventById(eventId);
 
 export default api;

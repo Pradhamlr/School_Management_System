@@ -1,5 +1,22 @@
 import { useState, useEffect } from "react";
-import { BookOpen } from "lucide-react";
+import { 
+  BookOpen, 
+  Calculator, 
+  Atom, 
+  Globe, 
+  Palette, 
+  Music, 
+  Dumbbell, 
+  Languages, 
+  Microscope, 
+  Computer,
+  PenTool,
+  Beaker,
+  MapPin,
+  Users,
+  Brain,
+  Lightbulb
+} from "lucide-react";
 import StudentSidebar from "@/components/StudentSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -26,11 +43,51 @@ const StudentCourses = () => {
     fetchSubjects();
   }, []);
 
-  const getGradeColor = (grade: string) => {
-    if (grade.startsWith('A')) return 'text-green-600 bg-green-50 border-green-200';
-    if (grade.startsWith('B')) return 'text-blue-600 bg-blue-50 border-blue-200';
-    if (grade.startsWith('C')) return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    return 'text-gray-600 bg-gray-50 border-gray-200';
+  const getSubjectIcon = (subjectName: string) => {
+    const name = subjectName.toLowerCase();
+    
+    if (name.includes('math') || name.includes('algebra') || name.includes('geometry') || name.includes('calculus')) {
+      return { icon: Calculator, gradient: 'from-blue-500 to-indigo-600' };
+    }
+    if (name.includes('english') || name.includes('literature') || name.includes('language')) {
+      return { icon: PenTool, gradient: 'from-green-500 to-emerald-600' };
+    }
+    if (name.includes('physics')) {
+      return { icon: Atom, gradient: 'from-purple-500 to-violet-600' };
+    }
+    if (name.includes('chemistry')) {
+      return { icon: Beaker, gradient: 'from-orange-500 to-red-600' };
+    }
+    if (name.includes('computer') || name.includes('programming') || name.includes('coding') || name === 'computer') {
+      return { icon: Computer, gradient: 'from-gray-700 to-gray-900' };
+    }
+    if (name.includes('biology') || name.includes('science')) {
+      return { icon: Microscope, gradient: 'from-teal-500 to-cyan-600' };
+    }
+    if (name.includes('history')) {
+      return { icon: Globe, gradient: 'from-amber-500 to-yellow-600' };
+    }
+    if (name.includes('geography')) {
+      return { icon: Globe, gradient: 'from-emerald-500 to-green-600' };
+    }
+    if (name.includes('art') || name.includes('drawing')) {
+      return { icon: Palette, gradient: 'from-pink-500 to-rose-600' };
+    }
+    if (name.includes('music')) {
+      return { icon: Music, gradient: 'from-violet-500 to-purple-600' };
+    }
+    if (name.includes('physical') || name.includes('sports') || name.includes('pe')) {
+      return { icon: Dumbbell, gradient: 'from-red-500 to-pink-600' };
+    }
+    if (name.includes('psychology') || name.includes('philosophy')) {
+      return { icon: Brain, gradient: 'from-indigo-500 to-blue-600' };
+    }
+    if (name.includes('economics') || name.includes('business')) {
+      return { icon: Users, gradient: 'from-slate-600 to-gray-700' };
+    }
+    
+    // Default icon
+    return { icon: BookOpen, gradient: 'from-blue-500 to-purple-500' };
   };
 
   return (
@@ -66,9 +123,14 @@ const StudentCourses = () => {
                 <Card key={subject.id} className="border-0 shadow-lg bg-white/80 backdrop-blur hover:shadow-xl transition-all">
                   <CardContent className="p-6">
                     <div className="flex items-center gap-4 mb-4">
-                      <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
-                        <BookOpen className="w-8 h-8 text-white" />
-                      </div>
+                      {(() => {
+                        const { icon: SubjectIcon, gradient } = getSubjectIcon(subject.name);
+                        return (
+                          <div className={`w-16 h-16 bg-gradient-to-r ${gradient} rounded-xl flex items-center justify-center shadow-lg`}>
+                            <SubjectIcon className="w-8 h-8 text-white" />
+                          </div>
+                        );
+                      })()}
                       <div className="flex-1">
                         <h3 className="text-xl font-bold text-gray-900">{subject.name}</h3>
                         <p className="text-sm text-gray-600 mt-1">Code: {subject.code}</p>

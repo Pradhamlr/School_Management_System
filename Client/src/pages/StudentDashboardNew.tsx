@@ -30,24 +30,9 @@ const StudentDashboardNew = () => {
   const [analytics, setAnalytics] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Only attempt admin analytics if the logged-in user is admin/teacher
+  // Remove analytics - not needed for students
   useEffect(() => {
-    let mounted = true;
-    const fetchAnalytics = async () => {
-      try {
-        // If the API returns 403 for non-admins, just ignore analytics
-        const res = await api.get('/api/analytics');
-        if (!mounted) return;
-        setAnalytics(res.data.data);
-      } catch (e) {
-        // expected for students (403) or other failures - keep defaults
-        console.info('Analytics not available for this user or failed to fetch');
-      } finally {
-        if (mounted) setLoading(false);
-      }
-    };
-    fetchAnalytics();
-    return () => { mounted = false; };
+    setLoading(false);
   }, []);
 
   const [upcomingAssignments, setUpcomingAssignments] = useState<any[]>([]);
@@ -95,12 +80,35 @@ const StudentDashboardNew = () => {
           if (mounted) setNotifications([]);
         }
 
-        // Recent grades (if you have an endpoint, fallback to analytics)
+        // Recent grades from exam details
         try {
-          const analyticsRes = await api.get('/api/analytics');
-          if (mounted) setRecentGrades(analyticsRes.data.data?.topStudents || []);
+          const examResponse = await api.get('/api/exams');
+          const allExams = examResponse.data.exams || [];
+          const classExams = allExams.filter((exam: any) => exam.classId === student.classId);
+          
+          const gradesData = [];
+          for (const exam of classExams.slice(0, 5)) { // Get latest 5 exams
+            try {
+              const detailsResponse = await api.get(`/api/exams/${exam.id}`);
+              const examDetails = detailsResponse.data.exam;
+              const studentResult = examDetails.results?.find((result: any) => result.studentId === student.id);
+              
+              if (studentResult) {
+                gradesData.push({
+                  subject: exam.subject?.name || 'Unknown',
+                  grade: studentResult.grade,
+                  score: studentResult.marks,
+                  date: new Date(exam.date).toLocaleDateString()
+                });
+              }
+            } catch (err) {
+              console.error(`Failed to fetch exam ${exam.id} details:`, err);
+            }
+          }
+          
+          if (mounted) setRecentGrades(gradesData);
         } catch (e) {
-          console.error('Failed to fetch analytics for grades', e);
+          console.error('Failed to fetch exam grades', e);
           if (mounted) setRecentGrades([]);
         }
 

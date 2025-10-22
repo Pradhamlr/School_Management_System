@@ -64,6 +64,12 @@ const StudentSidebar = () => {
       color: "text-pink-600"
     },
     {
+      title: "Events",
+      icon: Calendar,
+      path: "/student/events",
+      color: "text-cyan-600"
+    },
+    {
       title: "Payments",
       icon: CreditCard,
       path: "/payments",

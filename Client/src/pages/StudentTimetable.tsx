@@ -5,7 +5,7 @@ import { DashboardHeader } from "@/components/DashboardHeader";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { timetableAPI } from '@/lib/api';
+import { timetableAPI, studentAPI } from '@/lib/api';
 
 const StudentTimetable = () => {
   const [timetables, setTimetables] = useState([]);
@@ -14,8 +14,19 @@ const StudentTimetable = () => {
   useEffect(() => {
     const fetchTimetables = async () => {
       try {
+        // Get current student first
+        const studentResponse = await studentAPI.getCurrentStudent();
+        const studentId = studentResponse.data.student.id;
+        
+        // Get timetables for student's class
         const response = await timetableAPI.getTimetables();
-        setTimetables(response.data.data || []);
+        const allTimetables = response.data.data || [];
+        
+        // Filter timetables for student's class
+        const studentClassId = studentResponse.data.student.classId;
+        const studentTimetables = allTimetables.filter(t => t.classId === studentClassId);
+        
+        setTimetables(studentTimetables);
       } catch (error) {
         console.error('Failed to fetch timetables:', error);
       } finally {
