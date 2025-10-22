@@ -61,7 +61,7 @@ const Payments = () => {
     
     try {
       // Create Razorpay order
-      const orderResponse = await fetch(`/api/payments/${feeId}/create-order`, {
+      const orderResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/payments/${feeId}/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -80,7 +80,7 @@ const Payments = () => {
         handler: async (response: any) => {
           try {
             // Verify payment
-            const verifyResponse = await fetch(`/api/payments/${feeId}/verify-payment`, {
+            const verifyResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/payments/${feeId}/verify-payment`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({

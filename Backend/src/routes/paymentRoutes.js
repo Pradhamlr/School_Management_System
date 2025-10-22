@@ -14,7 +14,7 @@ router.patch('/:id', auth, authorize('ADMIN'), paymentController.updateFee);
 router.delete('/:id', auth, authorize('ADMIN'), paymentController.deleteFee);
 
 // Student: view own fees and pay
-router.get('/me', auth, authorize('STUDENT'), paymentController.getMyFees);
+router.get('/student/me', auth, authorize('STUDENT'), paymentController.getMyFees);
 router.post('/:id/pay', auth, paymentController.payFee); // student or admin can call
 
 // Razorpay integration
