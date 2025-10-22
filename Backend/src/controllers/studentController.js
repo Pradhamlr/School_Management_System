@@ -134,5 +134,22 @@ module.exports = {
     getStudentById,
     getCurrentStudent,
     updateStudent,
-    deleteStudent
+    deleteStudent,
+    // debug helper
+    debugCurrentStudent: async (req, res) => {
+        // Return decoded token and student lookup for debugging purposes
+        try {
+            const tokenUser = req.user || null;
+            let student = null;
+            try {
+                student = await prisma.student.findUnique({ where: { userId: req.user?.id || -1 }, include: { user: true } });
+            } catch (e) {
+                // ignore lookup errors
+            }
+
+            return res.status(200).json({ success: true, tokenUser, student });
+        } catch (err) {
+            return res.status(500).json({ success: false, error: String(err) });
+        }
+    }
 };
