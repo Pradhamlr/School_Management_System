@@ -22,11 +22,7 @@ export default function NotificationFormModal({ open, onOpenChange, onSaved }: P
       const apiClient = await import('@/lib/api').then(m => m.default);
       const res = await apiClient.post('/api/notifications', { title: values.title, message: values.message, targetRole: values.targetRole });
       toast({ title: 'Sent', description: 'Notification created and dispatched' });
-      // Show email summary preview if present
-      if (res?.data?.data?.emailSummary) {
-        const total = res.data.data.emailSummary.totalRecipients;
-        toast({ title: 'Email summary', description: `${total} recipients (preview available in backend)` });
-      }
+      // Close modal and refresh list
       onSaved();
       onOpenChange(false);
     }catch(err:any){
@@ -81,6 +77,7 @@ export default function NotificationFormModal({ open, onOpenChange, onSaved }: P
             </DialogFooter>
           </form>
         </Form>
+        {/* Email preview removed - backend may still send emailSummary but we don't surface previews in the UI */}
       </DialogContent>
     </Dialog>
   );
