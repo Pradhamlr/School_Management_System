@@ -34,15 +34,18 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import StudentFormModal from '@/components/admin/StudentFormModal';
+import StudentDetailsModal from '@/components/admin/StudentDetailsModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import api from '@/lib/api';
 
 const StudentManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   
   const { toast } = useToast();
 
@@ -62,6 +65,16 @@ const StudentManagement = () => {
 
   useEffect(() => {
     fetchStudents();
+    // also load classes so we can show name/section instead of id
+    (async () => {
+      try {
+        const api = await import('@/lib/api').then(m => m.default);
+        const res = await api.get('/api/classes');
+        setClasses(res.data.classes || []);
+      } catch (e) {
+        console.warn('Failed to load classes', e);
+      }
+    })();
   }, []);
 
   // fetch analytics totals for cards
@@ -83,12 +96,21 @@ const StudentManagement = () => {
 
   const [analytics, setAnalytics] = React.useState<any | null>(null);
 
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 180);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
+
   const filteredStudents = students.filter(student => {
     const name = student?.user?.name || '';
     const email = student?.user?.email || '';
+    const cls = classes.find(c => c.id === student.classId);
+    const classLabel = cls ? `${cls.name}${cls.section ? ` ${cls.section}` : ''}` : (student.classId ? String(student.classId) : '');
     return (
-      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.toLowerCase().includes(searchTerm.toLowerCase())
+      name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      classLabel.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
   });
 
@@ -246,7 +268,14 @@ const StudentManagement = () => {
                       </TableCell>
                       <TableCell className="font-mono">{student.rollNumber || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{student.classId || '-'}</Badge>
+                        {(() => {
+                          const cls = classes.find(c => c.id === student.classId);
+                          return cls ? (
+                            <Badge variant="outline">{cls.name}{cls.section ? ` ${cls.section}` : ''}</Badge>
+                          ) : (
+                            <Badge variant="outline">{student.classId || '-'}</Badge>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         <Badge variant="default">Student</Badge>
@@ -263,7 +292,7 @@ const StudentManagement = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => setSelectedStudent(student)}>
                               <Eye className="w-4 h-4" />
                               View Details
                             </DropdownMenuItem>
@@ -297,6 +326,12 @@ const StudentManagement = () => {
               />
             </React.Suspense>
           )}
+
+          <StudentDetailsModal
+            open={Boolean(selectedStudent)}
+            onOpenChange={(v) => { if (!v) setSelectedStudent(null); }}
+            student={selectedStudent}
+          />
 
           {/* Delete confirmation dialog */}
           <Dialog open={Boolean(deletingStudentId)} onOpenChange={(v) => { if (!v) setDeletingStudentId(null); }}>

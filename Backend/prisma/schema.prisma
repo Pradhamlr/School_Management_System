@@ -37,6 +37,7 @@ model Student {
 model Teacher {
   id         Int      @id @default(autoincrement())
   userId     Int      @unique
+  status     String   @default("Active")
   department String
   hireDate   DateTime @default(now())
   user       User     @relation(fields: [userId], references: [id])

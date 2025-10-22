@@ -62,6 +62,8 @@ export default function TeacherFormModal({ initial, open, onOpenChange, onSaved 
     }
   };
 
+  // department is a free-text field now; no dropdown
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
@@ -122,7 +124,7 @@ export default function TeacherFormModal({ initial, open, onOpenChange, onSaved 
             <FormItem>
               <FormLabel>Department</FormLabel>
               <FormControl>
-                <Input {...form.register('department', { required: 'Department is required' })} />
+                <Input {...form.register('department')} placeholder="e.g. Science" />
               </FormControl>
               <FormMessage>{form.formState.errors.department?.message as string}</FormMessage>
             </FormItem>

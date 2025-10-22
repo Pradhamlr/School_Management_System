@@ -92,6 +92,7 @@ const getTeacherById = async (req, res) => {
         user: teacher.user,
         department: teacher.department,
         hireDate: teacher.hireDate,
+        status: teacher.status || 'Active',
         subjects,
         classes: classIds.size,
         teachingAssignments: teacher.teachingAssignments,
@@ -124,6 +125,7 @@ const getCurrentTeacher = async (req, res) => {
         user: teacher.user,
         department: teacher.department,
         hireDate: teacher.hireDate,
+        status: teacher.status || 'Active',
         subjects,
         classes: classIds.size,
         teachingAssignments: teacher.teachingAssignments,
@@ -137,7 +139,7 @@ const getCurrentTeacher = async (req, res) => {
 }
 
 const updateTeacher = async (req, res) => {
-    const { department, hireDate } = req.body;
+    const { department, hireDate, status } = req.body;
 
     const existingTeacher = await prisma.teacher.findUnique({ where: { id: Number(req.params.id) } });
     if (!existingTeacher) {
@@ -147,12 +149,20 @@ const updateTeacher = async (req, res) => {
     const updateData = {};
     if (department !== undefined) updateData.department = department;
     if (hireDate !== undefined) updateData.hireDate = new Date(hireDate);
+    if (status !== undefined) updateData.status = status;
 
-    const updatedTeacher = await prisma.teacher.update({
-        where: { id: Number(req.params.id) },
-        data: updateData,
-        include: { user: { select: { id: true, name: true, email: true, role: true } } }
-    });
+        let updatedTeacher;
+        try {
+            updatedTeacher = await prisma.teacher.update({
+                    where: { id: Number(req.params.id) },
+                    data: updateData,
+                    include: { user: { select: { id: true, name: true, email: true, role: true } } }
+            });
+        } catch (err) {
+            // Likely a schema mismatch (e.g., `status` field not present in DB). Return a clear error.
+            console.error('Failed to update teacher:', err);
+            return res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({ success: false, message: 'Failed to update teacher. Database schema may be out of date. Please run prisma migrate.' });
+        }
 
     res.status(StatusCodes.OK).json({
         success: true,
