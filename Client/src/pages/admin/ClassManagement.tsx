@@ -76,7 +76,9 @@ const ClassManagement = () => {
               <p className="text-gray-600 mt-1">Manage classes and subjects</p>
             </div>
             <div>
-              <Button onClick={() => { setEditing(null); setIsModalOpen(true); }}>Add Class</Button>
+              <Button onClick={() => { setEditing(null); setIsModalOpen(true); }} className="bg-gradient-to-r from-indigo-600 to-indigo-700 gap-2">
+                Add Class
+              </Button>
             </div>
           </div>
 
@@ -85,7 +87,15 @@ const ClassManagement = () => {
               <CardTitle>All Classes</CardTitle>
             </CardHeader>
             <CardContent>
-              <Table>
+              {loading ? (
+                <div className="p-8 text-center text-sm text-muted-foreground">Loading classes…</div>
+              ) : classes.length === 0 ? (
+                <div className="p-8 text-center">
+                  <p className="text-sm text-gray-600">No classes yet. Click Add Class to create one.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                <Table>
                 <TableHeader>
                   <TableRow>
                     <TableHead>Name</TableHead>
@@ -110,7 +120,9 @@ const ClassManagement = () => {
                     </TableRow>
                   ))}
                 </TableBody>
-              </Table>
+                </Table>
+                </div>
+              )}
             </CardContent>
           </Card>
 

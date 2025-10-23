@@ -34,22 +34,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import StudentFormModal from '@/components/admin/StudentFormModal';
+import StudentDetailsModal from '@/components/admin/StudentDetailsModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import api, { studentAPI } from '@/lib/api';
+import api from '@/lib/api';
 
 const StudentManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [students, setStudents] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
+  const [selectedStudent, setSelectedStudent] = useState<any | null>(null);
   
   const { toast } = useToast();
 
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const res = await studentAPI.getAllStudents();
+      const res = await api.get('/api/students');
       // backend returns { success: true, students }
       setStudents(res.data.students || []);
     } catch (err: any) {
@@ -59,8 +62,21 @@ const StudentManagement = () => {
     }
   };
 
+  const [analytics, setAnalytics] = React.useState<any | null>(null);
+
   useEffect(() => {
+    // initial load
     fetchStudents();
+
+    // also load classes so we can show name/section instead of id
+    (async () => {
+      try {
+        const res = await api.get('/api/classes');
+        setClasses(res.data.classes || []);
+      } catch (e) {
+        console.warn('Failed to load classes', e);
+      }
+    })();
   }, []);
 
   // fetch analytics totals for cards
@@ -70,7 +86,6 @@ const StudentManagement = () => {
       try {
         const res = await api.get('/api/analytics');
         if (!mounted) return;
-        // we don't store globally; just set values into DOM state below if needed
         setAnalytics(res.data.data);
       } catch (e) {
         console.error('Failed to fetch analytics', e);
@@ -80,14 +95,21 @@ const StudentManagement = () => {
     return () => { mounted = false; };
   }, []);
 
-  const [analytics, setAnalytics] = React.useState<any | null>(null);
+  const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(searchTerm), 180);
+    return () => clearTimeout(t);
+  }, [searchTerm]);
 
   const filteredStudents = students.filter(student => {
     const name = student?.user?.name || '';
     const email = student?.user?.email || '';
+    const cls = classes.find(c => c.id === student.classId);
+    const classLabel = cls ? `${cls.name}${cls.section ? ` ${cls.section}` : ''}` : (student.classId ? String(student.classId) : '');
     return (
-      name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      email.toLowerCase().includes(searchTerm.toLowerCase())
+      name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      email.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+      classLabel.toLowerCase().includes(debouncedSearch.toLowerCase())
     );
   });
 
@@ -98,9 +120,11 @@ const StudentManagement = () => {
   const confirmDeleteStudent = async () => {
     if (!deletingStudentId) return;
     try {
-      await studentAPI.deleteStudent(deletingStudentId);
+      await api.delete(`/api/students/${deletingStudentId}`);
       toast({ title: 'Deleted', description: 'Student deleted successfully' });
       fetchStudents();
+      // refresh analytics when list changes
+      try { await api.get('/api/analytics').then(r => setAnalytics(r.data.data)); } catch(e){}
     } catch (err: any) {
       toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to delete student', variant: 'destructive' });
     } finally {
@@ -165,7 +189,7 @@ const StudentManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-100">New This Month</p>
-                    <p className="text-3xl font-bold">127</p>
+                    <p className="text-3xl font-bold">{analytics ? (analytics.academics?.monthlyNewStudents ?? '—') : '…'}</p>
                   </div>
                   <Plus className="w-8 h-8 text-orange-200" />
                 </div>
@@ -176,7 +200,7 @@ const StudentManagement = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-purple-100">Avg. Attendance</p>
-                    <p className="text-3xl font-bold">89%</p>
+                    <p className="text-3xl font-bold">{analytics ? `${analytics.attendance.studentAttendanceRate ?? '—'}%` : '…'}</p>
                   </div>
                   <Eye className="w-8 h-8 text-purple-200" />
                 </div>
@@ -242,7 +266,14 @@ const StudentManagement = () => {
                       </TableCell>
                       <TableCell className="font-mono">{student.rollNumber || '-'}</TableCell>
                       <TableCell>
-                        <Badge variant="outline">{student.classId || '-'}</Badge>
+                        {(() => {
+                          const cls = classes.find(c => c.id === student.classId);
+                          return cls ? (
+                            <Badge variant="outline">{cls.name}{cls.section ? ` ${cls.section}` : ''}</Badge>
+                          ) : (
+                            <Badge variant="outline">{student.classId || '-'}</Badge>
+                          );
+                        })()}
                       </TableCell>
                       <TableCell>
                         <Badge variant="default">Student</Badge>
@@ -259,7 +290,7 @@ const StudentManagement = () => {
                             </Button>
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
-                            <DropdownMenuItem className="gap-2">
+                            <DropdownMenuItem className="gap-2" onClick={() => setSelectedStudent(student)}>
                               <Eye className="w-4 h-4" />
                               View Details
                             </DropdownMenuItem>
@@ -281,18 +312,19 @@ const StudentManagement = () => {
             </CardContent>
           </Card>
           
-          {/* Student form modal */}
-          {typeof window !== 'undefined' && (
-            // dynamic import to avoid SSR issues
-            <React.Suspense>
-              <StudentFormModal
-                initial={editing}
-                open={isModalOpen}
-                onOpenChange={setIsModalOpen}
-                onSaved={fetchStudents}
-              />
-            </React.Suspense>
-          )}
+          {/* Student form modal (render directly) */}
+          <StudentFormModal
+            initial={editing}
+            open={isModalOpen}
+            onOpenChange={setIsModalOpen}
+            onSaved={fetchStudents}
+          />
+
+          <StudentDetailsModal
+            open={Boolean(selectedStudent)}
+            onOpenChange={(v) => { if (!v) setSelectedStudent(null); }}
+            student={selectedStudent}
+          />
 
           {/* Delete confirmation dialog */}
           <Dialog open={Boolean(deletingStudentId)} onOpenChange={(v) => { if (!v) setDeletingStudentId(null); }}>

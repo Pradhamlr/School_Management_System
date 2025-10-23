@@ -29,6 +29,7 @@ import ClassManagement from "./pages/admin/ClassManagement";
 import EventManagement from "./pages/admin/EventManagement";
 import FinanceManagement from "./pages/admin/FinanceManagement";
 import ExamManagement from "./pages/admin/ExamManagement";
+import SubjectManagement from "./pages/admin/SubjectManagement";
 import ReportManagement from "./pages/admin/ReportManagement";
 import NotificationManagement from "./pages/admin/NotificationManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
@@ -61,6 +62,7 @@ const App = () => (
           <Route path="/admin/students" element={<ProtectedRoute><StudentManagement /></ProtectedRoute>} />
           <Route path="/admin/teachers" element={<ProtectedRoute><TeacherManagement /></ProtectedRoute>} />
           <Route path="/admin/classes" element={<ProtectedRoute><ClassManagement /></ProtectedRoute>} />
+          <Route path="/admin/subjects" element={<ProtectedRoute><SubjectManagement /></ProtectedRoute>} />
           <Route path="/admin/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
           <Route path="/admin/events" element={<ProtectedRoute><EventManagement /></ProtectedRoute>} />
           <Route path="/admin/finance" element={<ProtectedRoute><FinanceManagement /></ProtectedRoute>} />

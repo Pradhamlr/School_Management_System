@@ -49,6 +49,12 @@ const AdminSidebar = () => {
       color: "text-orange-600"
     },
     {
+      title: "Subjects",
+      icon: BookOpen,
+      path: "/admin/subjects",
+      color: "text-teal-600"
+    },
+    {
       title: "Analytics",
       icon: BarChart3,
       path: "/admin/analytics",
