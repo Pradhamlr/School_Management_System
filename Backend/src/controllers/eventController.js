@@ -174,10 +174,57 @@ const deleteEvent = async (req, res) => {
   res.status(StatusCodes.NO_CONTENT).send();
 };
 
+/**
+ * Sign up as volunteer for event
+ * POST /api/events/:id/volunteer
+ */
+const signupVolunteer = async (req, res) => {
+  const eventId = Number(req.params.id);
+  const userId = req.user?.id;
+
+  if (!userId) {
+    throw new BadRequestError('User not authenticated');
+  }
+
+  // Find student record for the user
+  const student = await prisma.student.findFirst({ where: { userId } });
+  if (!student) {
+    throw new NotFoundError('Student record not found');
+  }
+
+  // Check if event exists
+  const event = await prisma.event.findUnique({ where: { id: eventId } });
+  if (!event) {
+    throw new NotFoundError('Event not found');
+  }
+
+  // Check if already volunteering
+  const existing = await prisma.eventVolunteer.findFirst({
+    where: { eventId, studentId: student.id }
+  });
+  if (existing) {
+    throw new BadRequestError('Already signed up as volunteer for this event');
+  }
+
+  // Create volunteer record
+  await prisma.eventVolunteer.create({
+    data: {
+      eventId,
+      studentId: student.id
+    }
+  });
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    message: 'Successfully signed up as volunteer'
+  });
+};
+
 module.exports = {
   createEvent,
   getEvents,
   getEventById,
   updateEvent,
-  deleteEvent
+  deleteEvent,
+  signupVolunteer
 };

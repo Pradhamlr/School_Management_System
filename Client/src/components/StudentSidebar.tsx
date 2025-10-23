@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { 
   LayoutDashboard, 
@@ -20,11 +20,61 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { studentAPI, attendanceAPI, timetableAPI } from "@/lib/api";
 
 const StudentSidebar = () => {
   const [collapsed, setCollapsed] = useState(false);
+  const [assignmentStats, setAssignmentStats] = useState({ completed: 0, total: 0 });
+  const [attendanceRate, setAttendanceRate] = useState(0);
+  const [nextClass, setNextClass] = useState<string>('');
   const navigate = useNavigate();
   const location = useLocation();
+
+  useEffect(() => {
+    fetchSidebarData();
+  }, []);
+
+  const fetchSidebarData = async () => {
+    try {
+      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const studentResponse = await studentAPI.getCurrentStudent();
+      const studentId = studentResponse.data.id;
+
+      // Fetch assignments
+      const assignmentsResponse = await studentAPI.getStudentAssignments(studentId);
+      const assignments = assignmentsResponse.data || [];
+      const completed = assignments.filter((a: any) => a.submission?.status === 'SUBMITTED' || a.submission?.status === 'GRADED').length;
+      setAssignmentStats({ completed, total: assignments.length });
+
+      // Fetch attendance
+      const attendanceResponse = await attendanceAPI.getStudentAttendance(studentId);
+      const attendanceStats = attendanceResponse.data.data?.statistics;
+      const rate = attendanceStats?.attendanceRate || 0;
+      setAttendanceRate(rate);
+
+      // Fetch next class from timetable
+      const timetableResponse = await timetableAPI.getStudentTimetables(studentId);
+      const timetables = timetableResponse.data || [];
+      const now = new Date();
+      const today = now.getDay();
+      const currentTime = now.getHours() * 60 + now.getMinutes();
+      
+      const todayClasses = timetables.filter((t: any) => t.dayOfWeek === today);
+      const upcomingClass = todayClasses.find((t: any) => {
+        const [hours, minutes] = t.startTime.split(':').map(Number);
+        const classTime = hours * 60 + minutes;
+        return classTime > currentTime;
+      });
+      
+      if (upcomingClass) {
+        setNextClass(`${upcomingClass.subject.name} at ${upcomingClass.startTime}`);
+      } else {
+        setNextClass('No more classes today');
+      }
+    } catch (error) {
+      console.error('Error fetching sidebar data:', error);
+    }
+  };
 
   const menuItems = [
     {
@@ -203,20 +253,20 @@ const StudentSidebar = () => {
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-500">Assignments</span>
-                <span className="text-green-600 font-medium">8/10</span>
+                <span className="text-green-600 font-medium">{assignmentStats.completed}/{assignmentStats.total}</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '80%' }}></div>
+                <div className="bg-green-500 h-1.5 rounded-full" style={{ width: `${assignmentStats.total > 0 ? (assignmentStats.completed / assignmentStats.total) * 100 : 0}%` }}></div>
               </div>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
                 <span className="text-gray-500">Attendance</span>
-                <span className="text-blue-600 font-medium">94%</span>
+                <span className="text-blue-600 font-medium">{attendanceRate}%</span>
               </div>
               <div className="w-full bg-gray-200 rounded-full h-1.5">
-                <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: '94%' }}></div>
+                <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${attendanceRate}%` }}></div>
               </div>
             </div>
           </div>

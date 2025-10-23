@@ -115,10 +115,12 @@ export const classAPI = {
 export const eventAPI = {
   getEvents: () => api.get('/api/events'),
   getEventById: (eventId: number) => api.get(`/api/events/${eventId}`),
+  signupVolunteer: (eventId: number) => api.post(`/api/events/${eventId}/volunteer`),
 };
 
 // Convenience functions
 export const getEvents = () => eventAPI.getEvents();
 export const getEventById = (eventId: number) => eventAPI.getEventById(eventId);
+export const signupVolunteer = (eventId: number) => eventAPI.signupVolunteer(eventId);
 
 export default api;

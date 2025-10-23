@@ -6,7 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { getEvents } from '@/lib/api';
+import { getEvents, signupVolunteer } from '@/lib/api';
+import { useToast } from '@/hooks/use-toast';
 
 interface Event {
   id: number;
@@ -36,6 +37,8 @@ const StudentEvents = () => {
   const [loading, setLoading] = useState(true);
   const [selectedEvent, setSelectedEvent] = useState<string>('');
   const [volunteerDialogOpen, setVolunteerDialogOpen] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
     fetchEvents();
@@ -73,6 +76,31 @@ const StudentEvents = () => {
 
   const isUpcoming = (startDate: string) => {
     return new Date(startDate) > new Date();
+  };
+
+  const handleVolunteerSignup = async () => {
+    if (!selectedEvent) return;
+    
+    setSubmitting(true);
+    try {
+      await signupVolunteer(Number(selectedEvent));
+      toast({
+        title: 'Success!',
+        description: 'Successfully signed up as volunteer for the event.',
+      });
+      setVolunteerDialogOpen(false);
+      setSelectedEvent('');
+      // Refresh events to show updated volunteer list
+      fetchEvents();
+    } catch (error: any) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Failed to sign up as volunteer.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const upcomingEvents = events.filter(event => isUpcoming(event.startDate));
@@ -134,16 +162,11 @@ const StudentEvents = () => {
                   Cancel
                 </Button>
                 <Button 
-                  onClick={() => {
-                    // Handle volunteer signup
-                    console.log('Volunteering for event:', selectedEvent);
-                    setVolunteerDialogOpen(false);
-                    setSelectedEvent('');
-                  }}
-                  disabled={!selectedEvent}
+                  onClick={handleVolunteerSignup}
+                  disabled={!selectedEvent || submitting}
                   className="bg-gradient-to-r from-blue-600 to-purple-600"
                 >
-                  Sign Up as Volunteer
+                  {submitting ? 'Signing Up...' : 'Sign Up as Volunteer'}
                 </Button>
               </div>
             </div>
