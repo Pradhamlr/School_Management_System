@@ -48,6 +48,7 @@ import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 import TeacherAttendance from "./pages/teacher/TeacherAttendance";
 import TeacherTimetable from "./pages/teacher/TeacherTimetable";
 import TeacherGrades from "./pages/teacher/TeacherGrades";
+import TeacherNotifications from "./pages/teacher/TeacherNotifications";
 import TestPage from "./pages/TestPage";
 
 const queryClient = new QueryClient();
@@ -81,6 +82,7 @@ const App = () => (
           <Route path="/teacher/assignments" element={<ProtectedRoute><TeacherAssignments /></ProtectedRoute>} />
           <Route path="/teacher/attendance" element={<ProtectedRoute><TeacherAttendance /></ProtectedRoute>} />
           <Route path="/teacher/timetable" element={<ProtectedRoute><TeacherTimetable /></ProtectedRoute>} />
+          <Route path="/teacher/notifications" element={<ProtectedRoute><TeacherNotifications /></ProtectedRoute>} />
           <Route path="/teacher/grades" element={<ProtectedRoute><TeacherGrades /></ProtectedRoute>} />
           <Route path="/student-dashboard" element={<ProtectedRoute requiredRole="student"><StudentDashboardNew /></ProtectedRoute>} />
           <Route path="/student-dashboard-new" element={<ProtectedRoute requiredRole="student"><StudentDashboardNew /></ProtectedRoute>} />

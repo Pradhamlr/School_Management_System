@@ -20,24 +20,37 @@ const Login = () => {
     password: ""
   });
   const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
+    setFieldErrors({});
+    // basic client-side validation to avoid unnecessary requests
+    const errs: { email?: string; password?: string } = {};
+    if (!formData.email || !formData.email.includes('@')) errs.email = 'Please enter a valid email address';
+    if (!formData.password || formData.password.length < 6) errs.password = 'Password must be at least 6 characters';
+    if (Object.keys(errs).length > 0) {
+      setFieldErrors(errs);
+      return;
+    }
     setLoading(true);
 
     try {
       const res = await api.post('/api/auth/login', formData);
       const data = res.data;
 
-      if (res.status >= 200 && res.status < 300) {
+        if (res.status >= 200 && res.status < 300) {
         if (data.user.role.toLowerCase() === role?.toLowerCase()) {
-          login(data.user, data.token);
-          toast({
-            title: "Login successful",
-            description: `Welcome back, ${data.user.name}!`,
-          });
-          const dashboardRoute = `/${role?.toLowerCase()}-dashboard`;
-          navigate(dashboardRoute);
+            // call login and wait for state to update before navigating
+            login(data.user, data.token);
+            toast({
+              title: "Login successful",
+              description: `Welcome back, ${data.user.name}!`,
+            });
+            const dashboardRoute = `/${role?.toLowerCase()}-dashboard`;
+            navigate(dashboardRoute);
         } else {
           toast({
             title: "Access denied",
@@ -46,19 +59,15 @@ const Login = () => {
           });
         }
       } else {
-        toast({
-          title: "Login failed",
-          description: data.message || "Invalid credentials",
-          variant: "destructive",
-        });
+          // show persistent inline error for common failure path
+          setErrorMessage(data.message || 'Invalid credentials');
+          toast({ title: 'Login failed', description: data.message || 'Invalid credentials', variant: 'destructive' });
       }
     } catch (error) {
-      const serverMessage = error?.response?.data?.message || error?.message;
-      toast({
-        title: "Login failed",
-        description: serverMessage || "Something went wrong. Please try again.",
-        variant: "destructive",
-      });
+      const serverMessage = (error as any)?.response?.data?.message || (error as any)?.message || 'Something went wrong. Please try again.';
+      // persist server message in an inline alert so it doesn't flash
+      setErrorMessage(serverMessage);
+      toast({ title: 'Login failed', description: serverMessage, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -126,6 +135,9 @@ const Login = () => {
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   required
                 />
+                {fieldErrors.email && (
+                  <p role="alert" className="text-sm text-red-600 mt-1">{fieldErrors.email}</p>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>
@@ -138,6 +150,9 @@ const Login = () => {
                     onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                     required
                   />
+                    {fieldErrors.password && (
+                      <p role="alert" className="text-sm text-red-600 mt-1">{fieldErrors.password}</p>
+                    )}
                   <Button
                     type="button"
                     variant="ghost"
@@ -170,6 +185,14 @@ const Login = () => {
               >
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
+
+              {/* inline persistent error area */}
+              {errorMessage && (
+                <div role="alert" className="mt-3 p-3 bg-red-50 border border-red-200 text-red-800 rounded">
+                  <strong className="block font-semibold">Login error</strong>
+                  <p className="text-sm">{errorMessage}</p>
+                </div>
+              )}
 
 
             </form>

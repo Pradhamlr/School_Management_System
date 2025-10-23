@@ -7,6 +7,7 @@ import {
   CheckSquare,
   BarChart3,
   Clock,
+  Bell,
   Settings,
   GraduationCap
 } from "lucide-react";
@@ -19,6 +20,7 @@ const teacherNavigationItems = [
   { name: "Attendance", icon: CheckSquare, href: "/teacher/attendance" },
   { name: "Timetable", icon: Clock, href: "/teacher/timetable" },
   { name: "Grades", icon: BarChart3, href: "/teacher/grades" },
+  { name: "Notifications", icon: Bell, href: "/teacher/notifications" },
 ];
 
 export function TeacherSidebar() {

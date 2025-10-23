@@ -13,6 +13,7 @@ import {
   Edit,
   Trash2,
   Download,
+  DownloadCloud,
   Loader2,
   GraduationCap
 } from "lucide-react";
@@ -440,7 +441,7 @@ const TeacherAssignments = () => {
                             Grade
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => handleExport(assignment.id)}>
-                            <Download className="w-4 h-4 mr-2" />
+                            <DownloadCloud className="w-4 h-4 mr-2" />
                             Export
                           </Button>
                           <AlertDialog>

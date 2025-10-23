@@ -9,7 +9,7 @@ import {
   Trash2, 
   Eye,
   Download,
-  Upload,
+  DownloadCloud,
   MoreHorizontal
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
@@ -115,7 +115,7 @@ const StudentManagement = () => {
   });
 
   const [deletingStudentId, setDeletingStudentId] = useState<number | null>(null);
-  const [debugInfo, setDebugInfo] = useState<any | null>(null);
+  // debugInfo removed per UX request
   const deleteStudent = async (id: number) => {
     setDeletingStudentId(id);
   };
@@ -148,26 +148,36 @@ const StudentManagement = () => {
               <p className="text-gray-600 mt-1">Manage and monitor all student records</p>
             </div>
             <div className="flex gap-3">
-              <Button variant="outline" className="gap-2">
-                <Upload className="w-4 h-4" />
-                Import
-              </Button>
-              <Button variant="ghost" className="gap-2" onClick={async () => {
-                // Run quick debug checks: /api/students and /api/students/me-debug
+              <Button variant="outline" className="gap-2" onClick={() => {
+                // Export visible table rows as CSV
                 try {
-                  const [allRes, meRes] = await Promise.all([
-                    api.get('/api/students').catch((e) => e),
-                    api.get('/api/students/me-debug').catch((e) => e)
-                  ]);
-                  setDebugInfo({ all: { status: allRes?.status, data: allRes?.data }, me: { status: meRes?.status, data: meRes?.data } });
+                  const rows = filteredStudents.map(s => ({
+                    id: s.id,
+                    name: s.user?.name || '',
+                    email: s.user?.email || '',
+                    rollNumber: s.rollNumber || '',
+                    class: (() => {
+                      const cls = classes.find(c => c.id === s.classId);
+                      return cls ? `${cls.name}${cls.section ? ` ${cls.section}` : ''}` : (s.classId || '');
+                    })(),
+                  }));
+
+                  const header = ['id','name','email','rollNumber','class'];
+                  const csv = [header.join(',')].concat(rows.map(r => header.map(h => `"${String((r as any)[h] ?? '').replace(/"/g, '""')}"`).join(','))).join('\n');
+                  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement('a');
+                  a.href = url;
+                  a.download = `students-export-${new Date().toISOString().slice(0,10)}.csv`;
+                  document.body.appendChild(a);
+                  a.click();
+                  a.remove();
+                  URL.revokeObjectURL(url);
                 } catch (e) {
-                  setDebugInfo({ error: String(e) });
+                  toast({ title: 'Export failed', description: String(e), variant: 'destructive' });
                 }
               }}>
-                Debug
-              </Button>
-              <Button variant="outline" className="gap-2">
-                <Download className="w-4 h-4" />
+                <DownloadCloud className="w-4 h-4" />
                 Export
               </Button>
               <Button className="gap-2 bg-gradient-to-r from-blue-600 to-blue-700" onClick={() => { setEditing(null); setIsModalOpen(true); }}>
@@ -175,13 +185,7 @@ const StudentManagement = () => {
                 Add Student
               </Button>
             </div>
-            {/* Debug panel showing raw API responses from the debug button */}
-            {debugInfo && (
-              <div className="mt-4 p-4 bg-white rounded shadow-sm">
-                <h3 className="font-semibold mb-2">Debug info</h3>
-                <pre className="text-xs max-h-56 overflow-auto">{JSON.stringify(debugInfo, null, 2)}</pre>
-              </div>
-            )}
+            {/* debug panel removed */}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

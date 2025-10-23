@@ -154,7 +154,8 @@ const getTeacherClasses = async (req, res) => {
             classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } },
             students: { include: { user: { select: { id: true, name: true, email: true } } } },
             // include timetable entries for this class (optional, useful for teacher view)
-            timetable: { include: { subject: true, classroom: true, teacher: { include: { user: { select: { id: true, name: true, email: true } } } } } }
+            // Prisma relation name is `timetables` (plural) in the schema
+            timetables: { include: { subject: true, classroom: true, teacher: { include: { user: { select: { id: true, name: true, email: true } } } } } }
         }
     });
 
