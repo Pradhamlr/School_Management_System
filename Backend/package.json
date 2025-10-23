@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/server.js",
   "prisma": {
-    "seed": "node prisma/seed-grades.js"
+    "seed": "node prisma/seed-teacher-class-subjects.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",

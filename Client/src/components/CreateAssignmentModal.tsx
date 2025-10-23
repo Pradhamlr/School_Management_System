@@ -21,6 +21,7 @@ export function CreateAssignmentModal({ open, onOpenChange, onSuccess }: CreateA
   const [teacherClassSubjectId, setTeacherClassSubjectId] = useState("");
   const [teacherClassSubjects, setTeacherClassSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [loadingMappings, setLoadingMappings] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -30,12 +31,34 @@ export function CreateAssignmentModal({ open, onOpenChange, onSuccess }: CreateA
   }, [open]);
 
   const fetchTeacherClassSubjects = async () => {
-    // Use seeded data directly since authentication might not be set up properly
-    setTeacherClassSubjects([
-      { id: 1, class: { name: "10", section: "A" }, subject: { name: "Mathematics" } },
-      { id: 2, class: { name: "11", section: "B" }, subject: { name: "Physics" } },
-      { id: 3, class: { name: "12", section: "A" }, subject: { name: "Chemistry" } }
-    ]);
+    try {
+      setLoadingMappings(true);
+      const response = await api.get('/api/teachers/me');
+      const mappings = response.data?.data?.teacherClassSubjects || [];
+      setTeacherClassSubjects(mappings);
+      
+      if (mappings.length > 0) {
+        setTeacherClassSubjectId(mappings[0].id.toString());
+      }
+    } catch (error) {
+      console.error('Failed to fetch teacher class subjects:', error);
+      toast({ 
+        title: "Warning", 
+        description: "Could not load class-subject mappings. Please contact admin to set up your teaching assignments.", 
+        variant: "destructive" 
+      });
+    } finally {
+      setLoadingMappings(false);
+    }
+  };
+
+
+
+  const resetForm = () => {
+    setTitle("");
+    setDescription("");
+    setDueDate("");
+    setTeacherClassSubjectId("1");
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -52,6 +75,7 @@ export function CreateAssignmentModal({ open, onOpenChange, onSuccess }: CreateA
 
     try {
       setLoading(true);
+      
       const response = await api.post('/api/assignments', {
         title,
         description,
@@ -64,23 +88,21 @@ export function CreateAssignmentModal({ open, onOpenChange, onSuccess }: CreateA
         description: "Assignment created successfully"
       });
 
-      setTitle("");
-      setDescription("");
-      setDueDate("");
-      setTeacherClassSubjectId("");
+      resetForm();
       onOpenChange(false);
       onSuccess();
     } catch (error: any) {
       console.error('Error creating assignment:', error);
-      const errorMessage = error.response?.data?.message || "Failed to create assignment";
-      toast({
-        title: "Error",
-        description: errorMessage,
-        variant: "destructive"
-      });
+      const errorMessage = error?.response?.data?.message || error.message || "Failed to create assignment";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleClose = () => {
+    resetForm();
+    onOpenChange(false);
   };
 
   return (
@@ -119,14 +141,20 @@ export function CreateAssignmentModal({ open, onOpenChange, onSuccess }: CreateA
             <Label htmlFor="class-subject">Class & Subject *</Label>
             <Select value={teacherClassSubjectId} onValueChange={setTeacherClassSubjectId}>
               <SelectTrigger>
-                <SelectValue placeholder="Select class and subject" />
+                <SelectValue placeholder={loadingMappings ? "Loading..." : "Select class and subject"} />
               </SelectTrigger>
               <SelectContent>
-                {teacherClassSubjects.map((tcs) => (
-                  <SelectItem key={tcs.id} value={tcs.id.toString()}>
-                    {tcs.subject.name} - {tcs.class.name}-{tcs.class.section}
-                  </SelectItem>
-                ))}
+                {loadingMappings ? (
+                  <SelectItem disabled value="loading">Loading mappings...</SelectItem>
+                ) : teacherClassSubjects.length === 0 ? (
+                  <SelectItem disabled value="empty">No class-subject mappings found</SelectItem>
+                ) : (
+                  teacherClassSubjects.map((tcs) => (
+                    <SelectItem key={tcs.id} value={tcs.id.toString()}>
+                      {tcs.subject?.name} - {tcs.class?.name}-{tcs.class?.section}
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
@@ -143,7 +171,7 @@ export function CreateAssignmentModal({ open, onOpenChange, onSuccess }: CreateA
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={handleClose}>
               Cancel
             </Button>
             <Button type="submit" disabled={loading} className="bg-green-600 hover:bg-green-700">

@@ -1,6 +1,7 @@
 import { GraduationCap, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import QuickLogin from "@/components/QuickLogin";
 
 const Homepage = () => {
   const navigate = useNavigate();
@@ -41,7 +42,7 @@ const Homepage = () => {
           </p>
         </div>
 
-        <div className="grid md:grid-cols-3 gap-8">
+        <div className="grid md:grid-cols-3 gap-8 mb-12">
           {roles.map((role) => {
             const Icon = role.icon;
             return (
@@ -68,6 +69,8 @@ const Homepage = () => {
             );
           })}
         </div>
+        
+        <QuickLogin />
       </div>
     </div>
   );
