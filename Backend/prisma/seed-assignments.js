@@ -67,6 +67,25 @@ async function main() {
     console.log('Created subject:', subject.id);
   }
 
+  // Helper to find or create an extra class/subject so we can seed multiple TeacherClassSubject rows
+  async function findOrCreateClass({ name, section }) {
+    let c = await prisma.class.findFirst({ where: { name, section } });
+    if (!c) {
+      c = await prisma.class.create({ data: { name, section } });
+      console.log('Created extra class:', c.id);
+    }
+    return c;
+  }
+
+  async function findOrCreateSubject({ name, code }) {
+    let s = await prisma.subject.findUnique({ where: { code } });
+    if (!s) {
+      s = await prisma.subject.create({ data: { name, code } });
+      console.log('Created extra subject:', s.id);
+    }
+    return s;
+  }
+
   // Ensure at least one teacher user exists or create a test teacher
   const teacherUser = await findOrCreateUser({
     name: 'Seed Teacher',
@@ -85,6 +104,46 @@ async function main() {
       classId: cls.id
     }
   });
+
+  // Create an extra class/subject and link the same teacher to it so multiple mappings exist
+  const extraClass = await findOrCreateClass({ name: cls.name + 'B', section: 'B' });
+  const extraSubject = await findOrCreateSubject({ name: 'Science', code: 'SCI101' });
+
+  // Only create the second mapping if it doesn't violate the unique constraint
+  let tcs2 = await prisma.teacherClassSubject.findFirst({ where: { teacherId: teacher.id, subjectId: extraSubject.id } });
+  if (!tcs2) {
+    tcs2 = await prisma.teacherClassSubject.create({
+      data: {
+        teacherId: teacher.id,
+        subjectId: extraSubject.id,
+        classId: extraClass.id
+      }
+    });
+    console.log('Created additional teacherClassSubject:', tcs2.id);
+  } else {
+    console.log('Found existing additional teacherClassSubject:', tcs2.id);
+  }
+
+  // Also ensure Physics and Chemistry subjects/mappings exist so frontend fallback (Physics/Chemistry) matches DB
+  const physSubject = await findOrCreateSubject({ name: 'Physics', code: 'PHY101' });
+  const chemSubject = await findOrCreateSubject({ name: 'Chemistry', code: 'CHEM101' });
+
+  // Create teacherClassSubject mappings for Physics and Chemistry in the primary class if missing
+  let tcsPhysics = await prisma.teacherClassSubject.findFirst({ where: { teacherId: teacher.id, subjectId: physSubject.id } });
+  if (!tcsPhysics) {
+    tcsPhysics = await prisma.teacherClassSubject.create({
+      data: { teacherId: teacher.id, subjectId: physSubject.id, classId: cls.id }
+    });
+    console.log('Created teacherClassSubject for Physics:', tcsPhysics.id);
+  }
+
+  let tcsChem = await prisma.teacherClassSubject.findFirst({ where: { teacherId: teacher.id, subjectId: chemSubject.id } });
+  if (!tcsChem) {
+    tcsChem = await prisma.teacherClassSubject.create({
+      data: { teacherId: teacher.id, subjectId: chemSubject.id, classId: extraClass.id }
+    });
+    console.log('Created teacherClassSubject for Chemistry:', tcsChem.id);
+  }
 
   // Ensure at least one student user exists or create a test student
   const studentUser = await findOrCreateUser({
@@ -115,7 +174,18 @@ async function main() {
     }
   });
 
+  // Create one assignment for the second teacherClassSubject mapping so frontend has multiple options
+  const assignment3 = await prisma.assignment.create({
+    data: {
+      title: 'Science Lab Report',
+      description: 'Complete the lab report with observations.',
+      dueDate: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000),
+      teacherClassSubjectId: tcs2.id
+    }
+  });
+
   console.log('Created assignments:', assignment1.id, assignment2.id);
+  console.log('Created additional assignment for second mapping:', assignment3.id);
 
   // Create submissions: one text-only, one with a fileUrl placeholder
   await prisma.assignmentSubmission.create({
