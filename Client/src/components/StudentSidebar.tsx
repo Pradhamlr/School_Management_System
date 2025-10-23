@@ -125,12 +125,7 @@ const StudentSidebar = () => {
       path: "/payments",
       color: "text-emerald-600"
     },
-    {
-      title: "Exams",
-      icon: Target,
-      path: "/student/exams",
-      color: "text-orange-600"
-    },
+    // Exams removed from Student sidebar; results moved to Settings
     {
       title: "Notifications",
       icon: Bell,
@@ -143,12 +138,7 @@ const StudentSidebar = () => {
       path: "/student/attendance",
       color: "text-purple-600"
     },
-    {
-      title: "Settings",
-      icon: Settings,
-      path: "/settings",
-      color: "text-gray-600"
-    }
+    // Settings removed for students (admin-only)
   ];
 
   const isActive = (path: string) => location.pathname === path;

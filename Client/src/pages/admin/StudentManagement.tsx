@@ -54,6 +54,7 @@ const StudentManagement = () => {
     try {
       const res = await api.get('/api/students');
       // backend returns { success: true, students }
+      console.debug('fetchStudents response', res);
       setStudents(res.data.students || []);
     } catch (err: any) {
       toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load students', variant: 'destructive' });
@@ -114,6 +115,7 @@ const StudentManagement = () => {
   });
 
   const [deletingStudentId, setDeletingStudentId] = useState<number | null>(null);
+  const [debugInfo, setDebugInfo] = useState<any | null>(null);
   const deleteStudent = async (id: number) => {
     setDeletingStudentId(id);
   };
@@ -150,6 +152,20 @@ const StudentManagement = () => {
                 <Upload className="w-4 h-4" />
                 Import
               </Button>
+              <Button variant="ghost" className="gap-2" onClick={async () => {
+                // Run quick debug checks: /api/students and /api/students/me-debug
+                try {
+                  const [allRes, meRes] = await Promise.all([
+                    api.get('/api/students').catch((e) => e),
+                    api.get('/api/students/me-debug').catch((e) => e)
+                  ]);
+                  setDebugInfo({ all: { status: allRes?.status, data: allRes?.data }, me: { status: meRes?.status, data: meRes?.data } });
+                } catch (e) {
+                  setDebugInfo({ error: String(e) });
+                }
+              }}>
+                Debug
+              </Button>
               <Button variant="outline" className="gap-2">
                 <Download className="w-4 h-4" />
                 Export
@@ -159,6 +175,13 @@ const StudentManagement = () => {
                 Add Student
               </Button>
             </div>
+            {/* Debug panel showing raw API responses from the debug button */}
+            {debugInfo && (
+              <div className="mt-4 p-4 bg-white rounded shadow-sm">
+                <h3 className="font-semibold mb-2">Debug info</h3>
+                <pre className="text-xs max-h-56 overflow-auto">{JSON.stringify(debugInfo, null, 2)}</pre>
+              </div>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-6">

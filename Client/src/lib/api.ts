@@ -68,6 +68,8 @@ export const examAPI = {
 
 export const authAPI = {
   login: (credentials: {email: string, password: string}) => api.post('/api/auth/login', credentials),
+  forgotPassword: (payload: { email: string }) => api.post('/api/auth/forgot-password', payload),
+  resetPassword: (payload: { token: string, newPassword: string }) => api.post('/api/auth/reset-password', payload),
 };
 
 export const assignmentAPI = {

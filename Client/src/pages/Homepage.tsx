@@ -1,7 +1,6 @@
 import { GraduationCap, Users, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import QuickLogin from "@/components/QuickLogin";
 
 const Homepage = () => {
   const navigate = useNavigate();
@@ -68,9 +67,7 @@ const Homepage = () => {
               </div>
             );
           })}
-        </div>
-        
-        <QuickLogin />
+  </div>
       </div>
     </div>
   );

@@ -25,11 +25,14 @@ import api from '@/lib/api';
 const TeacherDashboard = () => {
   const [analytics, setAnalytics] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
+  const [myClasses, setMyClasses] = useState<any[]>([]);
   const [activeTab, setActiveTab] = useState("overview");
 
   const classAttendanceData = analytics ? [
-    { name: 'Present', value: Number(analytics.attendance.studentAttendanceRate) || 0, color: '#10B981' },
-    { name: 'Absent', value: 100 - (Number(analytics.attendance.studentAttendanceRate) || 0), color: '#EF4444' },
+    // analytics may be the simplified teacher analytics { activeClasses, assignmentsCount }
+    // guard access to attendance fields which may be missing
+    { name: 'Present', value: Number(analytics?.attendance?.studentAttendanceRate ?? analytics?.data?.attendance?.studentAttendanceRate ?? 0) || 0, color: '#10B981' },
+    { name: 'Absent', value: 100 - (Number(analytics?.attendance?.studentAttendanceRate ?? analytics?.data?.attendance?.studentAttendanceRate ?? 0) || 0), color: '#EF4444' },
   ] : [
     { name: "Present", value: 0, color: "#10B981" },
     { name: "Absent", value: 0, color: "#EF4444" },
@@ -44,16 +47,28 @@ const TeacherDashboard = () => {
     let mounted = true;
     const fetchAnalytics = async () => {
       try {
-        const res = await api.get('/api/analytics');
+        // use teacher-specific analytics to keep dashboard numbers consistent
+        const res = await api.get('/api/analytics/teacher');
         if (!mounted) return;
-        setAnalytics(res.data.data);
+        // res.data.data may be the simplified teacher analytics or the full analytics depending on backend
+        setAnalytics(res.data.data || res.data);
       } catch (e) {
-        console.error('Failed to fetch analytics', e);
+        console.error('Failed to fetch analytics', e?.response?.status, e?.response?.data || e?.message || e);
       } finally {
         if (mounted) setLoading(false);
       }
     };
     fetchAnalytics();
+    // fetch classes assigned to this teacher
+    const fetchMyClasses = async () => {
+      try {
+        const res = await api.get('/api/classes/me/teacher');
+        setMyClasses(res.data.classes || []);
+      } catch (e) {
+        console.error('Failed to fetch teacher classes', e?.response?.status, e?.response?.data || e?.message || e);
+      }
+    };
+    fetchMyClasses();
     return () => { mounted = false; };
   }, []);
 
@@ -90,10 +105,6 @@ const TeacherDashboard = () => {
                   <Plus className="w-4 h-4 mr-2" />
                   Create Assignment
                 </Button>
-                <Button variant="outline" className="border-white text-white hover:bg-white hover:text-green-700">
-                  <Eye className="w-4 h-4 mr-2" />
-                  View Classes
-                </Button>
               </div>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
@@ -103,28 +114,16 @@ const TeacherDashboard = () => {
           {/* Metrics Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <MetricCard
-              title="My Students"
-              value={loading ? '…' : '156'}
-              icon={Users}
-              color="hsl(142 76% 36%)"
-            />
-            <MetricCard
               title="Active Classes"
-              value={loading ? '…' : '8'}
+              value={loading ? '…' : analytics?.activeClasses ?? '…'}
               icon={BookOpen}
               color="hsl(217 91% 60%)"
             />
             <MetricCard
               title="Assignments"
-              value={loading ? '…' : '24'}
+              value={loading ? '…' : analytics?.assignmentsCount ?? '…'}
               icon={FileText}
               color="hsl(262 83% 58%)"
-            />
-            <MetricCard
-              title="Avg. Attendance"
-              value={loading ? '…' : `${analytics?.attendance?.studentAttendanceRate ?? '85'}%`}
-              icon={CheckSquare}
-              color="hsl(25 95% 53%)"
             />
           </div>
 
@@ -254,33 +253,33 @@ const TeacherDashboard = () => {
 
             <TabsContent value="classes" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {[
-                  { name: "Mathematics 10-A", students: 25, subject: "Mathematics", room: "Room 101", time: "09:00 AM" },
-                  { name: "Physics 11-B", students: 20, subject: "Physics", room: "Lab 1", time: "10:30 AM" },
-                  { name: "Chemistry 12-A", students: 28, subject: "Chemistry", room: "Lab 2", time: "02:00 PM" },
-                ].map((classItem, index) => (
-                  <Card key={index} className="shadow-lg border-0 bg-white/80 backdrop-blur hover:shadow-xl transition-shadow cursor-pointer">
-                    <CardHeader>
-                      <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-3">
-                        <BookOpen className="w-6 h-6 text-white" />
-                      </div>
-                      <CardTitle className="text-lg">{classItem.name}</CardTitle>
-                      <CardDescription>{classItem.students} students</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Room:</span>
-                          <span className="font-medium">{classItem.room}</span>
+                {myClasses.length === 0 ? (
+                  <div className="text-center text-sm text-muted-foreground">No classes assigned yet.</div>
+                ) : (
+                  myClasses.map((cls: any) => (
+                    <Card key={cls.id} className="shadow-lg border-0 bg-white/80 backdrop-blur hover:shadow-xl transition-shadow cursor-pointer">
+                      <CardHeader>
+                        <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-3">
+                          <BookOpen className="w-6 h-6 text-white" />
                         </div>
-                        <div className="flex justify-between text-sm">
-                          <span className="text-muted-foreground">Time:</span>
-                          <span className="font-medium">{classItem.time}</span>
+                        <CardTitle className="text-lg">{`${cls.name} ${cls.section}`}</CardTitle>
+                        <CardDescription>{cls.students ? cls.students.length : 0} students</CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Class Teacher:</span>
+                            <span className="font-medium">{cls.classTeacher?.user?.name || '—'}</span>
+                          </div>
+                          <div className="flex justify-between text-sm">
+                            <span className="text-muted-foreground">Subjects / Timetable:</span>
+                            <span className="font-medium">{cls.timetable ? cls.timetable.length : 0} slots</span>
+                          </div>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
               </div>
             </TabsContent>
 

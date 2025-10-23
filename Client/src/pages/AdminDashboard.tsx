@@ -120,10 +120,6 @@ const AdminDashboard = () => {
                   <BarChart3 className="w-4 h-4 mr-2" />
                   View Analytics
                 </Button>
-                <Button variant="outline" className="border-white text-white hover:bg-white hover:text-purple-700">
-                  <Settings className="w-4 h-4 mr-2" />
-                  System Settings
-                </Button>
               </div>
             </div>
             <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-32 translate-x-32"></div>
@@ -164,7 +160,7 @@ const AdminDashboard = () => {
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="management">Management</TabsTrigger>
-              <TabsTrigger value="reports">Reports</TabsTrigger>
+              {/* Reports tab removed; moved to Admin Settings */}
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -297,61 +293,7 @@ const AdminDashboard = () => {
               </div>
             </TabsContent>
 
-            <TabsContent value="reports" className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
-                  <CardHeader>
-                    <CardTitle>Generate Reports</CardTitle>
-                    <CardDescription>Create comprehensive school reports</CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <Button className="w-full justify-start" variant="outline">
-                      <BarChart3 className="w-4 h-4 mr-2" />
-                      Attendance Report
-                    </Button>
-                    <Button className="w-full justify-start" variant="outline">
-                      <Award className="w-4 h-4 mr-2" />
-                      Academic Performance Report
-                    </Button>
-                    <Button className="w-full justify-start" variant="outline">
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      Financial Report
-                    </Button>
-                    <Button className="w-full justify-start" variant="outline">
-                      <Users className="w-4 h-4 mr-2" />
-                      Student Demographics Report
-                    </Button>
-                  </CardContent>
-                </Card>
-
-                <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
-                  <CardHeader>
-                    <CardTitle>System Health</CardTitle>
-                    <CardDescription>Monitor system performance and status</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Database Status</span>
-                        <span className="text-green-600 text-sm">Healthy</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Server Uptime</span>
-                        <span className="text-green-600 text-sm">99.9%</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Active Users</span>
-                        <span className="text-blue-600 text-sm">1,247</span>
-                      </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Storage Used</span>
-                        <span className="text-orange-600 text-sm">67%</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </TabsContent>
+            {/* Reports removed */}
           </Tabs>
         </main>
       </div>

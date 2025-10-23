@@ -100,17 +100,17 @@ const Login = () => {
             </CardDescription>
             {role === 'admin' && (
               <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
-                Sample: admin@school.com / admin123
+                Sample: admin@school.test / AdminPass123!
               </div>
             )}
             {role === 'teacher' && (
               <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
-                Sample: sarah@school.com / teacher123
+                Sample: teacher1@school.test / TeacherPass1!
               </div>
             )}
             {role === 'student' && (
               <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
-                Sample: alex.thompson@student.school.com / student123
+                Sample: student1@school.test / StudentPass1!
               </div>
             )}
           </CardHeader>

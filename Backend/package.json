@@ -4,7 +4,7 @@
   "description": "",
   "main": "src/server.js",
   "prisma": {
-    "seed": "node prisma/seed-teacher-class-subjects.js"
+    "seed": "node prisma/seed-production.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -20,7 +20,7 @@
     "generate:local": "dotenv -e .env.local -- npx prisma generate",
     "migrate:prod": "dotenv -e .env.prod -- npx prisma migrate deploy",
     "deploy:local": "dotenv -e .env.local -- npx prisma migrate deploy",
-    "seed:local": "dotenv -e .env.local -- npx prisma db seed"
+    "seed:prod": "dotenv -e .env.prod -- npx prisma db seed"
   },
   "keywords": [],
   "author": "",

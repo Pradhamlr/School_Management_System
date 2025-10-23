@@ -18,16 +18,24 @@ const ForgotPassword = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-
-    // Simulate API call for forgot password
-    setTimeout(() => {
-      setEmailSent(true);
+    try {
+      const res = await (await import('@/lib/api')).authAPI.forgotPassword({ email });
+      // In dev the backend returns token in response
+      const token = res.data?.token;
       setLoading(false);
-      toast({
-        title: "Reset link sent",
-        description: "Check your email for password reset instructions",
-      });
-    }, 2000);
+      if (token) {
+        toast({ title: 'Reset token generated (dev)', description: 'Use the reset page to apply a new password' });
+        // navigate to reset page with token
+        navigate(`/reset-password?token=${token}`);
+      } else {
+        setEmailSent(true);
+        toast({ title: 'Reset requested', description: 'If an account exists, a reset link was sent' });
+      }
+    } catch (err) {
+      console.error(err);
+      setLoading(false);
+      toast({ title: 'Error', description: 'Could not request password reset' });
+    }
   };
 
   const getRoleColor = () => {

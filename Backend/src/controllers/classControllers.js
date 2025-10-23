@@ -137,6 +137,30 @@ const getStudentClass = async (req, res) => {
     res.status(StatusCodes.OK).json({ class: student.class });
 };
 
+// Get classes assigned to the currently authenticated teacher
+const getTeacherClasses = async (req, res) => {
+    const userId = req.user.id;
+
+    // Find teacher record linked to this user
+    const teacher = await prisma.teacher.findUnique({ where: { userId } });
+    if (!teacher) {
+        throw new NotFoundError('Teacher record not found for this user');
+    }
+
+    // Find classes where this teacher is assigned as classTeacher
+    const classes = await prisma.class.findMany({
+        where: { classTeacherId: teacher.id },
+        include: {
+            classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } },
+            students: { include: { user: { select: { id: true, name: true, email: true } } } },
+            // include timetable entries for this class (optional, useful for teacher view)
+            timetable: { include: { subject: true, classroom: true, teacher: { include: { user: { select: { id: true, name: true, email: true } } } } } }
+        }
+    });
+
+    res.status(StatusCodes.OK).json({ classes });
+};
+
 module.exports = {
     createClass,
     getClasses,
@@ -145,5 +169,6 @@ module.exports = {
     assignClassTeacher,
     assignStudentToClass,
     getStudentClass,
-    updateClass
+    updateClass,
+    getTeacherClasses
 };
