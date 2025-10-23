@@ -258,6 +258,17 @@ const getStudentAttendance = async (req, res) => {
     take: Number(limit)
   });
 
+  // Get recent 5 days attendance
+  const recentAttendance = await prisma.studentAttendance.findMany({
+    where: {
+      studentId: Number(studentId)
+    },
+    orderBy: {
+      date: 'desc'
+    },
+    take: 5
+  });
+
   const totalCount = await prisma.studentAttendance.count({
     where: {
       studentId: Number(studentId),
@@ -286,9 +297,28 @@ const getStudentAttendance = async (req, res) => {
   statistics.attendanceRate = statistics.total > 0 ? 
     Math.round((statistics.present / statistics.total) * 100) : 0;
 
+  // Calculate improvement metrics
+  const currentRate = statistics.attendanceRate;
+  const targetRate = 90;
+  
+  let daysToImprove = 0;
+  let canBunk = 0;
+  
+  if (currentRate < targetRate && statistics.total > 0) {
+    daysToImprove = Math.ceil((targetRate * statistics.total - 100 * statistics.present) / (100 - targetRate));
+  }
+  
+  if (currentRate >= targetRate && statistics.total > 0) {
+    canBunk = Math.floor((statistics.present - targetRate * statistics.total / 100) / (targetRate / 100));
+  }
+  
+  statistics.daysToImprove = Math.max(0, daysToImprove);
+  statistics.canBunk = Math.max(0, canBunk);
+
   const data = {
     student,
     attendance,
+    recentAttendance,
     statistics,
     pagination: {
       currentPage: Number(page),

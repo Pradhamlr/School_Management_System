@@ -9,8 +9,13 @@ const createStudent = async (req, res) => {
     const { userId, rollNumber, classId, dob } = req.body;
 
     const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user || user.role !== 'STUDENT') {
-        throw new BadRequestError('Invalid user ID or user is not a student');
+    if (!user) {
+        throw new BadRequestError('Invalid user ID');
+    }
+
+    // If user exists but not STUDENT, promote to STUDENT role
+    if (user.role !== 'STUDENT') {
+        await prisma.user.update({ where: { id: userId }, data: { role: 'STUDENT' } });
     }
 
     const existingStudent = await prisma.student.findUnique({ where: { userId } });
@@ -134,5 +139,22 @@ module.exports = {
     getStudentById,
     getCurrentStudent,
     updateStudent,
-    deleteStudent
+    deleteStudent,
+    // debug helper
+    debugCurrentStudent: async (req, res) => {
+        // Return decoded token and student lookup for debugging purposes
+        try {
+            const tokenUser = req.user || null;
+            let student = null;
+            try {
+                student = await prisma.student.findUnique({ where: { userId: req.user?.id || -1 }, include: { user: true } });
+            } catch (e) {
+                // ignore lookup errors
+            }
+
+            return res.status(200).json({ success: true, tokenUser, student });
+        } catch (err) {
+            return res.status(500).json({ success: false, error: String(err) });
+        }
+    }
 };

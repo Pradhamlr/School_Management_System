@@ -37,37 +37,82 @@ const getAnalytics = async (req, res) => {
 
         const averageScore = (averageScoreData._avg && averageScoreData._avg.marks) || 0;
 
-        const topStudents = await prisma.result.groupBy({
-        by: ['studentId'],
-        _avg: { marks: true },
-        orderBy: { _avg: { marks: 'desc' } },
-        take: 5,
-        });
+  const topStudents = await prisma.result.groupBy({
+  by: ['studentId'],
+  _avg: { marks: true },
+  orderBy: { _avg: { marks: 'desc' } },
+  take: 5,
+  });
 
     const teacherAttendanceStats = await prisma.teacherAttendance.groupBy({
         by: ['status'],
         _count: { status: true },
     });
 
-    res.status(StatusCodes.OK).json({
-        success: true,
-        data: {
-        attendance: {
-            totalStudents,
-            studentsPresentToday,
-            studentAttendanceRate,
-            totalTeachers,
-            teachersPresentToday,
-            teacherAttendanceRate
-        },
-        academics: {
-            totalResults,
-            averageScore,
-            topStudents
-        },
-        teachers: teacherAttendanceStats,
-        }
-    });
+  // Additional analytics fields
+  // monthlyNewStudents: count students whose user.createdAt is in current month
+  const startOfMonth = new Date();
+  startOfMonth.setDate(1);
+  startOfMonth.setHours(0,0,0,0);
+  const endOfMonth = new Date(startOfMonth);
+  endOfMonth.setMonth(endOfMonth.getMonth() + 1);
+  endOfMonth.setMilliseconds(endOfMonth.getMilliseconds() - 1);
+
+  const monthlyNewStudents = await prisma.student.count({
+    where: {
+      user: { createdAt: { gte: startOfMonth, lte: endOfMonth } }
+    }
+  });
+
+  // departmentCount
+  const departmentCount = await prisma.teacher.aggregate({
+    _count: { department: true }
+  });
+
+  // avgTeacherExperience (years)
+  const teachers = await prisma.teacher.findMany({ select: { hireDate: true } });
+  const now = new Date();
+  let avgTeacherExperience = 0;
+  if (teachers.length > 0) {
+    const totalYears = teachers.reduce((acc, t) => acc + ((now - new Date(t.hireDate)) / (1000 * 60 * 60 * 24 * 365)), 0);
+    avgTeacherExperience = Number((totalYears / teachers.length).toFixed(1));
+  }
+
+  // monthlyRevenue: sum of paid feeRecords in current month
+  const monthlyRevenueRes = await prisma.feeRecord.aggregate({
+    where: {
+      status: 'PAID',
+      paidAt: { gte: startOfMonth, lte: endOfMonth }
+    },
+    _sum: { amount: true }
+  });
+  const monthlyRevenue = monthlyRevenueRes._sum.amount || 0;
+
+  res.status(StatusCodes.OK).json({
+    success: true,
+    data: {
+    attendance: {
+      totalStudents,
+      studentsPresentToday,
+      studentAttendanceRate,
+      totalTeachers,
+      teachersPresentToday,
+      teacherAttendanceRate,
+      totalClasses
+    },
+    academics: {
+      totalResults,
+      averageScore,
+      topStudents
+    },
+    teachers: teacherAttendanceStats,
+    monthlyNewStudents,
+  // compute distinct department count
+  departmentCount: (await prisma.teacher.findMany({ select: { department: true } })).reduce((acc, t) => acc.add(t.department), new Set()).size,
+    avgTeacherExperience,
+    monthlyRevenue
+    }
+  });
 }
 
 const getClassPerformance = async (req, res) => {

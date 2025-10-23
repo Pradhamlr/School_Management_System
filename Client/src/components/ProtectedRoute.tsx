@@ -1,38 +1,41 @@
-import { Navigate, useLocation, useNavigate } from 'react-router-dom';
+import React, { useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
-import { useEffect } from 'react';
+import { Navigate, useLocation, useNavigate } from 'react-router-dom';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
+  requiredRole?: string;
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
-  const { isAuthenticated, user } = useAuth();
+const ProtectedRoute = ({ children, requiredRole }: ProtectedRouteProps) => {
+  const { isAuthenticated, user, initialized } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
+  // Redirect users away from areas that don't match their role (prevents a student/teacher from opening admin pages)
   useEffect(() => {
-    // Check if user is trying to access wrong dashboard
-    if (isAuthenticated && user) {
-      const userRole = user.role.toLowerCase();
+    if (!initialized || !isAuthenticated || !user) return;
 
-      // Use the first path segment (e.g. '/admin/students' -> 'admin') to avoid
-      // substring matches (e.g. 'students' includes 'student').
-      const segments = location.pathname.split('/').filter(Boolean);
-      const firstSegment = segments[0] || '';
+    const userRole = (user.role || '').toLowerCase();
+    const segments = location.pathname.split('/').filter(Boolean);
+    const firstSegment = segments[0] || '';
 
-      if (firstSegment === 'admin' && userRole !== 'admin') {
-        navigate(`/${userRole}-dashboard`, { replace: true });
-      } else if (firstSegment === 'teacher' && userRole !== 'teacher') {
-        navigate(`/${userRole}-dashboard`, { replace: true });
-      } else if (firstSegment === 'student' && userRole !== 'student') {
-        navigate(`/${userRole}-dashboard`, { replace: true });
+    // Map possible first segments to roles: e.g. '/admin/...' -> 'admin'
+    if (firstSegment && firstSegment !== userRole) {
+      // Avoid redirect loops by only redirecting when the path clearly belongs to another role
+      if (['admin', 'teacher', 'student'].includes(firstSegment)) {
+        navigate(`/${userRole}`, { replace: true });
       }
     }
-  }, [isAuthenticated, user, location, navigate]);
+  }, [initialized, isAuthenticated, user, location.pathname, navigate]);
 
-  if (!isAuthenticated) {
-    return <Navigate to="/" replace />;
+  // Wait for auth initialization to avoid flashing redirects
+  if (!initialized) return null;
+
+  if (!isAuthenticated) return <Navigate to="/login/student" replace />;
+
+  if (requiredRole && user?.role.toLowerCase() !== requiredRole.toLowerCase()) {
+    return <Navigate to="/login/student" replace />;
   }
 
   return <>{children}</>;

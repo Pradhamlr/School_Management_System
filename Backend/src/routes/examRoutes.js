@@ -4,7 +4,7 @@ const { createExam, getExams, getExamDetails } = require('../controllers/examCon
 const authorize = require('../middlewares/roleMiddleware');
 
 router.post('/', authorize('ADMIN'), createExam);
-router.get('/', authorize('ADMIN'), getExams);
-router.get('/:id', authorize('ADMIN'), getExamDetails);
+router.get('/',  getExams);
+router.get('/:id',  getExamDetails);
 
 module.exports = router;

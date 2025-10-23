@@ -1,0 +1,303 @@
+import { useState, useEffect } from "react";
+import { 
+  Users, 
+  BookOpen, 
+  Calendar, 
+  CheckSquare, 
+  FileText, 
+  Plus,
+  Search,
+  Filter,
+  MoreVertical,
+  Eye,
+  Edit,
+  UserPlus
+} from "lucide-react";
+import { TeacherSidebar } from "@/components/TeacherSidebar";
+import { DashboardHeader } from "@/components/DashboardHeader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger 
+} from "@/components/ui/dropdown-menu";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+
+const TeacherClasses = () => {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("all");
+
+  const classes = [
+    {
+      id: 1,
+      name: "Mathematics 10-A",
+      subject: "Mathematics",
+      grade: "10",
+      section: "A",
+      students: 25,
+      room: "Room 101",
+      schedule: "Mon, Wed, Fri - 09:00 AM",
+      attendance: 92,
+      assignments: 8,
+      status: "active"
+    },
+    {
+      id: 2,
+      name: "Physics 11-B",
+      subject: "Physics",
+      grade: "11",
+      section: "B",
+      students: 20,
+      room: "Lab 1",
+      schedule: "Tue, Thu - 10:30 AM",
+      attendance: 88,
+      assignments: 5,
+      status: "active"
+    },
+    {
+      id: 3,
+      name: "Chemistry 12-A",
+      subject: "Chemistry",
+      grade: "12",
+      section: "A",
+      students: 28,
+      room: "Lab 2",
+      schedule: "Mon, Wed, Fri - 02:00 PM",
+      attendance: 95,
+      assignments: 12,
+      status: "active"
+    },
+    {
+      id: 4,
+      name: "Mathematics 9-C",
+      subject: "Mathematics",
+      grade: "9",
+      section: "C",
+      students: 22,
+      room: "Room 103",
+      schedule: "Tue, Thu - 11:00 AM",
+      attendance: 85,
+      assignments: 6,
+      status: "active"
+    }
+  ];
+
+  const filteredClasses = classes.filter(cls => 
+    cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    cls.subject.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
+      <TeacherSidebar />
+      
+      <div className="flex-1">
+        <DashboardHeader />
+        
+        <main className="p-8 space-y-8">
+          {/* Header Section */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-foreground">My Classes</h1>
+              <p className="text-muted-foreground mt-1">Manage your classes and students</p>
+            </div>
+            <Button className="bg-green-600 hover:bg-green-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Class
+            </Button>
+          </div>
+
+          {/* Search and Filter */}
+          <div className="flex items-center gap-4">
+            <div className="relative flex-1 max-w-md">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground w-4 h-4" />
+              <Input
+                placeholder="Search classes..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10"
+              />
+            </div>
+            <Button variant="outline" size="sm">
+              <Filter className="w-4 h-4 mr-2" />
+              Filter
+            </Button>
+          </div>
+
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList>
+              <TabsTrigger value="all">All Classes ({classes.length})</TabsTrigger>
+              <TabsTrigger value="active">Active</TabsTrigger>
+              <TabsTrigger value="archived">Archived</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="all" className="space-y-6">
+              {/* Classes Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {filteredClasses.map((classItem) => (
+                  <Card key={classItem.id} className="shadow-lg border-0 bg-white/80 backdrop-blur hover:shadow-xl transition-all duration-200 group">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center">
+                            <BookOpen className="w-6 h-6 text-white" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-lg">{classItem.name}</CardTitle>
+                            <CardDescription>{classItem.students} students</CardDescription>
+                          </div>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem>
+                              <Eye className="w-4 h-4 mr-2" />
+                              View Details
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit Class
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <UserPlus className="w-4 h-4 mr-2" />
+                              Add Students
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground">Room</p>
+                          <p className="font-medium">{classItem.room}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground">Schedule</p>
+                          <p className="font-medium text-xs">{classItem.schedule}</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                        <div className="flex items-center gap-4">
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-green-600">{classItem.attendance}%</p>
+                            <p className="text-xs text-muted-foreground">Attendance</p>
+                          </div>
+                          <div className="text-center">
+                            <p className="text-lg font-bold text-blue-600">{classItem.assignments}</p>
+                            <p className="text-xs text-muted-foreground">Assignments</p>
+                          </div>
+                        </div>
+                        <Badge variant="default" className="bg-green-100 text-green-800">
+                          {classItem.status}
+                        </Badge>
+                      </div>
+
+                      <div className="flex gap-2 pt-2">
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <CheckSquare className="w-4 h-4 mr-2" />
+                          Attendance
+                        </Button>
+                        <Button size="sm" variant="outline" className="flex-1">
+                          <FileText className="w-4 h-4 mr-2" />
+                          Assignments
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="active">
+              <div className="text-center py-12">
+                <BookOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">Active Classes</h3>
+                <p className="text-muted-foreground">All your classes are currently active</p>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="archived">
+              <div className="text-center py-12">
+                <BookOpen className="w-16 h-16 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Archived Classes</h3>
+                <p className="text-muted-foreground">You don't have any archived classes yet</p>
+              </div>
+            </TabsContent>
+          </Tabs>
+
+          {/* Quick Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <Users className="w-5 h-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">95</p>
+                    <p className="text-sm text-muted-foreground">Total Students</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
+                    <CheckSquare className="w-5 h-5 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">90%</p>
+                    <p className="text-sm text-muted-foreground">Avg Attendance</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <FileText className="w-5 h-5 text-purple-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">31</p>
+                    <p className="text-sm text-muted-foreground">Assignments</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
+              <CardContent className="p-6">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-5 h-5 text-orange-600" />
+                  </div>
+                  <div>
+                    <p className="text-2xl font-bold">18</p>
+                    <p className="text-sm text-muted-foreground">Classes/Week</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </main>
+      </div>
+    </div>
+  );
+};
+
+export default TeacherClasses;
