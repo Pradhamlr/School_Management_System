@@ -36,6 +36,7 @@ const eventRoutes = require('./routes/eventRoutes');
 const assignmentRoutes = require('./routes/assignmentRoutes');
 const timetableRoutes = require('./routes/timetableRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
+const gradeRoutes = require('./routes/gradeRoutes');
 const departmentRoutes = require('./routes/departmentRoutes');
 
 // ==========================================
@@ -79,6 +80,7 @@ app.use('/api/departments', authMiddleware, departmentRoutes);
 app.use('/api/assignments', authMiddleware, assignmentRoutes);
 app.use('/api/timetables', authMiddleware, timetableRoutes);
 app.use('/api/payments', authMiddleware, paymentRoutes);
+app.use('/api/grades', authMiddleware, gradeRoutes);
 
 // ==========================================
 // ERROR HANDLING

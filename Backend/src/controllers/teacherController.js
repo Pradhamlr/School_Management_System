@@ -132,9 +132,24 @@ const getCurrentTeacher = async (req, res) => {
         advisedClasses: teacher.advisedClasses,
     };
 
+    // Also attempt to fetch teacherClassSubjects if model exists
+    let teacherClassSubjects = [];
+    try {
+        teacherClassSubjects = await prisma.teacherClassSubject.findMany({
+            where: { teacherId: teacher.id },
+            include: { class: true, subject: true }
+        });
+    } catch (e) {
+        // ignore if relation/model not present in schema
+        teacherClassSubjects = [];
+    }
+
     res.status(StatusCodes.OK).json({
         success: true,
-        teacher: shaped
+        data: {
+            teacher: shaped,
+            teacherClassSubjects
+        }
     });
 }
 

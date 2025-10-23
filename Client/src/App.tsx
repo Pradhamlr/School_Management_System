@@ -42,6 +42,11 @@ import Payments from "./pages/Payments";
 import Exams from "./pages/Exams";
 import Library from "./pages/Library";
 import Settings from "./pages/Settings";
+import TeacherClasses from "./pages/teacher/TeacherClasses";
+import TeacherAssignments from "./pages/teacher/TeacherAssignments";
+import TeacherAttendance from "./pages/teacher/TeacherAttendance";
+import TeacherTimetable from "./pages/teacher/TeacherTimetable";
+import TeacherGrades from "./pages/teacher/TeacherGrades";
 import TestPage from "./pages/TestPage";
 
 const queryClient = new QueryClient();
@@ -71,6 +76,11 @@ const App = () => (
           <Route path="/admin/notifications" element={<ProtectedRoute><NotificationManagement /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
           <Route path="/teacher-dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
+          <Route path="/teacher/classes" element={<ProtectedRoute><TeacherClasses /></ProtectedRoute>} />
+          <Route path="/teacher/assignments" element={<ProtectedRoute><TeacherAssignments /></ProtectedRoute>} />
+          <Route path="/teacher/attendance" element={<ProtectedRoute><TeacherAttendance /></ProtectedRoute>} />
+          <Route path="/teacher/timetable" element={<ProtectedRoute><TeacherTimetable /></ProtectedRoute>} />
+          <Route path="/teacher/grades" element={<ProtectedRoute><TeacherGrades /></ProtectedRoute>} />
           <Route path="/student-dashboard" element={<ProtectedRoute requiredRole="student"><StudentDashboardNew /></ProtectedRoute>} />
           <Route path="/student-dashboard-new" element={<ProtectedRoute requiredRole="student"><StudentDashboardNew /></ProtectedRoute>} />
           <Route path="/student/profile" element={<ProtectedRoute requiredRole="student"><StudentProfile /></ProtectedRoute>} />
