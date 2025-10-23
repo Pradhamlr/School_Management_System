@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import api from '@/lib/api';
 
 const Row: React.FC<{label: string; value?: React.ReactNode}> = ({label, value}) => (
   <div className="flex justify-between py-2 border-b last:border-b-0">
@@ -19,7 +20,6 @@ export default function StudentDetailsModal({ open, onOpenChange, student }: { o
     if (!open || !student) return;
     (async () => {
       try {
-        const api = await import('@/lib/api').then(m => m.default);
         const res = await api.get(`/api/classes/${student.classId}`);
         if (!mounted) return;
         setCls(res.data.class || null);

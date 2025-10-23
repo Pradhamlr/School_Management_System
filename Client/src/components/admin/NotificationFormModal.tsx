@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
+import api from '@/lib/api';
 
 type Props = {
   open: boolean;
@@ -19,8 +20,7 @@ export default function NotificationFormModal({ open, onOpenChange, onSaved }: P
 
   const onSubmit = async (values:any) => {
     try{
-      const apiClient = await import('@/lib/api').then(m => m.default);
-      const res = await apiClient.post('/api/notifications', { title: values.title, message: values.message, targetRole: values.targetRole });
+      const res = await api.post('/api/notifications', { title: values.title, message: values.message, targetRole: values.targetRole });
       toast({ title: 'Sent', description: 'Notification created and dispatched' });
       // Close modal and refresh list
       onSaved();

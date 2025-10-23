@@ -25,8 +25,7 @@ export default function NotificationManagement(){
   const fetchNotifications = async () => {
     setLoading(true);
     try{
-      const apiClient = await import('@/lib/api').then(m => m.default);
-      const res = await apiClient.get('/api/notifications');
+  const res = await api.get('/api/notifications');
       setNotifications(res.data.data || []);
     }catch(err:any){
       toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load notifications', variant: 'destructive' });
@@ -47,7 +46,7 @@ export default function NotificationManagement(){
     setDeletingId(id);
     try{
       const apiClient = await import('@/lib/api').then(m=>m.default);
-      await apiClient.delete(`/api/notifications/${id}`);
+  await api.delete(`/api/notifications/${id}`);
       toast({ title: 'Deleted', description: 'Notification deleted' });
       fetchNotifications();
     }catch(err:any){

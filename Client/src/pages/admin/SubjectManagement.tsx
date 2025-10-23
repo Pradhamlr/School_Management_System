@@ -22,7 +22,6 @@ export default function SubjectManagement(){
   const fetchSubjects = async () => {
     setLoading(true);
     try{
-      const api = await import('@/lib/api').then(m => m.default);
       const res = await api.get('/api/subjects');
       setSubjects(res.data.subjects || []);
     }catch(err:any){
@@ -34,7 +33,6 @@ export default function SubjectManagement(){
 
   const deleteSubject = async(id:number) => {
     try{
-      const api = await import('@/lib/api').then(m=>m.default);
       await api.delete(`/api/subjects/${id}`);
       toast({ title: 'Deleted', description: 'Subject deleted' });
       fetchSubjects();

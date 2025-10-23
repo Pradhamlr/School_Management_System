@@ -17,11 +17,10 @@ export default function SubjectFormModal({ initial, open, onOpenChange, onSaved 
 
   const onSubmit = async (values:any) => {
     try{
-      const apiClient = await import('@/lib/api').then(m=>m.default);
       if (initial && initial.id) {
-        await apiClient.put(`/api/subjects/${initial.id}`, values);
+        await api.put(`/api/subjects/${initial.id}`, values);
       } else {
-        await apiClient.post('/api/subjects', values);
+        await api.post('/api/subjects', values);
       }
       toast({ title: 'Saved', description: 'Subject saved' });
       onSaved();

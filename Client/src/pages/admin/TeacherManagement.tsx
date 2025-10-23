@@ -57,7 +57,6 @@ const TeacherManagement = () => {
   const fetchTeachers = async () => {
     setLoading(true);
     try {
-      const api = await import('@/lib/api').then(m => m.default);
       const res = await api.get('/api/teachers');
       setTeachers(res.data.teachers || []);
       // also refresh analytics after fetching teachers to keep totals in sync
@@ -76,7 +75,6 @@ const TeacherManagement = () => {
   useEffect(() => {
     const loadDepartments = async () => {
       try {
-        const api = await import('@/lib/api').then(m => m.default);
         const res = await api.get('/api/departments');
         setDepartments(res.data.departments || []);
       } catch (e) {
@@ -137,7 +135,6 @@ const TeacherManagement = () => {
   const confirmDeleteTeacher = async () => {
     if (!deletingTeacherId) return;
     try {
-      const api = await import('@/lib/api').then(m => m.default);
       await api.delete(`/api/teachers/${deletingTeacherId}`);
       toast({ title: 'Removed', description: 'Teacher removed successfully' });
       fetchTeachers();
@@ -160,8 +157,7 @@ const TeacherManagement = () => {
       setTeachers((t) => t.map((x) => (x.id === id ? { ...x, status: newStatus } : x)));
 
       // dynamically import api like other handlers to ensure runtime config/token is applied
-      const apiClient = await import('@/lib/api').then(m => m.default);
-      const res = await apiClient.patch(`/api/teachers/${id}`, { status: newStatus });
+  const res = await api.patch(`/api/teachers/${id}`, { status: newStatus });
       if (res?.data?.success) {
         toast({ title: 'Updated', description: `Teacher marked ${newStatus}` });
       } else {

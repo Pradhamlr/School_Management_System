@@ -14,11 +14,10 @@ export default function NotificationPreviewDrawer({ id, open, onOpenChange }: Pr
   useEffect(() => {
     if (!open || !id) return;
     let mounted = true;
-    const load = async () => {
+      const load = async () => {
       setLoading(true);
       try{
-        const apiClient = await import('@/lib/api').then(m=>m.default);
-        const res = await apiClient.get(`/api/notifications/${id}`);
+        const res = await api.get(`/api/notifications/${id}`);
         if (!mounted) return;
         setNotification(res.data.data || null);
       }catch(err:any){

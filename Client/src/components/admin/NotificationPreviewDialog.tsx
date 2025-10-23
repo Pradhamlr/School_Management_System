@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { timeAgo } from '@/lib/time';
+import api from '@/lib/api';
 
 type Props = {
   id: number | null;
@@ -16,11 +17,10 @@ export default function NotificationPreviewDialog({ id, open, onOpenChange }: Pr
   useEffect(() => {
     if (!id || !open) return;
     let mounted = true;
-    const fetchOne = async () => {
+      const fetchOne = async () => {
       setLoading(true);
       try {
-        const apiClient = await import('@/lib/api').then(m=>m.default);
-        const res = await apiClient.get(`/api/notifications/${id}`);
+        const res = await api.get(`/api/notifications/${id}`);
         if (!mounted) return;
         setNotif(res.data.data || null);
       } catch (e) {

@@ -52,7 +52,6 @@ const StudentManagement = () => {
   const fetchStudents = async () => {
     setLoading(true);
     try {
-      const api = await import('@/lib/api').then(m => m.default);
       const res = await api.get('/api/students');
       // backend returns { success: true, students }
       setStudents(res.data.students || []);
@@ -63,12 +62,15 @@ const StudentManagement = () => {
     }
   };
 
+  const [analytics, setAnalytics] = React.useState<any | null>(null);
+
   useEffect(() => {
+    // initial load
     fetchStudents();
+
     // also load classes so we can show name/section instead of id
     (async () => {
       try {
-        const api = await import('@/lib/api').then(m => m.default);
         const res = await api.get('/api/classes');
         setClasses(res.data.classes || []);
       } catch (e) {
@@ -79,7 +81,6 @@ const StudentManagement = () => {
 
   // fetch analytics totals for cards
   useEffect(() => {
-    // fetch analytics and set state; expose function to allow manual refresh after CRUD
     let mounted = true;
     const fetchAnalytics = async () => {
       try {
@@ -93,8 +94,6 @@ const StudentManagement = () => {
     fetchAnalytics();
     return () => { mounted = false; };
   }, []);
-
-  const [analytics, setAnalytics] = React.useState<any | null>(null);
 
   const [debouncedSearch, setDebouncedSearch] = useState(searchTerm);
   useEffect(() => {
@@ -121,7 +120,6 @@ const StudentManagement = () => {
   const confirmDeleteStudent = async () => {
     if (!deletingStudentId) return;
     try {
-      const api = await import('@/lib/api').then(m => m.default);
       await api.delete(`/api/students/${deletingStudentId}`);
       toast({ title: 'Deleted', description: 'Student deleted successfully' });
       fetchStudents();
@@ -314,18 +312,13 @@ const StudentManagement = () => {
             </CardContent>
           </Card>
           
-          {/* Student form modal */}
-          {typeof window !== 'undefined' && (
-            // dynamic import to avoid SSR issues
-            <React.Suspense>
-              <StudentFormModal
-                initial={editing}
-                open={isModalOpen}
-                onOpenChange={setIsModalOpen}
-                onSaved={fetchStudents}
-              />
-            </React.Suspense>
-          )}
+          {/* Student form modal (render directly) */}
+          <StudentFormModal
+            initial={editing}
+            open={isModalOpen}
+            onOpenChange={setIsModalOpen}
+            onSaved={fetchStudents}
+          />
 
           <StudentDetailsModal
             open={Boolean(selectedStudent)}

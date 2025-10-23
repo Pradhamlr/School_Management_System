@@ -1,12 +1,12 @@
-import { Search, Bell, Settings, User, LogOut } from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
 import React, { useEffect, useState } from 'react';
-import api from '@/lib/api';
+import { Search, Bell, Settings, User, LogOut } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { useAuth } from '@/contexts/AuthContext';
+import { useNavigate } from 'react-router-dom';
+import { notificationAPI } from '@/lib/api';
 import NotificationPreviewDialog from '@/components/admin/NotificationPreviewDialog';
 import { timeAgo } from '@/lib/time';
 
@@ -20,8 +20,7 @@ export function DashboardHeader() {
   const fetchNotifications = async () => {
     setNotifLoading(true);
     try {
-      const apiClient = await import('@/lib/api').then(m => m.default);
-      const res = await apiClient.get('/api/notifications');
+      const res = await notificationAPI.getNotifications();
       setNotifications((res.data.data || []).slice(0, 6));
     } catch (e) {
       console.error('Failed to load notifications', e);
@@ -32,23 +31,20 @@ export function DashboardHeader() {
 
   useEffect(() => { fetchNotifications(); }, []);
 
-  const handleLogout = () => {
-    logout();
-    navigate("/");
-  };
+  const handleLogout = () => { logout(); navigate('/'); };
+
+  const viewAllRoute = user?.role === 'ADMIN' ? '/admin/notifications' : '/student/notifications';
+
   return (
     <header className="h-20 glass-card border-b border-border/50 px-8 flex items-center justify-between">
       <div className="flex items-center gap-6">
         <h2 className="text-2xl font-bold text-foreground">Dashboard</h2>
       </div>
 
-  <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4">
         <div className="relative w-80">
           <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Search..."
-            className="pl-10 bg-background/50 border-border/50 backdrop-blur-sm"
-          />
+          <Input placeholder="Search..." className="pl-10 bg-background/50 border-border/50 backdrop-blur-sm" />
         </div>
 
         <DropdownMenu>
@@ -84,7 +80,7 @@ export function DashboardHeader() {
                 )}
               </div>
               <div className="pt-3 border-t mt-3 flex items-center justify-between">
-                <Button variant="ghost" size="sm" onClick={() => navigate('/admin/notifications')}>View all</Button>
+                <Button variant="ghost" size="sm" onClick={() => navigate(viewAllRoute)}>View all</Button>
                 <Button variant="outline" size="sm" onClick={() => fetchNotifications()}>Refresh</Button>
               </div>
             </div>
@@ -107,8 +103,8 @@ export function DashboardHeader() {
                   </AvatarFallback>
                 </Avatar>
                 <div className="text-left">
-                  <p className="text-sm font-medium text-foreground">{user?.name || "User"}</p>
-                  <p className="text-xs text-muted-foreground">{user?.role || "Role"}</p>
+                  <p className="text-sm font-medium text-foreground">{user?.name || 'User'}</p>
+                  <p className="text-xs text-muted-foreground">{user?.role || 'Role'}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>

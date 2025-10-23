@@ -12,6 +12,16 @@ import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
 import StudentDashboard from "./pages/StudentDashboard";
+import StudentDashboardNew from "./pages/StudentDashboardNew";
+import StudentProfile from "./pages/StudentProfile";
+import StudentAssignments from "./pages/StudentAssignments";
+import StudentGrades from "./pages/StudentGrades";
+import StudentTimetable from "./pages/StudentTimetable";
+import StudentCourses from "./pages/StudentCourses";
+import StudentExams from "./pages/StudentExams";
+import StudentNotifications from "./pages/StudentNotifications";
+import StudentAttendance from "./pages/StudentAttendance";
+import StudentEvents from "./pages/StudentEvents";
 import StudentManagement from "./pages/admin/StudentManagement";
 import TeacherManagement from "./pages/admin/TeacherManagement";
 import Analytics from "./pages/admin/Analytics";
@@ -32,6 +42,7 @@ import Payments from "./pages/Payments";
 import Exams from "./pages/Exams";
 import Library from "./pages/Library";
 import Settings from "./pages/Settings";
+import TestPage from "./pages/TestPage";
 
 const queryClient = new QueryClient();
 
@@ -60,7 +71,17 @@ const App = () => (
           <Route path="/admin/notifications" element={<ProtectedRoute><NotificationManagement /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
           <Route path="/teacher-dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
-          <Route path="/student-dashboard" element={<ProtectedRoute><StudentDashboard /></ProtectedRoute>} />
+          <Route path="/student-dashboard" element={<ProtectedRoute requiredRole="student"><StudentDashboardNew /></ProtectedRoute>} />
+          <Route path="/student-dashboard-new" element={<ProtectedRoute requiredRole="student"><StudentDashboardNew /></ProtectedRoute>} />
+          <Route path="/student/profile" element={<ProtectedRoute requiredRole="student"><StudentProfile /></ProtectedRoute>} />
+          <Route path="/student/assignments" element={<ProtectedRoute requiredRole="student"><StudentAssignments /></ProtectedRoute>} />
+          <Route path="/student/grades" element={<ProtectedRoute requiredRole="student"><StudentGrades /></ProtectedRoute>} />
+          <Route path="/student/timetable" element={<ProtectedRoute requiredRole="student"><StudentTimetable /></ProtectedRoute>} />
+          <Route path="/student/courses" element={<ProtectedRoute requiredRole="student"><StudentCourses /></ProtectedRoute>} />
+          <Route path="/student/exams" element={<ProtectedRoute requiredRole="student"><StudentExams /></ProtectedRoute>} />
+          <Route path="/student/notifications" element={<ProtectedRoute requiredRole="student"><StudentNotifications /></ProtectedRoute>} />
+          <Route path="/student/attendance" element={<ProtectedRoute requiredRole="student"><StudentAttendance /></ProtectedRoute>} />
+          <Route path="/student/events" element={<ProtectedRoute requiredRole="student"><StudentEvents /></ProtectedRoute>} />
           <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
           <Route path="/teachers" element={<ProtectedRoute><Teachers /></ProtectedRoute>} />
           <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
@@ -69,6 +90,7 @@ const App = () => (
           <Route path="/exams" element={<ProtectedRoute><Exams /></ProtectedRoute>} />
           <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/test-page" element={<TestPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

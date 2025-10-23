@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import { Table, TableHeader, TableBody, TableRow, TableCell } from '@/components/ui/table';
 import EventFormModal from '../../components/admin/EventFormModal';
 import { timeAgo } from '@/lib/time';
+import api from '@/lib/api';
 
 export default function EventManagement() {
   const [events, setEvents] = useState<any[]>([]);
@@ -16,8 +17,7 @@ export default function EventManagement() {
   const fetchEvents = async () => {
     setLoading(true);
     try {
-      const apiClient = await import('@/lib/api').then(m=>m.default);
-      const res = await apiClient.get('/api/events');
+      const res = await api.get('/api/events');
       setEvents(res.data.data || []);
     } catch (e) {
       console.error(e);
@@ -30,7 +30,7 @@ export default function EventManagement() {
   const handleEdit = (ev: any) => { setEditing(ev); setOpenForm(true); };
   const handleDelete = async (id: number) => {
     if (!confirm('Delete this event?')) return;
-    try { const apiClient = await import('@/lib/api').then(m=>m.default); await apiClient.delete(`/api/events/${id}`); fetchEvents(); } catch (e) { console.error(e); }
+    try { await api.delete(`/api/events/${id}`); fetchEvents(); } catch (e) { console.error(e); }
   };
 
   return (

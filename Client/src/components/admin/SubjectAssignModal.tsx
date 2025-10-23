@@ -20,7 +20,6 @@ export default function SubjectAssignModal({ subject, open, onOpenChange, onSave
 
   useEffect(()=>{ const load = async ()=>{
     try{
-      const api = await import('@/lib/api').then(m=>m.default);
       const [tRes, cRes] = await Promise.all([api.get('/api/teachers'), api.get('/api/classes')]);
       setTeachers(tRes.data.teachers || []);
       setClasses(cRes.data.classes || []);
@@ -30,7 +29,6 @@ export default function SubjectAssignModal({ subject, open, onOpenChange, onSave
 
   const onSubmit = async (values:any) => {
     try{
-      const api = await import('@/lib/api').then(m=>m.default);
       const teacherId = selectedTeacherId ? Number(selectedTeacherId) : (values.teacherId ? Number(values.teacherId) : null);
       const classId = selectedClassId ? Number(selectedClassId) : (values.classId ? Number(values.classId) : null);
       if (!teacherId || !classId) throw new Error('Select both teacher and class');

@@ -8,6 +8,7 @@ import { Form, FormItem, FormLabel, FormControl, FormMessage } from '@/component
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import api from '@/lib/api';
 
 type Props = {
   open: boolean;
@@ -60,8 +61,7 @@ export default function EventFormModal({ open, onOpenChange, event, onSaved }: P
   useEffect(() => {
     const fetchTeachers = async () => {
       try {
-        const apiClient = await import('@/lib/api').then(m=>m.default);
-        const res = await apiClient.get('/api/teachers');
+        const res = await api.get('/api/teachers');
         const list = res.data.data || res.data.teachers || [];
         // If event has an assigned teacher id but it's not in the fetched list, append a lightweight placeholder so Select can display it
         const assignedId = event?.teacher?.id ?? event?.teacherId;
@@ -78,8 +78,7 @@ export default function EventFormModal({ open, onOpenChange, event, onSaved }: P
     // also fetch students as potential volunteers (fallback: client-side filter)
     const fetchStudents = async () => {
       try {
-        const apiClient = await import('@/lib/api').then(m=>m.default);
-        const res = await apiClient.get('/api/students');
+        const res = await api.get('/api/students');
         const list = res.data.students || res.data.data || [];
         // If the event has assigned volunteers (join rows), ensure their student records are present so names render
         const assignedStudentIds = (event?.volunteers || []).map((v:any)=>Number(v.student?.id ?? v.studentId ?? v.id));
@@ -102,8 +101,7 @@ export default function EventFormModal({ open, onOpenChange, event, onSaved }: P
 
   const onSubmit = async (values: any) => {
     if (!values.title || !values.startDate || !values.endDate) { toast({ title: 'Validation', description: 'Title and dates are required', variant: 'destructive' }); return; }
-    try {
-      const apiClient = await import('@/lib/api').then(m=>m.default);
+  try {
       const payload = {
         title: values.title,
         description: values.description || null,
@@ -114,9 +112,9 @@ export default function EventFormModal({ open, onOpenChange, event, onSaved }: P
         volunteerIds: Array.isArray(values.volunteerIds) ? values.volunteerIds.filter(Boolean).map((v:any)=>Number(v)) : []
       };
       if (event && event.id) {
-        await apiClient.put(`/api/events/${event.id}`, payload);
+        await api.put(`/api/events/${event.id}`, payload);
       } else {
-        await apiClient.post('/api/events', payload);
+        await api.post('/api/events', payload);
       }
       toast({ title: 'Saved', description: 'Event saved successfully' });
       onSaved();
