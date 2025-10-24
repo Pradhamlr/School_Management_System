@@ -40,7 +40,7 @@ import {
 import TeacherFormModal from '@/components/admin/TeacherFormModal';
 import TeacherDetailsModal from '@/components/admin/TeacherDetailsModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 
 const TeacherManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -63,7 +63,7 @@ const TeacherManagement = () => {
       // also refresh analytics after fetching teachers to keep totals in sync
       try { const a = await api.get('/api/analytics'); setAnalytics(a.data.data); } catch(e){}
     } catch (err: any) {
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load teachers', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to load teachers');
     } finally {
       setLoading(false);
     }
@@ -140,7 +140,7 @@ const TeacherManagement = () => {
       toast({ title: 'Removed', description: 'Teacher removed successfully' });
       fetchTeachers();
     } catch (err: any) {
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to remove teacher', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to remove teacher');
     } finally {
       setDeletingTeacherId(null);
     }
@@ -174,8 +174,8 @@ const TeacherManagement = () => {
       // rollback optimistic update
       setTeachers(prevTeachers);
       console.error('Failed to toggle status', err);
-      const msg = err?.response?.data?.message || err?.message || 'Failed to update status';
-      toast({ title: 'Error', description: msg, variant: 'destructive' });
+  const msg = err?.response?.data?.message || err?.message || 'Failed to update status';
+  showApiError(toast, err, msg);
       return null;
     } finally {
       setStatusLoading(prev => ({ ...prev, [id]: false }));

@@ -35,14 +35,6 @@ import NotificationManagement from "./pages/admin/NotificationManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
 import TimetableManagement from "./pages/admin/TimetableManagement";
 import NotFound from "./pages/NotFound";
-import Students from "./pages/Students";
-import Teachers from "./pages/Teachers";
-import Courses from "./pages/Courses";
-import Events from "./pages/Events";
-import Payments from "./pages/Payments";
-import Exams from "./pages/Exams";
-import Library from "./pages/Library";
-import Settings from "./pages/Settings";
 import TeacherClasses from "./pages/teacher/TeacherClasses";
 import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 import TeacherAttendance from "./pages/teacher/TeacherAttendance";
@@ -96,14 +88,6 @@ const App = () => (
           <Route path="/student/notifications" element={<ProtectedRoute requiredRole="student"><StudentNotifications /></ProtectedRoute>} />
           <Route path="/student/attendance" element={<ProtectedRoute requiredRole="student"><StudentAttendance /></ProtectedRoute>} />
           <Route path="/student/events" element={<ProtectedRoute requiredRole="student"><StudentEvents /></ProtectedRoute>} />
-          <Route path="/students" element={<ProtectedRoute><Students /></ProtectedRoute>} />
-          <Route path="/teachers" element={<ProtectedRoute><Teachers /></ProtectedRoute>} />
-          <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
-          <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-          <Route path="/payments" element={<ProtectedRoute><Payments /></ProtectedRoute>} />
-          <Route path="/exams" element={<ProtectedRoute><Exams /></ProtectedRoute>} />
-          <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
-          <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/test-page" element={<TestPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

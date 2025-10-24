@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { emailRegex } from '@/lib/validation';
 
@@ -58,7 +58,7 @@ export default function TeacherFormModal({ initial, open, onOpenChange, onSaved 
       onOpenChange(false);
     } catch (err: any) {
       console.error(err);
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to save teacher', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to save teacher');
     }
   };
 

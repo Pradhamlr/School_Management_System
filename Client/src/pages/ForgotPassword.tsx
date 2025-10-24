@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ArrowLeft, Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { showApiError } from '@/lib/api';
 
 const ForgotPassword = () => {
   const { role } = useParams<{ role: string }>();
@@ -34,7 +35,7 @@ const ForgotPassword = () => {
     } catch (err) {
       console.error(err);
       setLoading(false);
-      toast({ title: 'Error', description: 'Could not request password reset' });
+      showApiError(toast, err, 'Could not request password reset');
     }
   };
 

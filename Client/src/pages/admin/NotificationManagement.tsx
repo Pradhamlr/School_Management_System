@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import NotificationFormModal from '../../components/admin/NotificationFormModal';
 import NotificationPreviewDrawer from '@/components/admin/NotificationPreviewDrawer';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Trash2, Plus } from 'lucide-react';
 
@@ -28,7 +28,7 @@ export default function NotificationManagement(){
   const res = await api.get('/api/notifications');
       setNotifications(res.data.data || []);
     }catch(err:any){
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load notifications', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to load notifications');
     }finally{ setLoading(false); }
   };
 
@@ -50,7 +50,7 @@ export default function NotificationManagement(){
       toast({ title: 'Deleted', description: 'Notification deleted' });
       fetchNotifications();
     }catch(err:any){
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to delete', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to delete');
     }finally{ setDeletingId(null); }
   };
 

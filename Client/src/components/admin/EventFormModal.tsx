@@ -7,6 +7,7 @@ import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuChe
 import { Form, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { useForm } from 'react-hook-form';
 import { useToast } from '@/hooks/use-toast';
+import { showApiError } from '@/lib/api';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import api from '@/lib/api';
 
@@ -121,7 +122,7 @@ export default function EventFormModal({ open, onOpenChange, event, onSaved }: P
       onOpenChange(false);
     } catch (err:any) {
       console.error(err);
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to save event', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to save event');
     }
   };
 

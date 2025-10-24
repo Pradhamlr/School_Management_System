@@ -42,6 +42,60 @@ api.interceptors.response.use(
   }
 );
 
+// Utility: parse API errors into a consistent shape
+export function parseApiError(error: any) {
+  // Default
+  const result: { message: string; details?: string[]; status?: number } = { message: 'Something went wrong' };
+  try {
+    if (!error) return result;
+    const status = error.response?.status;
+    result.status = status;
+    const data = error.response?.data ?? error.data ?? {};
+
+    // Common patterns: { message }, { error }, { errors: { field: ['...'] } }, { errors: [...] }
+    if (typeof data === 'string') {
+      result.message = data;
+      return result;
+    }
+
+    if (data.message) result.message = data.message;
+    else if (data.error) result.message = data.error;
+    else if (data.errors && typeof data.errors === 'string') result.message = data.errors;
+
+    // collect details
+    if (data.errors && typeof data.errors === 'object') {
+      if (Array.isArray(data.errors)) {
+        result.details = data.errors.map((d: any) => (typeof d === 'string' ? d : JSON.stringify(d)));
+      } else {
+        // object of field -> array
+        result.details = Object.values(data.errors).flat().map((d: any) => (typeof d === 'string' ? d : JSON.stringify(d)));
+      }
+    }
+
+    // If nothing useful, try message on error itself
+    if ((!result.message || result.message === 'Something went wrong') && error.message) {
+      result.message = error.message;
+    }
+  } catch (e) {
+    // ignore
+  }
+  return result;
+}
+
+// Helper to show a toast-friendly error using the project's toast API
+export function showApiError(toast: (opts: any) => void, error: any, fallback?: string) {
+  const parsed = parseApiError(error);
+  const title = parsed.status === 400 ? 'Validation error' : (parsed.status === 401 ? 'Unauthorized' : 'Error');
+  const description = parsed.message || fallback || 'Something went wrong';
+  const details = parsed.details && parsed.details.length ? '\n' + parsed.details.join('\n') : '';
+  try {
+    toast({ title, description: description + details, variant: 'destructive' });
+  } catch (e) {
+    // fallback to alert
+    alert(description + (details || ''));
+  }
+}
+
 // API functions matching backend routes
 export const studentAPI = {
   getCurrentStudent: () => api.get('/api/students/me'),

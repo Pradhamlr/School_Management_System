@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import SubjectFormModal from '../../components/admin/SubjectFormModal';
 import SubjectAssignModal from '../../components/admin/SubjectAssignModal';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SubjectManagement(){
@@ -25,7 +25,7 @@ export default function SubjectManagement(){
       const res = await api.get('/api/subjects');
       setSubjects(res.data.subjects || []);
     }catch(err:any){
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load subjects', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to load subjects');
     }finally{ setLoading(false); }
   };
 
@@ -37,7 +37,7 @@ export default function SubjectManagement(){
       toast({ title: 'Deleted', description: 'Subject deleted' });
       fetchSubjects();
     }catch(err:any){
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to delete subject', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to delete subject');
     }
   };
 

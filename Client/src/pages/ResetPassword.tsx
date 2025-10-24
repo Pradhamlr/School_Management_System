@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { showApiError } from '@/lib/api';
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
@@ -36,7 +37,7 @@ const ResetPassword = () => {
     } catch (err) {
       console.error(err);
       setLoading(false);
-      toast({ title: 'Error', description: 'Failed to reset password' });
+      showApiError(toast, err, 'Failed to reset password');
     }
   };
 

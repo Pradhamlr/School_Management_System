@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Form, FormItem, FormLabel, FormControl, FormMessage } from '@/components/ui/form';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { useForm } from 'react-hook-form';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 type Props = { subject?: any; open: boolean; onOpenChange: (v:boolean)=>void; onSaved: ()=>void };
@@ -41,7 +41,7 @@ export default function SubjectAssignModal({ subject, open, onOpenChange, onSave
       onSaved();
       onOpenChange(false);
     }catch(err:any){
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to assign', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to assign');
     }
   };
 

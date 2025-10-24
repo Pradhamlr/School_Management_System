@@ -6,7 +6,7 @@ import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 
 type Props = {
   open: boolean;
@@ -27,7 +27,7 @@ export default function NotificationFormModal({ open, onOpenChange, onSaved }: P
       onOpenChange(false);
     }catch(err:any){
       console.error(err);
-      toast({ title: 'Error', description: err?.response?.data?.message || err?.message || 'Failed to send notification', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to send notification');
     }
   };
 

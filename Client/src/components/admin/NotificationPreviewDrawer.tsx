@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 type Props = { id: number | null; open: boolean; onOpenChange: (v: boolean) => void };
@@ -21,7 +21,7 @@ export default function NotificationPreviewDrawer({ id, open, onOpenChange }: Pr
         if (!mounted) return;
         setNotification(res.data.data || null);
       }catch(err:any){
-        toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load notification', variant: 'destructive' });
+        showApiError(toast, err, 'Failed to load notification');
       }finally{ if (mounted) setLoading(false); }
     };
     load();

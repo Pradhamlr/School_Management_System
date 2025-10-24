@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import AdminSidebar from '@/components/AdminSidebar';
 import { DashboardHeader } from '@/components/DashboardHeader';
 import TimetableFormModal from '@/components/admin/TimetableFormModal';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -29,8 +29,8 @@ const TimetableManagement = () => {
         const firstClass = items.find((it: any) => it.class && it.class.id);
         if (firstClass) setClassFilter(String(firstClass.class.id));
       }
-    } catch (err) {
-      toast({ title: 'Error', description: 'Failed to load timetables', variant: 'destructive' });
+    } catch (err: any) {
+      showApiError(toast, err, 'Failed to load timetables');
     } finally {
       setLoading(false);
     }
@@ -47,7 +47,7 @@ const TimetableManagement = () => {
       toast({ title: 'Deleted', description: 'Timetable slot removed' });
       fetchTimetables();
     } catch (err: any) {
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to delete', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to delete');
     }
   };
 

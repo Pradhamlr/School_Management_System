@@ -36,7 +36,7 @@ import {
 import StudentFormModal from '@/components/admin/StudentFormModal';
 import StudentDetailsModal from '@/components/admin/StudentDetailsModal';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 
 const StudentManagement = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -57,7 +57,7 @@ const StudentManagement = () => {
       console.debug('fetchStudents response', res);
       setStudents(res.data.students || []);
     } catch (err: any) {
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load students', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to load students');
     } finally {
       setLoading(false);
     }
@@ -128,7 +128,7 @@ const StudentManagement = () => {
       // refresh analytics when list changes
       try { await api.get('/api/analytics').then(r => setAnalytics(r.data.data)); } catch(e){}
     } catch (err: any) {
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to delete student', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to delete student');
     } finally {
       setDeletingStudentId(null);
     }

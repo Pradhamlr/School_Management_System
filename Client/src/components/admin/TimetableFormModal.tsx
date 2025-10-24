@@ -5,7 +5,7 @@ import { Form, FormItem, FormLabel, FormControl, FormMessage } from '@/component
 import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 import { Lock, Unlock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -82,8 +82,8 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
           }
         }
         setClassrooms(Array.from(seen.values()));
-      } catch (err: any) {
-        toast({ title: 'Error', description: 'Failed to load select options', variant: 'destructive' });
+        } catch (err: any) {
+        showApiError(toast, err, 'Failed to load select options');
       }
     })();
   }, [open]);
@@ -160,7 +160,7 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
       onSaved();
       onOpenChange(false);
     } catch (err: any) {
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to save timetable', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to save timetable');
     }
   };
 

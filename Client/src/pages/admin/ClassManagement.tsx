@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import ClassFormModal from '@/components/admin/ClassFormModal';
-import api from '@/lib/api';
+import api, { showApiError } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -26,7 +26,7 @@ const ClassManagement = () => {
       const res = await api.get('/api/classes');
       setClasses(res.data.classes || []);
     } catch (err: any) {
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load classes', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to load classes');
     } finally {
       setLoading(false);
     }
@@ -46,7 +46,7 @@ const ClassManagement = () => {
       toast({ title: 'Deleted', description: 'Class deleted' });
       fetchClasses();
     } catch (err: any) {
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to delete class', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to delete class');
     } finally {
       setDeletingClassId(null);
     }
@@ -59,7 +59,7 @@ const ClassManagement = () => {
       const res = await api.get('/api/teachers');
       setTeachersList(res.data.teachers || []);
     } catch (err: any) {
-      toast({ title: 'Error', description: err?.response?.data?.message || 'Failed to load teachers', variant: 'destructive' });
+      showApiError(toast, err, 'Failed to load teachers');
       return;
     }
   };
@@ -152,7 +152,7 @@ const ClassManagement = () => {
                 <form className="space-y-4 p-2" onSubmit={async (e) => {
                   e.preventDefault();
                   if (!assigningClassId || !selectedTeacherId) {
-                    toast({ title: 'Error', description: 'Select a teacher to assign', variant: 'destructive' });
+                    showApiError(toast, null, 'Select a teacher to assign');
                     return;
                   }
                   try {
@@ -161,8 +161,8 @@ const ClassManagement = () => {
                     setAssigningClassId(null);
                     setSelectedTeacherId(null);
                     fetchClasses();
-                  } catch (err: any) {
-                    toast({ title: 'Error', description: err?.response?.data?.message || err?.message || 'Failed to assign teacher', variant: 'destructive' });
+                    } catch (err: any) {
+                    showApiError(toast, err, 'Failed to assign teacher');
                   }
                 }}>
                   <div>
