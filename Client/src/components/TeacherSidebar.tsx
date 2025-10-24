@@ -7,6 +7,7 @@ import {
   CheckSquare,
   BarChart3,
   Clock,
+  Bell,
   Settings,
   GraduationCap
 } from "lucide-react";
@@ -19,6 +20,7 @@ const teacherNavigationItems = [
   { name: "Attendance", icon: CheckSquare, href: "/teacher/attendance" },
   { name: "Timetable", icon: Clock, href: "/teacher/timetable" },
   { name: "Grades", icon: BarChart3, href: "/teacher/grades" },
+  { name: "Notifications", icon: Bell, href: "/teacher/notifications" },
 ];
 
 export function TeacherSidebar() {
@@ -54,15 +56,7 @@ export function TeacherSidebar() {
           ))}
         </nav>
 
-        <div className="mt-8 pt-6 border-t border-border/50">
-          <NavLink
-            to="/teacher/settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-muted hover:text-foreground transition-all duration-200"
-          >
-            <Settings className="w-5 h-5" />
-            <span className="font-medium">Settings</span>
-          </NavLink>
-        </div>
+        {/* Settings removed for teachers; admin-only settings available in Admin panel */}
       </div>
     </div>
   );

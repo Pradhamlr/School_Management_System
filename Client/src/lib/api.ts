@@ -68,6 +68,8 @@ export const examAPI = {
 
 export const authAPI = {
   login: (credentials: {email: string, password: string}) => api.post('/api/auth/login', credentials),
+  forgotPassword: (payload: { email: string }) => api.post('/api/auth/forgot-password', payload),
+  resetPassword: (payload: { token: string, newPassword: string }) => api.post('/api/auth/reset-password', payload),
 };
 
 export const assignmentAPI = {
@@ -115,10 +117,12 @@ export const classAPI = {
 export const eventAPI = {
   getEvents: () => api.get('/api/events'),
   getEventById: (eventId: number) => api.get(`/api/events/${eventId}`),
+  signupVolunteer: (eventId: number) => api.post(`/api/events/${eventId}/volunteer`),
 };
 
 // Convenience functions
 export const getEvents = () => eventAPI.getEvents();
 export const getEventById = (eventId: number) => eventAPI.getEventById(eventId);
+export const signupVolunteer = (eventId: number) => eventAPI.signupVolunteer(eventId);
 
 export default api;

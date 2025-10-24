@@ -16,15 +16,32 @@ const StudentTimetable = () => {
       try {
         // Get current student first
         const studentResponse = await studentAPI.getCurrentStudent();
-        const studentId = studentResponse.data.student.id;
+        console.log('Student response:', studentResponse);
+        const studentId = studentResponse.data.student?.id || studentResponse.data.id;
+        const studentClassId = studentResponse.data.student?.classId || studentResponse.data.classId;
         
         // Get timetables for student's class
         const response = await timetableAPI.getTimetables();
-        const allTimetables = response.data.data || [];
+        console.log('Timetables response:', response);
+        const allTimetables = response.data?.data || [];
+        console.log('All timetables:', allTimetables);
+        console.log('Total timetables found:', allTimetables.length);
         
         // Filter timetables for student's class
-        const studentClassId = studentResponse.data.student.classId;
+        console.log('Student class ID:', studentClassId);
+        console.log('Sample timetable:', allTimetables[0]);
+        console.log('Days in DB:', [...new Set(allTimetables.map(t => t.day))]);
         const studentTimetables = allTimetables.filter(t => t.classId === studentClassId);
+        console.log('Filtered timetables:', studentTimetables);
+        console.log('Days in filtered:', [...new Set(studentTimetables.map(t => t.day))]);
+        console.log('Monday periods:', studentTimetables.filter(t => t.day === 'MON').map(t => ({ start: t.startMinute, end: t.endMinute, subject: t.subject?.name })));
+        console.log('All periods count by day:', {
+          MON: studentTimetables.filter(t => t.day === 'MON').length,
+          TUE: studentTimetables.filter(t => t.day === 'TUE').length,
+          WED: studentTimetables.filter(t => t.day === 'WED').length,
+          THU: studentTimetables.filter(t => t.day === 'THU').length,
+          FRI: studentTimetables.filter(t => t.day === 'FRI').length
+        });
         
         setTimetables(studentTimetables);
       } catch (error) {
@@ -37,9 +54,38 @@ const StudentTimetable = () => {
     fetchTimetables();
   }, []);
 
-  // Normalize timetable day codes to readable names
-  const dayMap: Record<string, string> = { MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday', SAT: 'Saturday', SUN: 'Sunday' };
-  const groupedTimetable = Object.entries(dayMap).map(([code, name]) => ({ day: name, classes: timetables.filter(t => (t.day || '').toUpperCase() === code) }));
+  // Create 8 periods structure for each day
+  const periods = [
+    { start: 480, end: 520, period: 1 },   // 8:00-8:40
+    { start: 520, end: 560, period: 2 },   // 8:40-9:20
+    { start: 560, end: 600, period: 3 },   // 9:20-10:00
+    { start: 615, end: 655, period: 4 },   // 10:15-10:55
+    { start: 655, end: 695, period: 5 },   // 10:55-11:35
+    { start: 695, end: 735, period: 6 },   // 11:35-12:15
+    { start: 795, end: 835, period: 7 },   // 13:15-13:55
+    { start: 835, end: 875, period: 8 }    // 13:55-14:35
+  ];
+
+  const dayMap: Record<string, string> = { MON: 'Monday', TUE: 'Tuesday', WED: 'Wednesday', THU: 'Thursday', FRI: 'Friday' };
+  const groupedTimetable = Object.entries(dayMap).map(([code, name]) => {
+    const dayClasses = timetables.filter(t => (t.day || '').toUpperCase() === code);
+    
+    // Create 8 periods for each day, filling with actual classes or empty slots
+    const periodsWithClasses = periods.map(period => {
+      const classForPeriod = dayClasses.find(t => t.startMinute === period.start);
+      return {
+        period: period.period,
+        startMinute: period.start,
+        endMinute: period.end,
+        class: classForPeriod || null
+      };
+    });
+
+    return {
+      day: name,
+      periods: periodsWithClasses
+    };
+  });
 
   const formatTime = (minutes) => {
     const hours = Math.floor(minutes / 60);
@@ -95,44 +141,69 @@ const StudentTimetable = () => {
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
               {groupedTimetable.map((day, dayIndex) => (
-              <Card key={dayIndex} className="border-0 shadow-lg bg-white/80 backdrop-blur">
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-center text-lg font-semibold text-gray-900">
+              <Card key={dayIndex} className="border-0 shadow-lg bg-white/90 backdrop-blur">
+                <CardHeader className="pb-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-t-lg">
+                  <CardTitle className="text-center text-lg font-bold">
                     {day.day}
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
-                  {day.classes.length > 0 ? day.classes.map((timetableItem, classIndex) => (
-                    <div key={classIndex} className="p-3 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="w-4 h-4 text-blue-600" />
-                        <span className="text-sm font-medium text-blue-600">
-                          {formatTime(timetableItem.startMinute)} - {formatTime(timetableItem.endMinute)}
-                        </span>
-                      </div>
-                      
-                      <h4 className="font-semibold text-gray-900 mb-1">{timetableItem.subject?.name}</h4>
-                      <div className="space-y-1 text-xs text-gray-600">
-                        <div className="flex items-center gap-1">
-                          <User className="w-3 h-3" />
-                          <span>{timetableItem.teacher?.user?.name}</span>
+                <CardContent className="p-2 space-y-2">
+                  {day.periods.map((periodSlot, periodIndex) => {
+                    const timetableItem = periodSlot.class;
+                    const subjectColors = {
+                      'Mathematics': 'bg-blue-50 border-blue-200 text-blue-800',
+                      'English': 'bg-green-50 border-green-200 text-green-800',
+                      'Science': 'bg-purple-50 border-purple-200 text-purple-800',
+                      'History': 'bg-orange-50 border-orange-200 text-orange-800',
+                      'Geography': 'bg-teal-50 border-teal-200 text-teal-800'
+                    };
+                    
+                    if (!timetableItem) {
+                      // Empty period slot
+                      return (
+                        <div key={periodIndex} className="p-2 rounded-lg border-2 border-dashed border-gray-300 bg-gray-50">
+                          <div className="flex items-center justify-between mb-1">
+                            <Badge variant="outline" className="text-xs px-1 py-0">
+                              P{periodSlot.period}
+                            </Badge>
+                            <span className="text-xs text-gray-500">
+                              {formatTime(periodSlot.startMinute)}-{formatTime(periodSlot.endMinute)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-gray-500 text-center py-2">Free Period</p>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          <span>{timetableItem.classroom?.name}</span>
+                      );
+                    }
+                    
+                    const colorClass = subjectColors[timetableItem.subject?.name] || 'bg-gray-50 border-gray-200 text-gray-800';
+                    
+                    return (
+                      <div key={periodIndex} className={`p-2 rounded-lg border-2 ${colorClass} hover:shadow-md transition-all`}>
+                        <div className="flex items-center justify-between mb-1">
+                          <Badge variant="outline" className="text-xs px-1 py-0">
+                            P{periodSlot.period}
+                          </Badge>
+                          <span className="text-xs font-medium">
+                            {formatTime(periodSlot.startMinute)}-{formatTime(periodSlot.endMinute)}
+                          </span>
+                        </div>
+                        
+                        <h4 className="font-bold text-sm mb-1 truncate">{timetableItem.subject?.name}</h4>
+                        <div className="text-xs space-y-0.5">
+                          <div className="flex items-center gap-1 truncate">
+                            <User className="w-3 h-3 flex-shrink-0" />
+                            <span className="truncate">{timetableItem.teacher?.user?.name}</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <MapPin className="w-3 h-3 flex-shrink-0" />
+                            <span>{timetableItem.classroom?.name}</span>
+                          </div>
                         </div>
                       </div>
-                      <Badge className="bg-blue-100 text-blue-800 border-blue-200 border text-xs mt-2">
-                        Class
-                      </Badge>
-                    </div>
-                  )) : (
-                    <div className="p-4 text-center text-gray-500">
-                      <p className="text-sm">No classes scheduled</p>
-                    </div>
-                  )}
+                    );
+                  })}
                 </CardContent>
               </Card>
               ))}

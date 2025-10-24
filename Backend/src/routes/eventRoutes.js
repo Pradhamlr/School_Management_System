@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const authorize = require('../middlewares/roleMiddleware');
-const { createEvent, getEvents, getEventById, updateEvent, deleteEvent } = require('../controllers/eventController');
+const { createEvent, getEvents, getEventById, updateEvent, deleteEvent, signupVolunteer } = require('../controllers/eventController');
 
 // Create event: allow ADMIN, TEACHER, STUDENT (example)
 router.post('/', authorize('ADMIN', 'TEACHER', 'STUDENT'), createEvent);
@@ -15,5 +15,8 @@ router.put('/:id', authorize('ADMIN', 'TEACHER'), updateEvent);
 
 // Delete event: ADMIN only (adjust as needed)
 router.delete('/:id', authorize('ADMIN'), deleteEvent);
+
+// Volunteer signup: STUDENT only
+router.post('/:id/volunteer', authorize('STUDENT'), signupVolunteer);
 
 module.exports = router;

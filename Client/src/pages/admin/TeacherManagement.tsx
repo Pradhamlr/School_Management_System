@@ -9,6 +9,7 @@ import {
   Trash2, 
   Eye,
   Download,
+  DownloadCloud,
   Upload,
   MoreHorizontal,
   Mail,
@@ -196,11 +197,7 @@ const TeacherManagement = () => {
             </div>
             <div className="flex gap-3">
               <Button variant="outline" className="gap-2">
-                <Upload className="w-4 h-4" />
-                Import
-              </Button>
-              <Button variant="outline" className="gap-2">
-                <Download className="w-4 h-4" />
+                <DownloadCloud className="w-4 h-4" />
                 Export
               </Button>
               <Button className="gap-2 bg-gradient-to-r from-green-600 to-green-700" onClick={() => { setEditing(null); setIsModalOpen(true); }}>

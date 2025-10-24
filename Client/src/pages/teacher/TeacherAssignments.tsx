@@ -13,6 +13,7 @@ import {
   Edit,
   Trash2,
   Download,
+  DownloadCloud,
   Loader2,
   GraduationCap
 } from "lucide-react";
@@ -36,6 +37,7 @@ const TeacherAssignments = () => {
   const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ total: 0, submissions: 0, graded: 0, active: 0 });
+  const [teacherAnalytics, setTeacherAnalytics] = useState<any | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [viewData, setViewData] = useState(null);
   const [showViewModal, setShowViewModal] = useState(false);
@@ -167,6 +169,16 @@ const TeacherAssignments = () => {
 
   useEffect(() => {
     fetchAssignments();
+    // fetch teacher analytics for consistent assignment counts
+    const fetchTeacherAnalytics = async () => {
+      try {
+        const res = await api.get('/api/analytics/teacher');
+        setTeacherAnalytics(res.data.data || null);
+      } catch (e) {
+        // ignore
+      }
+    };
+    fetchTeacherAnalytics();
   }, []);
 
   const fetchAssignments = async () => {
@@ -286,7 +298,7 @@ const TeacherAssignments = () => {
                     <FileText className="w-5 h-5 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">{loading ? <Loader2 className="w-6 h-6 animate-spin" /> : stats.total}</p>
+                    <p className="text-2xl font-bold">{loading ? <Loader2 className="w-6 h-6 animate-spin" /> : (teacherAnalytics?.assignmentsCount ?? stats.total)}</p>
                     <p className="text-sm text-muted-foreground">Total Assignments</p>
                   </div>
                 </div>
@@ -429,7 +441,7 @@ const TeacherAssignments = () => {
                             Grade
                           </Button>
                           <Button variant="outline" size="sm" onClick={() => handleExport(assignment.id)}>
-                            <Download className="w-4 h-4 mr-2" />
+                            <DownloadCloud className="w-4 h-4 mr-2" />
                             Export
                           </Button>
                           <AlertDialog>

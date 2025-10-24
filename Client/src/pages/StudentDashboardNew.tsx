@@ -24,7 +24,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import api, { studentAPI, timetableAPI, notificationAPI } from '@/lib/api';
+import api, { studentAPI, timetableAPI, notificationAPI, attendanceAPI } from '@/lib/api';
 
 const StudentDashboardNew = () => {
   const [analytics, setAnalytics] = useState<any | null>(null);
@@ -39,6 +39,8 @@ const StudentDashboardNew = () => {
   const [todaySchedule, setTodaySchedule] = useState<any[]>([]);
   const [recentGrades, setRecentGrades] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [nextClass, setNextClass] = useState<string>('Loading...');
+  const [attendanceRate, setAttendanceRate] = useState(0);
 
   // Fetch student-specific info
   useEffect(() => {
@@ -78,6 +80,40 @@ const StudentDashboardNew = () => {
         } catch (e) {
           console.error('Failed to fetch notifications', e);
           if (mounted) setNotifications([]);
+        }
+
+        // Get next class and attendance
+        try {
+          const timetableResponse = await timetableAPI.getStudentTimetables(student.id);
+          const timetables = timetableResponse.data || [];
+          const now = new Date();
+          const today = now.getDay();
+          const currentTime = now.getHours() * 60 + now.getMinutes();
+          
+          const todayClasses = timetables.filter((t: any) => t.dayOfWeek === today);
+          const upcomingClass = todayClasses.find((t: any) => {
+            const [hours, minutes] = t.startTime.split(':').map(Number);
+            const classTime = hours * 60 + minutes;
+            return classTime > currentTime;
+          });
+          
+          if (upcomingClass) {
+            if (mounted) setNextClass(`${upcomingClass.subject.name}`);
+          } else {
+            if (mounted) setNextClass('No more classes today');
+          }
+
+          // Get attendance rate
+          const attendanceResponse = await attendanceAPI.getStudentAttendance(student.id);
+          const attendanceStats = attendanceResponse.data.data?.statistics;
+          const rate = attendanceStats?.attendanceRate || 0;
+          if (mounted) setAttendanceRate(rate);
+        } catch (e) {
+          console.error('Failed to fetch timetable/attendance', e);
+          if (mounted) {
+            setNextClass('No classes today');
+            setAttendanceRate(0);
+          }
         }
 
         // Recent grades from exam details
@@ -207,8 +243,8 @@ const StudentDashboardNew = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-green-600 font-medium">Attendance</p>
-                    <p className="text-3xl font-bold text-green-800">94%</p>
-                    <p className="text-sm text-green-600">Excellent record</p>
+                    <p className="text-3xl font-bold text-green-800">{attendanceRate}%</p>
+                    <p className="text-sm text-green-600">{attendanceRate >= 90 ? 'Excellent record' : attendanceRate >= 75 ? 'Good record' : 'Needs improvement'}</p>
                   </div>
                   <div className="w-12 h-12 bg-green-500 rounded-xl flex items-center justify-center">
                     <CheckCircle className="w-6 h-6 text-white" />
@@ -237,8 +273,8 @@ const StudentDashboardNew = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-orange-600 font-medium">Next Class</p>
-                    <p className="text-2xl font-bold text-orange-800">Mathematics</p>
-                    <p className="text-sm text-orange-600">in 45 minutes</p>
+                    <p className="text-2xl font-bold text-orange-800">{nextClass}</p>
+                    <p className="text-sm text-orange-600">{nextClass !== 'No more classes today' && nextClass !== 'No classes today' ? 'Coming up' : ''}</p>
                   </div>
                   <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center">
                     <Clock className="w-6 h-6 text-white" />

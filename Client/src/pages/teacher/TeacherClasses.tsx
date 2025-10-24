@@ -26,70 +26,50 @@ import {
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import api from '@/lib/api';
 
 const TeacherClasses = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("all");
+  const [classes, setClasses] = useState<any[]>([]);
+  const [loadingClasses, setLoadingClasses] = useState(true);
+  const [teacherAnalytics, setTeacherAnalytics] = useState<any | null>(null);
 
-  const classes = [
-    {
-      id: 1,
-      name: "Mathematics 10-A",
-      subject: "Mathematics",
-      grade: "10",
-      section: "A",
-      students: 25,
-      room: "Room 101",
-      schedule: "Mon, Wed, Fri - 09:00 AM",
-      attendance: 92,
-      assignments: 8,
-      status: "active"
-    },
-    {
-      id: 2,
-      name: "Physics 11-B",
-      subject: "Physics",
-      grade: "11",
-      section: "B",
-      students: 20,
-      room: "Lab 1",
-      schedule: "Tue, Thu - 10:30 AM",
-      attendance: 88,
-      assignments: 5,
-      status: "active"
-    },
-    {
-      id: 3,
-      name: "Chemistry 12-A",
-      subject: "Chemistry",
-      grade: "12",
-      section: "A",
-      students: 28,
-      room: "Lab 2",
-      schedule: "Mon, Wed, Fri - 02:00 PM",
-      attendance: 95,
-      assignments: 12,
-      status: "active"
-    },
-    {
-      id: 4,
-      name: "Mathematics 9-C",
-      subject: "Mathematics",
-      grade: "9",
-      section: "C",
-      students: 22,
-      room: "Room 103",
-      schedule: "Tue, Thu - 11:00 AM",
-      attendance: 85,
-      assignments: 6,
-      status: "active"
-    }
-  ];
+  useEffect(() => {
+    let mounted = true;
+    const fetchClasses = async () => {
+      try {
+        setLoadingClasses(true);
+        const res = await api.get('/api/classes/me/teacher');
+        if (!mounted) return;
+        setClasses(res.data.classes || []);
+      } catch (e: any) {
+        console.error('Error fetching teacher classes', e?.response?.status, e?.response?.data || e.message);
+        setClasses([]);
+      } finally {
+        if (mounted) setLoadingClasses(false);
+      }
+    };
+    fetchClasses();
+    // fetch teacher analytics for consistent counts
+    const fetchTeacherAnalytics = async () => {
+      try {
+        const res = await api.get('/api/analytics/teacher');
+        setTeacherAnalytics(res.data.data || null);
+      } catch (e: any) {
+        console.error('Failed to fetch teacher analytics', e?.response?.status, e?.response?.data || e.message);
+      }
+    };
+    fetchTeacherAnalytics();
+    return () => { mounted = false; };
+  }, []);
 
-  const filteredClasses = classes.filter(cls => 
-    cls.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cls.subject.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredClasses = classes.filter(cls => {
+    const name = (cls.name || `${cls.name ?? ''} ${cls.section ?? ''}`).toString().toLowerCase();
+    const subject = (cls.subject || (cls.timetable && cls.timetable[0]?.subject?.name) || '').toString().toLowerCase();
+    const term = searchTerm.toLowerCase();
+    return name.includes(term) || subject.includes(term);
+  });
 
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
@@ -148,8 +128,8 @@ const TeacherClasses = () => {
                             <BookOpen className="w-6 h-6 text-white" />
                           </div>
                           <div>
-                            <CardTitle className="text-lg">{classItem.name}</CardTitle>
-                            <CardDescription>{classItem.students} students</CardDescription>
+                            <CardTitle className="text-lg">{classItem.name || `${classItem.name ?? ''} ${classItem.section ?? ''}`}</CardTitle>
+                            <CardDescription>{classItem.students ?? (classItem.students?.length ?? classItem.students) ?? (classItem.studentsCount ?? (classItem.students ? classItem.students.length : 0))} students</CardDescription>
                           </div>
                         </div>
                         <DropdownMenu>
@@ -179,22 +159,22 @@ const TeacherClasses = () => {
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
                           <p className="text-muted-foreground">Room</p>
-                          <p className="font-medium">{classItem.room}</p>
+                          <p className="font-medium">{classItem.room || (classItem.timetable && classItem.timetable[0]?.classroom?.name) || '—'}</p>
                         </div>
                         <div>
                           <p className="text-muted-foreground">Schedule</p>
-                          <p className="font-medium text-xs">{classItem.schedule}</p>
+                          <p className="font-medium text-xs">{classItem.schedule || (classItem.timetable && classItem.timetable.map((t:any) => `${t.day} ${Math.floor(t.startMinute/60)}:${String(t.startMinute%60).padStart(2,'0')}`).join(', ')) || '—'}</p>
                         </div>
                       </div>
                       
                       <div className="flex items-center justify-between pt-2 border-t border-border/50">
                         <div className="flex items-center gap-4">
                           <div className="text-center">
-                            <p className="text-lg font-bold text-green-600">{classItem.attendance}%</p>
+                            <p className="text-lg font-bold text-green-600">{(classItem.attendance ?? classItem.attendanceRate ?? '—') + (classItem.attendance || classItem.attendanceRate ? '%' : '')}</p>
                             <p className="text-xs text-muted-foreground">Attendance</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-lg font-bold text-blue-600">{classItem.assignments}</p>
+                            <p className="text-lg font-bold text-blue-600">{classItem.assignments ?? (classItem.assignmentCount ?? (classItem.assignments ? classItem.assignments.length : 0))}</p>
                             <p className="text-xs text-muted-foreground">Assignments</p>
                           </div>
                         </div>
@@ -241,39 +221,11 @@ const TeacherClasses = () => {
             <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
               <CardContent className="p-6">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                    <Users className="w-5 h-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">95</p>
-                    <p className="text-sm text-muted-foreground">Total Students</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <CheckSquare className="w-5 h-5 text-green-600" />
-                  </div>
-                  <div>
-                    <p className="text-2xl font-bold">90%</p>
-                    <p className="text-sm text-muted-foreground">Avg Attendance</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-3">
                   <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                     <FileText className="w-5 h-5 text-purple-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">31</p>
+                    <p className="text-2xl font-bold">{teacherAnalytics ? teacherAnalytics.data?.assignmentsCount ?? teacherAnalytics.assignmentsCount ?? '…' : '…'}</p>
                     <p className="text-sm text-muted-foreground">Assignments</p>
                   </div>
                 </div>
@@ -287,8 +239,8 @@ const TeacherClasses = () => {
                     <Calendar className="w-5 h-5 text-orange-600" />
                   </div>
                   <div>
-                    <p className="text-2xl font-bold">18</p>
-                    <p className="text-sm text-muted-foreground">Classes/Week</p>
+                    <p className="text-2xl font-bold">{teacherAnalytics ? teacherAnalytics.data?.activeClasses ?? teacherAnalytics.activeClasses ?? '…' : '…'}</p>
+                    <p className="text-sm text-muted-foreground">Active Classes</p>
                   </div>
                 </div>
               </CardContent>

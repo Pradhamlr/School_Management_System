@@ -38,22 +38,22 @@ const QuickLogin = () => {
       </CardHeader>
       <CardContent className="space-y-3">
         <Button 
-          onClick={() => handleQuickLogin('alex.thompson@student.school.com', 'student123', 'student')}
+          onClick={() => handleQuickLogin('student1@school.test', 'StudentPass1!', 'student')}
           className="w-full bg-blue-600 hover:bg-blue-700"
         >
-          Login as Student (Alex Thompson)
+          Login as Student (student1@school.test)
         </Button>
         <Button 
-          onClick={() => handleQuickLogin('sarah@school.com', 'teacher123', 'teacher')}
+          onClick={() => handleQuickLogin('teacher1@school.test', 'TeacherPass1!', 'teacher')}
           className="w-full bg-green-600 hover:bg-green-700"
         >
-          Login as Teacher (Dr. Sarah Johnson)
+          Login as Teacher (teacher1@school.test)
         </Button>
         <Button 
-          onClick={() => handleQuickLogin('admin@school.com', 'admin123', 'admin')}
+          onClick={() => handleQuickLogin('admin@school.test', 'AdminPass123!', 'admin')}
           className="w-full bg-purple-600 hover:bg-purple-700"
         >
-          Login as Admin
+          Login as Admin (admin@school.test)
         </Button>
       </CardContent>
     </Card>

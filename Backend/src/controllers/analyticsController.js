@@ -230,3 +230,31 @@ module.exports = {
   getClassPerformance,
   getSubjectPerformance
 };
+
+// Teacher-specific analytics
+const getTeacherAnalytics = async (req, res) => {
+  const userId = req.user.id;
+  // find teacher record
+  const teacher = await prisma.teacher.findUnique({ where: { userId } });
+  if (!teacher) {
+    return res.status(200).json({ success: true, data: { activeClasses: 0, assignmentsCount: 0 } });
+  }
+
+  // classes where this teacher is classTeacher
+  const classes = await prisma.class.findMany({ where: { classTeacherId: teacher.id } });
+  const classIds = classes.map(c => c.id);
+  const classesCount = classes.length;
+
+  // assignments linked via teacherClassSubject -> assignment
+  const tcs = await prisma.teacherClassSubject.findMany({ where: { teacherId: teacher.id }, select: { id: true } });
+  const tcsIds = tcs.map(x => x.id);
+  let assignmentsCount = 0;
+  if (tcsIds.length > 0) {
+    assignmentsCount = await prisma.assignment.count({ where: { teacherClassSubjectId: { in: tcsIds } } });
+  }
+  // Return only active class count and assignments count as requested
+  res.status(200).json({ success: true, data: { activeClasses: classesCount, assignmentsCount } });
+};
+
+// export the new function
+module.exports.getTeacherAnalytics = getTeacherAnalytics;

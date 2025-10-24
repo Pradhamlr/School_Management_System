@@ -23,17 +23,29 @@ export function DashboardHeader() {
       const res = await notificationAPI.getNotifications();
       setNotifications((res.data.data || []).slice(0, 6));
     } catch (e) {
-      console.error('Failed to load notifications', e);
+      console.error('Failed to load notifications', e?.response?.status, e?.response?.data || e?.message || e);
     } finally {
       setNotifLoading(false);
     }
   };
 
-  useEffect(() => { fetchNotifications(); }, []);
+  // Fetch when component mounts and whenever user changes
+  useEffect(() => {
+    if (!user) return;
+    fetchNotifications();
+
+    // Poll for new notifications every 30 seconds
+    const interval = setInterval(() => {
+      fetchNotifications();
+    }, 30_000);
+
+    return () => clearInterval(interval);
+  }, [user?.id, user?.role]);
 
   const handleLogout = () => { logout(); navigate('/'); };
 
-  const viewAllRoute = user?.role === 'ADMIN' ? '/admin/notifications' : '/student/notifications';
+  // Route 'View all' based on user role (teacher should use /teacher/notifications)
+  const viewAllRoute = user?.role === 'ADMIN' ? '/admin/notifications' : (user?.role === 'TEACHER' ? '/teacher/notifications' : '/student/notifications');
 
   return (
     <header className="h-20 glass-card border-b border-border/50 px-8 flex items-center justify-between">
@@ -51,9 +63,11 @@ export function DashboardHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="relative">
               <Bell className="w-5 h-5" />
-              {notifications.length > 0 && (
+              {notifLoading ? (
+                <span className="absolute -top-2 -right-2 w-4 h-4 animate-pulse rounded-full bg-yellow-400" />
+              ) : notifications.length > 0 ? (
                 <span className="absolute -top-2 -right-2 min-w-[18px] h-4 bg-red-600 text-white rounded-full text-[11px] leading-4 flex items-center justify-center px-1">{notifications.length > 99 ? '99+' : notifications.length}</span>
-              )}
+              ) : null}
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-[520px]">
@@ -87,9 +101,11 @@ export function DashboardHeader() {
           </DropdownMenuContent>
         </DropdownMenu>
 
-        <Button variant="ghost" size="icon">
-          <Settings className="w-5 h-5" />
-        </Button>
+        {user?.role === 'ADMIN' && (
+          <Button variant="ghost" size="icon" onClick={() => navigate('/admin/settings')}>
+            <Settings className="w-5 h-5" />
+          </Button>
+        )}
 
         <div className="flex items-center gap-3 pl-4 border-l border-border/50">
           <NotificationPreviewDialog id={selectedNotifId} open={Boolean(selectedNotifId)} onOpenChange={(v) => { if (!v) setSelectedNotifId(null); }} />

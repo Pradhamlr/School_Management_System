@@ -8,6 +8,7 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import Homepage from "./pages/Homepage";
 import Login from "./pages/Login";
 import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import TeacherDashboard from "./pages/TeacherDashboard";
@@ -27,12 +28,12 @@ import TeacherManagement from "./pages/admin/TeacherManagement";
 import Analytics from "./pages/admin/Analytics";
 import ClassManagement from "./pages/admin/ClassManagement";
 import EventManagement from "./pages/admin/EventManagement";
-import FinanceManagement from "./pages/admin/FinanceManagement";
 import ExamManagement from "./pages/admin/ExamManagement";
 import SubjectManagement from "./pages/admin/SubjectManagement";
 import ReportManagement from "./pages/admin/ReportManagement";
 import NotificationManagement from "./pages/admin/NotificationManagement";
 import AdminSettings from "./pages/admin/AdminSettings";
+import TimetableManagement from "./pages/admin/TimetableManagement";
 import NotFound from "./pages/NotFound";
 import Students from "./pages/Students";
 import Teachers from "./pages/Teachers";
@@ -47,6 +48,7 @@ import TeacherAssignments from "./pages/teacher/TeacherAssignments";
 import TeacherAttendance from "./pages/teacher/TeacherAttendance";
 import TeacherTimetable from "./pages/teacher/TeacherTimetable";
 import TeacherGrades from "./pages/teacher/TeacherGrades";
+import TeacherNotifications from "./pages/teacher/TeacherNotifications";
 import TestPage from "./pages/TestPage";
 
 const queryClient = new QueryClient();
@@ -70,21 +72,23 @@ const App = () => (
           <Route path="/admin/subjects" element={<ProtectedRoute><SubjectManagement /></ProtectedRoute>} />
           <Route path="/admin/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
           <Route path="/admin/events" element={<ProtectedRoute><EventManagement /></ProtectedRoute>} />
-          <Route path="/admin/finance" element={<ProtectedRoute><FinanceManagement /></ProtectedRoute>} />
-          <Route path="/admin/exams" element={<ProtectedRoute><ExamManagement /></ProtectedRoute>} />
-          <Route path="/admin/reports" element={<ProtectedRoute><ReportManagement /></ProtectedRoute>} />
+          {/* Finance removed per user request */}
+          {/* Exams and Reports removed from Admin navigation; moved into Settings */}
           <Route path="/admin/notifications" element={<ProtectedRoute><NotificationManagement /></ProtectedRoute>} />
+          <Route path="/admin/timetables" element={<ProtectedRoute><TimetableManagement /></ProtectedRoute>} />
           <Route path="/admin/settings" element={<ProtectedRoute><AdminSettings /></ProtectedRoute>} />
           <Route path="/teacher-dashboard" element={<ProtectedRoute><TeacherDashboard /></ProtectedRoute>} />
           <Route path="/teacher/classes" element={<ProtectedRoute><TeacherClasses /></ProtectedRoute>} />
           <Route path="/teacher/assignments" element={<ProtectedRoute><TeacherAssignments /></ProtectedRoute>} />
           <Route path="/teacher/attendance" element={<ProtectedRoute><TeacherAttendance /></ProtectedRoute>} />
           <Route path="/teacher/timetable" element={<ProtectedRoute><TeacherTimetable /></ProtectedRoute>} />
+          <Route path="/teacher/notifications" element={<ProtectedRoute><TeacherNotifications /></ProtectedRoute>} />
           <Route path="/teacher/grades" element={<ProtectedRoute><TeacherGrades /></ProtectedRoute>} />
           <Route path="/student-dashboard" element={<ProtectedRoute requiredRole="student"><StudentDashboardNew /></ProtectedRoute>} />
           <Route path="/student-dashboard-new" element={<ProtectedRoute requiredRole="student"><StudentDashboardNew /></ProtectedRoute>} />
           <Route path="/student/profile" element={<ProtectedRoute requiredRole="student"><StudentProfile /></ProtectedRoute>} />
           <Route path="/student/assignments" element={<ProtectedRoute requiredRole="student"><StudentAssignments /></ProtectedRoute>} />
+          {/* Student and Teacher settings removed - admin only */}
           <Route path="/student/grades" element={<ProtectedRoute requiredRole="student"><StudentGrades /></ProtectedRoute>} />
           <Route path="/student/timetable" element={<ProtectedRoute requiredRole="student"><StudentTimetable /></ProtectedRoute>} />
           <Route path="/student/courses" element={<ProtectedRoute requiredRole="student"><StudentCourses /></ProtectedRoute>} />
@@ -100,6 +104,7 @@ const App = () => (
           <Route path="/exams" element={<ProtectedRoute><Exams /></ProtectedRoute>} />
           <Route path="/library" element={<ProtectedRoute><Library /></ProtectedRoute>} />
           <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/test-page" element={<TestPage />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

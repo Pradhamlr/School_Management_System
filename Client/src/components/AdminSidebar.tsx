@@ -55,6 +55,12 @@ const AdminSidebar = () => {
       color: "text-teal-600"
     },
     {
+      title: "Timetables",
+      icon: Calendar,
+      path: "/admin/timetables",
+      color: "text-pink-600"
+    },
+    {
       title: "Analytics",
       icon: BarChart3,
       path: "/admin/analytics",
@@ -66,24 +72,8 @@ const AdminSidebar = () => {
       path: "/admin/events",
       color: "text-pink-600"
     },
-    {
-      title: "Finance",
-      icon: DollarSign,
-      path: "/admin/finance",
-      color: "text-emerald-600"
-    },
-    {
-      title: "Exams",
-      icon: Award,
-      path: "/admin/exams",
-      color: "text-yellow-600"
-    },
-    {
-      title: "Reports",
-      icon: FileText,
-      path: "/admin/reports",
-      color: "text-cyan-600"
-    },
+    // Finance removed per user request
+    // Exams and Reports removed per request; functionality moved to Settings
     {
       title: "Notifications",
       icon: Bell,
