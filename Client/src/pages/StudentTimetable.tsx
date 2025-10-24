@@ -27,11 +27,11 @@ const StudentTimetable = () => {
         console.log('All timetables:', allTimetables);
         console.log('Total timetables found:', allTimetables.length);
         
-        // Filter timetables for student's class
-        console.log('Student class ID:', studentClassId);
-        console.log('Sample timetable:', allTimetables[0]);
-        console.log('Days in DB:', [...new Set(allTimetables.map(t => t.day))]);
-        const studentTimetables = allTimetables.filter(t => t.classId === studentClassId);
+  // Filter timetables for student's class (support either nested `class.id` or flat `classId`)
+  console.log('Student class ID:', studentClassId);
+  console.log('Sample timetable:', allTimetables[0]);
+  console.log('Days in DB:', [...new Set(allTimetables.map(t => t.day))]);
+  const studentTimetables = allTimetables.filter(t => Number(t.classId ?? t.class?.id) === Number(studentClassId));
         console.log('Filtered timetables:', studentTimetables);
         console.log('Days in filtered:', [...new Set(studentTimetables.map(t => t.day))]);
         console.log('Monday periods:', studentTimetables.filter(t => t.day === 'MON').map(t => ({ start: t.startMinute, end: t.endMinute, subject: t.subject?.name })));
@@ -72,11 +72,13 @@ const StudentTimetable = () => {
     
     // Create 8 periods for each day, filling with actual classes or empty slots
     const periodsWithClasses = periods.map(period => {
-      const classForPeriod = dayClasses.find(t => t.startMinute === period.start);
+      // Find a class that overlaps this period (more robust than exact start matching)
+      const classForPeriod = dayClasses.find(t => (typeof t.startMinute === 'number' && typeof t.endMinute === 'number') && (t.startMinute < period.end && t.endMinute > period.start));
       return {
         period: period.period,
-        startMinute: period.start,
-        endMinute: period.end,
+        // if a real class exists, use its actual times for display; otherwise fall back to the period template
+        startMinute: classForPeriod ? classForPeriod.startMinute : period.start,
+        endMinute: classForPeriod ? classForPeriod.endMinute : period.end,
         class: classForPeriod || null
       };
     });

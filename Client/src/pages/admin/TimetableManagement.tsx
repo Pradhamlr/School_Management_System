@@ -4,6 +4,7 @@ import { DashboardHeader } from '@/components/DashboardHeader';
 import TimetableFormModal from '@/components/admin/TimetableFormModal';
 import api, { showApiError } from '@/lib/api';
 import { Button } from '@/components/ui/button';
+import { Calendar, List } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
@@ -110,9 +111,25 @@ const TimetableManagement = () => {
                   </SelectContent>
                 </Select>
 
-                <div className="inline-flex bg-slate-100 rounded">
-                  <button className={`px-3 py-1 ${viewMode === 'grouped' ? 'bg-white shadow-sm' : ''}`} onClick={() => setViewMode('grouped')}>Week</button>
-                  <button className={`px-3 py-1 ${viewMode === 'list' ? 'bg-white shadow-sm' : ''}`} onClick={() => setViewMode('list')}>List</button>
+                <div className="inline-flex bg-slate-100 rounded-md p-1" role="tablist" aria-label="View mode">
+                  <button
+                    role="tab"
+                    aria-selected={viewMode === 'grouped'}
+                    onClick={() => setViewMode('grouped')}
+                    className={`inline-flex items-center gap-2 px-3 py-1 rounded ${viewMode === 'grouped' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:bg-slate-100'}`}
+                  >
+                    <Calendar className="w-4 h-4" />
+                    <span className="text-sm">Week</span>
+                  </button>
+                  <button
+                    role="tab"
+                    aria-selected={viewMode === 'list'}
+                    onClick={() => setViewMode('list')}
+                    className={`inline-flex items-center gap-2 px-3 py-1 rounded ${viewMode === 'list' ? 'bg-white shadow-sm text-slate-900' : 'text-slate-600 hover:bg-slate-100'}`}
+                  >
+                    <List className="w-4 h-4" />
+                    <span className="text-sm">List</span>
+                  </button>
                 </div>
 
                 <Button onClick={() => { setInitialData({ classId: classFilter !== 'all' ? Number(classFilter) : undefined, teacherId: teacherFilter !== 'all' ? Number(teacherFilter) : undefined }); setOpen(true); }}>Add Slot</Button>
