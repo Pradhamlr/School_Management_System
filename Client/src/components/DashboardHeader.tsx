@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Search, Bell, Settings, User, LogOut } from 'lucide-react';
+import { Search, Bell, Settings, User, LogOut, Sun, Moon } from 'lucide-react';
+import { useTheme } from 'next-themes';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -13,6 +14,7 @@ import { timeAgo } from '@/lib/time';
 export function DashboardHeader() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const { theme, setTheme } = useTheme();
   const [notifications, setNotifications] = useState<any[]>([]);
   const [notifLoading, setNotifLoading] = useState(false);
   const [selectedNotifId, setSelectedNotifId] = useState<number | null>(null);
@@ -100,6 +102,10 @@ export function DashboardHeader() {
             </div>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} title="Toggle theme">
+          {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+        </Button>
 
         {user?.role === 'ADMIN' && (
           <Button variant="ghost" size="icon" onClick={() => navigate('/admin/settings')}>
