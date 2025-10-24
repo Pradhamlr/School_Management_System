@@ -129,7 +129,7 @@ const TeacherClasses = () => {
                           </div>
                           <div>
                             <CardTitle className="text-lg">{classItem.name || `${classItem.name ?? ''} ${classItem.section ?? ''}`}</CardTitle>
-                            <CardDescription>{classItem.students ?? (classItem.students?.length ?? classItem.students) ?? (classItem.studentsCount ?? (classItem.students ? classItem.students.length : 0))} students</CardDescription>
+                            <CardDescription>{Array.isArray(classItem.students) ? classItem.students.length : (typeof classItem.students === 'number' ? classItem.students : (classItem.studentsCount ?? 0))} students</CardDescription>
                           </div>
                         </div>
                         <DropdownMenu>
@@ -170,11 +170,15 @@ const TeacherClasses = () => {
                       <div className="flex items-center justify-between pt-2 border-t border-border/50">
                         <div className="flex items-center gap-4">
                           <div className="text-center">
-                            <p className="text-lg font-bold text-green-600">{(classItem.attendance ?? classItem.attendanceRate ?? '—') + (classItem.attendance || classItem.attendanceRate ? '%' : '')}</p>
+                            <p className="text-lg font-bold text-green-600">{
+                              typeof classItem.attendance === 'number'
+                                ? `${classItem.attendance}%`
+                                : (typeof classItem.attendanceRate === 'number' ? `${classItem.attendanceRate}%` : '—')
+                            }</p>
                             <p className="text-xs text-muted-foreground">Attendance</p>
                           </div>
                           <div className="text-center">
-                            <p className="text-lg font-bold text-blue-600">{classItem.assignments ?? (classItem.assignmentCount ?? (classItem.assignments ? classItem.assignments.length : 0))}</p>
+                            <p className="text-lg font-bold text-blue-600">{Array.isArray(classItem.assignments) ? classItem.assignments.length : (typeof classItem.assignments === 'number' ? classItem.assignments : (classItem.assignmentCount ?? 0))}</p>
                             <p className="text-xs text-muted-foreground">Assignments</p>
                           </div>
                         </div>

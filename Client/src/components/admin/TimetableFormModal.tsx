@@ -6,6 +6,7 @@ import { useForm } from 'react-hook-form';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import api from '@/lib/api';
+import { Lock, Unlock } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
 type Props = {
@@ -13,9 +14,10 @@ type Props = {
   open: boolean;
   onOpenChange: (v: boolean) => void;
   onSaved: () => void;
+  timetables?: any[];
 };
 
-export default function TimetableFormModal({ initial, open, onOpenChange, onSaved }: Props) {
+export default function TimetableFormModal({ initial, open, onOpenChange, onSaved, timetables }: Props) {
   const { toast } = useToast();
   const form = useForm({ defaultValues: {
     classId: initial?.classId ?? '',
@@ -32,6 +34,8 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
   const [subjects, setSubjects] = useState<any[]>([]);
   const [teachers, setTeachers] = useState<any[]>([]);
   const [classrooms, setClassrooms] = useState<any[]>([]);
+  const [lockClass, setLockClass] = useState(false);
+  const [lockTeacher, setLockTeacher] = useState(false);
 
   useEffect(() => {
     if (!open) return;
@@ -84,6 +88,28 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
     })();
   }, [open]);
 
+  // Reset form when modal opens or the initial prop changes so prefill works
+  useEffect(() => {
+    if (!open) return;
+    const resetValues: any = {
+      classId: initial?.classId ?? '',
+      subjectId: initial?.subjectId ?? '',
+      teacherId: initial?.teacherId ?? '',
+      classroomId: initial?.classroomId ?? '',
+      day: initial?.day ? String(initial.day).slice(0,3).toUpperCase() : 'MON',
+      startTime: initial && typeof initial.startMinute === 'number' ? minutesToTime(initial.startMinute) : (initial?.startTime ?? '08:00'),
+      endTime: initial && typeof initial.endMinute === 'number' ? minutesToTime(initial.endMinute) : (initial?.endTime ?? '09:00')
+    };
+    try {
+      form.reset(resetValues);
+    } catch (e) {
+      // ignore
+    }
+    // reset lock state and conflicts
+    setLockClass(Boolean(initial?.classId));
+    setLockTeacher(Boolean(initial?.teacherId));
+  }, [open, initial]);
+
   function timeToMinutes(t: string) {
     const [hh, mm] = t.split(':').map(Number);
     return hh * 60 + mm;
@@ -95,6 +121,8 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
     return `${hh}:${mm}`;
   }
 
+  // (Client-side conflict preview removed to simplify UX)
+
   const onSubmit = async (values: any) => {
     try {
       // validate required selects
@@ -102,6 +130,7 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
         toast({ title: 'Validation', description: 'Select class, subject, teacher and classroom', variant: 'destructive' });
         return;
       }
+      // Note: client-side conflict preview has been removed; server will enforce conflicts.
 
       const dayMap: Record<string,string> = { MONDAY: 'MON', TUESDAY: 'TUE', WEDNESDAY: 'WED', THURSDAY: 'THU', FRIDAY: 'FRI', SATURDAY: 'SAT', SUNDAY: 'SUN', MON: 'MON', TUE: 'TUE', WED: 'WED', THU: 'THU', FRI: 'FRI', SAT: 'SAT', SUN: 'SUN' };
       const mappedDay = dayMap[String(values.day).toUpperCase()] || String(values.day).toUpperCase();
@@ -121,8 +150,13 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
         return;
       }
 
-      await api.post('/api/timetables', payload);
-      toast({ title: 'Saved', description: 'Timetable slot created' });
+      if (initial && initial.id) {
+        await api.put(`/api/timetables/${initial.id}`, payload);
+        toast({ title: 'Updated', description: 'Timetable slot updated' });
+      } else {
+        await api.post('/api/timetables', payload);
+        toast({ title: 'Saved', description: 'Timetable slot created' });
+      }
       onSaved();
       onOpenChange(false);
     } catch (err: any) {
@@ -142,16 +176,27 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 p-2">
             <FormItem>
               <FormLabel>Class</FormLabel>
-              <FormControl>
-                <Select onValueChange={(v) => form.setValue('classId', v)} value={String(form.watch('classId') ?? '')}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select class" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {classes.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.name} {c.section ? `- ${c.section}` : ''}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </FormControl>
+              <div className="flex items-center gap-2">
+                <FormControl>
+                  <Select onValueChange={(v) => { if (!lockClass) form.setValue('classId', v); }} value={String(form.watch('classId') ?? '')}>
+                    <SelectTrigger disabled={lockClass}>
+                      <SelectValue placeholder="Select class" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {classes.map((c) => <SelectItem key={c.id} value={String(c.id)}>{c.name} {c.section ? `- ${c.section}` : ''}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <button
+                  type="button"
+                  aria-pressed={lockClass}
+                  title={lockClass ? 'Unlock class' : 'Lock class'}
+                  onClick={() => setLockClass(!lockClass)}
+                  className="inline-flex items-center justify-center p-1 rounded text-slate-600 hover:bg-slate-100/50 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                >
+                  {lockClass ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                </button>
+              </div>
               <FormMessage>{form.formState.errors.classId?.message as string}</FormMessage>
             </FormItem>
 
@@ -172,16 +217,27 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
 
             <FormItem>
               <FormLabel>Teacher</FormLabel>
-              <FormControl>
-                <Select onValueChange={(v) => form.setValue('teacherId', v)} value={String(form.watch('teacherId') ?? '')}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select teacher" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {teachers.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.user?.name || t.name}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-              </FormControl>
+              <div className="flex items-center gap-2">
+                <FormControl>
+                  <Select onValueChange={(v) => { if (!lockTeacher) form.setValue('teacherId', v); }} value={String(form.watch('teacherId') ?? '')}>
+                    <SelectTrigger disabled={lockTeacher}>
+                      <SelectValue placeholder="Select teacher" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {teachers.map((t) => <SelectItem key={t.id} value={String(t.id)}>{t.user?.name || t.name}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                </FormControl>
+                <button
+                  type="button"
+                  aria-pressed={lockTeacher}
+                  title={lockTeacher ? 'Unlock teacher' : 'Lock teacher'}
+                  onClick={() => setLockTeacher(!lockTeacher)}
+                  className="inline-flex items-center justify-center p-1 rounded text-slate-600 hover:bg-slate-100/50 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-slate-200"
+                >
+                  {lockTeacher ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                </button>
+              </div>
               <FormMessage>{form.formState.errors.teacherId?.message as string}</FormMessage>
             </FormItem>
 
@@ -208,13 +264,11 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="MONDAY">Monday</SelectItem>
-                    <SelectItem value="TUESDAY">Tuesday</SelectItem>
-                    <SelectItem value="WEDNESDAY">Wednesday</SelectItem>
-                    <SelectItem value="THURSDAY">Thursday</SelectItem>
-                    <SelectItem value="FRIDAY">Friday</SelectItem>
-                    <SelectItem value="SATURDAY">Saturday</SelectItem>
-                    <SelectItem value="SUNDAY">Sunday</SelectItem>
+                    <SelectItem value="MON">Monday</SelectItem>
+                    <SelectItem value="TUE">Tuesday</SelectItem>
+                    <SelectItem value="WED">Wednesday</SelectItem>
+                    <SelectItem value="THU">Thursday</SelectItem>
+                    <SelectItem value="FRI">Friday</SelectItem>
                   </SelectContent>
                 </Select>
               </FormControl>
@@ -237,6 +291,8 @@ export default function TimetableFormModal({ initial, open, onOpenChange, onSave
                 <FormMessage>{form.formState.errors.endTime?.message as string}</FormMessage>
               </FormItem>
             </div>
+
+            {/* client-side conflict preview removed to simplify workflow; server validates overlaps */}
 
             <DialogFooter>
               <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
