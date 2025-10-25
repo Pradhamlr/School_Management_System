@@ -25,48 +25,65 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
   const [analytics, setAnalytics] = useState<any | null>(null);
+  const [students, setStudents] = useState<any[]>([]);
+  const [teachers, setTeachers] = useState<any[]>([]);
+  const [classes, setClasses] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let mounted = true;
-    const fetchAnalytics = async () => {
+    const fetchData = async () => {
       try {
-        const res = await api.get('/api/analytics');
+        const [analyticsRes, studentsRes, teachersRes, classesRes] = await Promise.all([
+          api.get('/api/analytics'),
+          api.get('/api/students'),
+          api.get('/api/teachers'),
+          api.get('/api/classes')
+        ]);
         if (!mounted) return;
-        setAnalytics(res.data.data);
+        setAnalytics(analyticsRes.data.data);
+        setStudents(studentsRes.data.students || []);
+        setTeachers(teachersRes.data.teachers || []);
+        setClasses(classesRes.data.classes || []);
       } catch (e) {
-        console.error('Failed to fetch analytics', e);
+        console.error('Failed to fetch data', e);
       } finally {
         if (mounted) setLoading(false);
       }
     };
-    fetchAnalytics();
+    fetchData();
     return () => { mounted = false; };
   }, []);
 
+  // Calculate attendance data from analytics
+  const studentAttendanceRate = analytics?.attendance?.studentAttendanceRate || 0;
+  const studentAttendancePercentage = studentAttendanceRate < 1 ? Math.round(studentAttendanceRate * 100) : Math.round(studentAttendanceRate);
   const studentAttendanceData = [
-    { name: "Present", value: 78, color: "#10B981" },
-    { name: "Absent", value: 22, color: "#EF4444" },
+    { name: "Present", value: studentAttendancePercentage, color: "#10B981" },
+    { name: "Absent", value: 100 - studentAttendancePercentage, color: "#EF4444" },
   ];
 
+  const teacherAttendanceRate = analytics?.attendance?.teacherAttendanceRate || 0;
+  const teacherAttendancePercentage = teacherAttendanceRate < 1 ? Math.round(teacherAttendanceRate * 100) : Math.round(teacherAttendanceRate);
   const teacherAttendanceData = [
-    { name: "Present", value: 92, color: "#6366F1" },
-    { name: "Absent", value: 8, color: "#EF4444" },
+    { name: "Present", value: teacherAttendancePercentage, color: "#6366F1" },
+    { name: "Absent", value: 100 - teacherAttendancePercentage, color: "#EF4444" },
   ];
 
-  const performanceData = [
-    { name: "Excellent", value: 45, color: "#10B981" },
-    { name: "Good", value: 35, color: "#F59E0B" },
-    { name: "Average", value: 20, color: "#EF4444" },
-  ];
+  const performanceData = analytics?.academics ? [
+    { name: "Excellent", value: Math.round((analytics.academics.excellentCount || 0) / (analytics.academics.totalResults || 1) * 100), color: "#10B981" },
+    { name: "Good", value: Math.round((analytics.academics.goodCount || 0) / (analytics.academics.totalResults || 1) * 100), color: "#F59E0B" },
+    { name: "Average", value: Math.round((analytics.academics.averageCount || 0) / (analytics.academics.totalResults || 1) * 100), color: "#EF4444" },
+  ] : [];
 
   const recentActivities = [
-    { type: "student", message: "New student Alex Thompson enrolled", time: "2 hours ago", icon: UserPlus },
-    { type: "payment", message: "Fee payment of $2,500 received", time: "4 hours ago", icon: DollarSign },
-    { type: "exam", message: "Mathematics exam results published", time: "6 hours ago", icon: Award },
-    { type: "teacher", message: "Dr. Sarah Johnson updated profile", time: "8 hours ago", icon: Users },
+    { type: "student", message: `${students.length} students currently enrolled`, time: "Current", icon: UserPlus },
+    { type: "teacher", message: `${teachers.length} teachers on staff`, time: "Current", icon: Users },
+    { type: "class", message: `${classes.length} active classes`, time: "Current", icon: BookOpen },
+    { type: "attendance", message: `${studentAttendancePercentage}% student attendance today`, time: "Today", icon: Activity },
   ];
 
   const quickActions = [
@@ -77,7 +94,6 @@ const AdminDashboard = () => {
   ];
 
   function QuickActionButton({ action }: { action: any }) {
-    const navigate = useNavigate();
     const handleClick = () => {
       switch (action.title) {
         case 'Add Student': return navigate('/admin/students');
@@ -116,7 +132,7 @@ const AdminDashboard = () => {
                 Manage your school with powerful insights and controls
               </p>
               <div className="flex gap-4 mt-6">
-                <Button className="bg-white text-purple-700 hover:bg-purple-50">
+                <Button className="bg-white text-purple-700 hover:bg-purple-50" onClick={() => navigate('/admin/analytics')}>
                   <BarChart3 className="w-4 h-4 mr-2" />
                   View Analytics
                 </Button>
@@ -147,20 +163,19 @@ const AdminDashboard = () => {
               color="hsl(262 83% 58%)"
             />
             <MetricCard
-              title="New Students (Month)"
-              value={loading ? '…' : analytics?.monthlyNewStudents ?? '—'}
-              icon={UserPlus}
+              title="Student Attendance"
+              value={loading ? '…' : `${studentAttendancePercentage}%`}
+              icon={Activity}
               color="hsl(25 95% 53%)"
             />
           </div>
 
           {/* Main Content Tabs */}
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-            <TabsList className="grid w-full grid-cols-4 lg:w-[600px]">
+            <TabsList className="grid w-full grid-cols-3 lg:w-[450px]">
               <TabsTrigger value="overview">Overview</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
               <TabsTrigger value="management">Management</TabsTrigger>
-              {/* Reports tab removed; moved to Admin Settings */}
             </TabsList>
 
             <TabsContent value="overview" className="space-y-6">
@@ -261,7 +276,7 @@ const AdminDashboard = () => {
 
             <TabsContent value="management" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="shadow-lg border-0 bg-white/80 backdrop-blur hover:shadow-xl transition-shadow cursor-pointer">
+                <Card className="shadow-lg border-0 bg-white/80 backdrop-blur hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/admin/students')}>
                   <CardHeader className="text-center">
                     <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center mb-4">
                       <Users className="w-8 h-8 text-blue-600" />
@@ -271,7 +286,7 @@ const AdminDashboard = () => {
                   </CardHeader>
                 </Card>
 
-                <Card className="shadow-lg border-0 bg-white/80 backdrop-blur hover:shadow-xl transition-shadow cursor-pointer">
+                <Card className="shadow-lg border-0 bg-white/80 backdrop-blur hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/admin/teachers')}>
                   <CardHeader className="text-center">
                     <div className="w-16 h-16 mx-auto bg-green-100 rounded-full flex items-center justify-center mb-4">
                       <GraduationCap className="w-8 h-8 text-green-600" />
@@ -281,7 +296,7 @@ const AdminDashboard = () => {
                   </CardHeader>
                 </Card>
 
-                <Card className="shadow-lg border-0 bg-white/80 backdrop-blur hover:shadow-xl transition-shadow cursor-pointer">
+                <Card className="shadow-lg border-0 bg-white/80 backdrop-blur hover:shadow-xl transition-shadow cursor-pointer" onClick={() => navigate('/admin/classes')}>
                   <CardHeader className="text-center">
                     <div className="w-16 h-16 mx-auto bg-purple-100 rounded-full flex items-center justify-center mb-4">
                       <BookOpen className="w-8 h-8 text-purple-600" />
