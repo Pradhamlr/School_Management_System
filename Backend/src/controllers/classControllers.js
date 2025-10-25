@@ -22,7 +22,11 @@ const createClass = async (req, res) => {
 
 const getClasses = async (req, res) => {
     const classes = await prisma.class.findMany({
-        include: { classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } }
+        include: { 
+            classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } },
+            students: { include: { user: { select: { id: true, name: true, email: true } } } },
+            timetables: { include: { subject: true, teacher: { include: { user: { select: { id: true, name: true, email: true } } } } } }
+        }
     });
     res.status(StatusCodes.OK).json({ classes });
 }
@@ -31,7 +35,11 @@ const getClassById = async (req, res) => {
     const classId = Number(req.params.id);
     const classData = await prisma.class.findUnique({
         where: { id: classId },
-        include: { classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } } }
+        include: { 
+            classTeacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } },
+            students: { include: { user: { select: { id: true, name: true, email: true } } } },
+            timetables: { include: { subject: true, teacher: { include: { user: { select: { id: true, name: true, email: true } } } } } }
+        }
     });
     if (!classData) {
         throw new NotFoundError('Class not found');
