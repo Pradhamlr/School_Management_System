@@ -237,7 +237,7 @@ export default function SubjectManagement(){
                     </div>
                   </CardHeader>
                   
-                  <CardContent className="space-y-4">
+                  <CardContent className="pt-4">
                     {/* Quick Actions */}
                     <div className="flex gap-2">
                       <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => { setAssigningSubject(subject); setIsAssignOpen(true); }}>

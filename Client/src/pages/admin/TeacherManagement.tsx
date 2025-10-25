@@ -13,8 +13,10 @@ import {
   Upload,
   MoreHorizontal,
   Mail,
-  Phone
-  ,ToggleLeft, CheckCircle
+  Phone,
+  ToggleLeft, 
+  CheckCircle,
+  Users
 } from "lucide-react";
 import AdminSidebar from "@/components/AdminSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
@@ -264,97 +266,44 @@ const TeacherManagement = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
-            <CardHeader>
-              <CardTitle>All Teachers</CardTitle>
-              <CardDescription>
-                Showing {filteredTeachers.length} of {teachers.length} teachers
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Teacher</TableHead>
-                    <TableHead>Department</TableHead>
-                    <TableHead>Subjects</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Classes</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredTeachers.map((teacher) => (
-                    <TableRow key={teacher.id} className="hover:bg-muted/50">
-                      <TableCell>
+          {/* Teachers Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="animate-pulse bg-white dark:bg-slate-800 shadow-lg">
+                  <CardContent className="p-6">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredTeachers.map((teacher) => {
+                const isActive = (teacher.status || 'Active') === 'Active';
+                return (
+                  <Card key={teacher.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-white dark:bg-slate-800 shadow-lg hover:-translate-y-1">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarFallback className="bg-gradient-to-r from-green-500 to-blue-500 text-white">
+                          <Avatar className="w-12 h-12 border-2 border-white shadow-md">
+                            <AvatarFallback className="bg-gradient-to-r from-green-500 to-blue-500 text-white font-semibold">
                               {(teacher.user?.name || '').split(' ').map((n: string) => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{teacher.user?.name || '-'}</p>
-                            <p className="text-sm text-muted-foreground flex items-center gap-1">
+                            <CardTitle className="text-lg dark:text-white">{teacher.user?.name || 'Unknown'}</CardTitle>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
                               <Mail className="w-3 h-3" />
-                              {teacher.user?.email || '-'}
+                              {teacher.user?.email}
                             </p>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="bg-green-50 text-green-700">
-                          {(!teacher.department || teacher.department === '_') ? '\u2014' : teacher.department}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {(teacher.subjects || []).map((subject: any, index: number) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {typeof subject === 'string' ? subject : (subject?.name || subject?.code || 'Subject')}
-                            </Badge>
-                          ))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                          <Badge 
-                            variant={(teacher.status || 'Active') === 'Active' ? 'default' : 'secondary'}
-                            className={
-                              (teacher.status || 'Active') === 'Active' 
-                                ? 'bg-green-100 text-green-800' 
-                                : 'bg-yellow-100 text-yellow-800'
-                            }
-                          >
-                            {teacher.status || 'Active'}
-                          </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex flex-wrap gap-1">
-                          {/* show advised classes (class teacher) */}
-                          {(teacher.advisedClasses || []).map((c: any) => (
-                            <Badge key={`adv-${c.id}`} variant="secondary" className="text-xs bg-indigo-50 text-indigo-700">
-                              CT • {c.name}{c.section ? ` ${c.section}` : ''}
-                            </Badge>
-                          ))}
-                          {/* show classes from teachingAssignments (subject teacher) - unique by class id */}
-                          {((teacher.teachingAssignments || [])
-                            .map((ta: any) => ta.class)
-                            .filter(Boolean)
-                            .reduce((acc: any[], cls: any) => {
-                              if (!acc.find((x) => x?.id === cls.id)) acc.push(cls);
-                              return acc;
-                            }, [])
-                            .map((c: any) => (
-                              <Badge key={`sub-${c.id}`} variant="outline" className="text-xs">
-                                {c.name}{c.section ? ` ${c.section}` : ''}
-                              </Badge>
-                            )))}
-                        </div>
-                      </TableCell>
-                      <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <MoreHorizontal className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -363,17 +312,13 @@ const TeacherManagement = () => {
                               <Eye className="w-4 h-4" />
                               View Profile
                             </DropdownMenuItem>
-                              <DropdownMenuItem className="gap-2" onClick={() => toggleTeacherStatus(teacher)}>
-                                <ToggleLeft className="w-4 h-4 mr-2" />
-                                {(statusLoading[teacher.id]) ? 'Updating…' : ((teacher.status || 'Active') === 'Active' ? 'Mark Inactive' : 'Mark Active')}
-                              </DropdownMenuItem>
+                            <DropdownMenuItem className="gap-2" onClick={() => toggleTeacherStatus(teacher)}>
+                              <ToggleLeft className="w-4 h-4" />
+                              {statusLoading[teacher.id] ? 'Updating…' : (isActive ? 'Mark Inactive' : 'Mark Active')}
+                            </DropdownMenuItem>
                             <DropdownMenuItem className="gap-2" onClick={() => { setEditing(teacher); setIsModalOpen(true); }}>
                               <Edit className="w-4 h-4" />
                               Edit Teacher
-                            </DropdownMenuItem>
-                            <DropdownMenuItem className="gap-2">
-                              <Mail className="w-4 h-4" />
-                              Send Message
                             </DropdownMenuItem>
                             <DropdownMenuItem className="gap-2 text-red-600" onClick={() => deleteTeacher(teacher.id)}>
                               <Trash2 className="w-4 h-4" />
@@ -381,13 +326,108 @@ const TeacherManagement = () => {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-5">
+                      {/* Status and Department */}
+                      <div className="flex items-center justify-between">
+                        <Badge className={isActive ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'}>
+                          {teacher.status || 'Active'}
+                        </Badge>
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                          {(!teacher.department || teacher.department === '_') ? 'No Dept' : teacher.department}
+                        </Badge>
+                      </div>
+
+                      {/* Subjects */}
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Subjects</p>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(teacher.subjects || []).slice(0, 3).map((subject: any, index: number) => (
+                            <Badge key={index} variant="secondary" className="text-xs bg-purple-100 text-purple-800 dark:bg-purple-900/20 dark:text-purple-400">
+                              {typeof subject === 'string' ? subject : (subject?.name || subject?.code || 'Subject')}
+                            </Badge>
+                          ))}
+                          {(teacher.subjects || []).length > 3 && (
+                            <Badge variant="secondary" className="text-xs bg-gray-100 text-gray-600 dark:bg-gray-800 dark:text-gray-400">
+                              +{(teacher.subjects || []).length - 3} more
+                            </Badge>
+                          )}
+                          {(!teacher.subjects || teacher.subjects.length === 0) && (
+                            <span className="text-xs text-gray-500 dark:text-gray-400">No subjects assigned</span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Class Teacher Info - Only show if teacher is a class teacher */}
+                      {(teacher.advisedClasses && teacher.advisedClasses.length > 0) && (
+                        <div className="p-4 bg-gradient-to-r from-indigo-50 to-blue-50 dark:from-indigo-900/20 dark:to-blue-900/20 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <GraduationCap className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
+                            <span className="text-sm font-medium text-indigo-900 dark:text-indigo-100">Class Teacher</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {teacher.advisedClasses.map((c: any) => (
+                              <Badge key={c.id} className="bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-300">
+                                Class {c.name}{c.section ? `-${c.section}` : ''}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Teaching Assignments - Only show if teacher has subject assignments */}
+                      {(teacher.teachingAssignments && teacher.teachingAssignments.length > 0) && (
+                        <div className="p-4 bg-gradient-to-r from-green-50 to-emerald-50 dark:from-green-900/20 dark:to-emerald-900/20 rounded-lg">
+                          <div className="flex items-center gap-2 mb-2">
+                            <Users className="w-4 h-4 text-green-600 dark:text-green-400" />
+                            <span className="text-sm font-medium text-green-900 dark:text-green-100">Teaching Classes</span>
+                          </div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {[...new Set(teacher.teachingAssignments.map((ta: any) => ta.class).filter(Boolean))].map((c: any) => (
+                              <Badge key={c.id} variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
+                                {c.name}{c.section ? `-${c.section}` : ''}
+                              </Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-3">
+                        <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => setSelectedTeacher(teacher)}>
+                          <Eye className="w-4 h-4" />
+                          View
+                        </Button>
+                        <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => { setEditing(teacher); setIsModalOpen(true); }}>
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {filteredTeachers.length === 0 && !loading && (
+            <Card className="shadow-lg border-0 bg-white dark:bg-slate-800">
+              <CardContent className="p-12 text-center">
+                <GraduationCap className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No teachers found</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {searchTerm ? "Try adjusting your search terms" : "Get started by adding your first teacher"}
+                </p>
+                <Button className="gap-2 bg-gradient-to-r from-green-600 to-green-700" onClick={() => { setEditing(null); setIsModalOpen(true); }}>
+                  <Plus className="w-4 h-4" />
+                  Add Teacher
+                </Button>
+              </CardContent>
+            </Card>
+          )}
           {typeof window !== 'undefined' && (
             <React.Suspense>
               <TeacherFormModal

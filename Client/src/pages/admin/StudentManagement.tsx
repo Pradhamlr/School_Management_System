@@ -255,64 +255,42 @@ const StudentManagement = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-lg border-0 bg-white/80 backdrop-blur">
-            <CardHeader>
-              <CardTitle>All Students</CardTitle>
-              <CardDescription>
-                Showing {filteredStudents.length} of {students.length} students
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Student</TableHead>
-                    <TableHead>Roll Number</TableHead>
-                    <TableHead>Class</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Attendance</TableHead>
-                    <TableHead>GPA</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredStudents.map((student) => (
-                    <TableRow key={student.id} className="hover:bg-muted/50">
-                      <TableCell>
+          {/* Students Grid */}
+          {loading ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => (
+                <Card key={i} className="animate-pulse bg-white dark:bg-slate-800 shadow-lg">
+                  <CardContent className="p-6">
+                    <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded mb-4"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded mb-2"></div>
+                    <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-2/3"></div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+              {filteredStudents.map((student) => {
+                const cls = classes.find(c => c.id === student.classId);
+                const classLabel = cls ? `${cls.name}${cls.section ? `-${cls.section}` : ''}` : 'No Class';
+                return (
+                  <Card key={student.id} className="group hover:shadow-xl transition-all duration-300 border-0 bg-white dark:bg-slate-800 shadow-lg hover:-translate-y-1">
+                    <CardHeader className="pb-4">
+                      <div className="flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                          <Avatar>
-                            <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
+                          <Avatar className="w-12 h-12 border-2 border-white shadow-md">
+                            <AvatarFallback className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-semibold">
                               {(student.user?.name || '').split(' ').map((n: string) => n[0]).join('')}
                             </AvatarFallback>
                           </Avatar>
                           <div>
-                            <p className="font-medium">{student.user?.name}</p>
-                            <p className="text-sm text-muted-foreground">{student.user?.email}</p>
+                            <CardTitle className="text-lg dark:text-white">{student.user?.name || 'Unknown'}</CardTitle>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">{student.user?.email}</p>
                           </div>
                         </div>
-                      </TableCell>
-                      <TableCell className="font-mono">{student.rollNumber || '-'}</TableCell>
-                      <TableCell>
-                        {(() => {
-                          const cls = classes.find(c => c.id === student.classId);
-                          return cls ? (
-                            <Badge variant="outline">{cls.name}{cls.section ? ` ${cls.section}` : ''}</Badge>
-                          ) : (
-                            <Badge variant="outline">{student.classId || '-'}</Badge>
-                          );
-                        })()}
-                      </TableCell>
-                      <TableCell>
-                        <Badge variant="default">Student</Badge>
-                      </TableCell>
-                      <TableCell>
-                        <span className="text-sm font-medium">-</span>
-                      </TableCell>
-                      <TableCell className="font-medium">-</TableCell>
-                      <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
                               <MoreHorizontal className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -331,13 +309,74 @@ const StudentManagement = () => {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                      </div>
+                    </CardHeader>
+                    
+                    <CardContent className="space-y-5">
+                      {/* Student Info */}
+                      <div className="flex items-center justify-between">
+                        <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
+                          {student.rollNumber || 'No Roll'}
+                        </Badge>
+                        <Badge className="bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400">
+                          Active
+                        </Badge>
+                      </div>
+
+                      {/* Class Info */}
+                      <div className="p-4 bg-gray-50 dark:bg-slate-700 rounded-lg">
+                        <div className="flex items-center gap-2">
+                          <Users className="w-4 h-4 text-gray-500" />
+                          <span className="text-sm font-medium dark:text-white">Class {classLabel}</span>
+                        </div>
+                      </div>
+
+                      {/* Quick Stats */}
+                      <div className="grid grid-cols-2 gap-3">
+                        <div className="text-center p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                          <p className="text-xs text-purple-600 dark:text-purple-400 mb-1">Attendance</p>
+                          <p className="font-semibold text-purple-700 dark:text-purple-300">-</p>
+                        </div>
+                        <div className="text-center p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                          <p className="text-xs text-orange-600 dark:text-orange-400 mb-1">GPA</p>
+                          <p className="font-semibold text-orange-700 dark:text-orange-300">-</p>
+                        </div>
+                      </div>
+
+                      {/* Action Buttons */}
+                      <div className="flex gap-2 pt-3">
+                        <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => setSelectedStudent(student)}>
+                          <Eye className="w-4 h-4" />
+                          View
+                        </Button>
+                        <Button size="sm" variant="outline" className="flex-1 gap-2" onClick={() => { setEditing(student); setIsModalOpen(true); }}>
+                          <Edit className="w-4 h-4" />
+                          Edit
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Empty State */}
+          {filteredStudents.length === 0 && !loading && (
+            <Card className="shadow-lg border-0 bg-white dark:bg-slate-800">
+              <CardContent className="p-12 text-center">
+                <Users className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">No students found</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">
+                  {searchTerm ? "Try adjusting your search terms" : "Get started by adding your first student"}
+                </p>
+                <Button className="gap-2 bg-gradient-to-r from-blue-600 to-blue-700" onClick={() => { setEditing(null); setIsModalOpen(true); }}>
+                  <Plus className="w-4 h-4" />
+                  Add Student
+                </Button>
+              </CardContent>
+            </Card>
+          )}
           
           {/* Student form modal (render directly) */}
           <StudentFormModal
