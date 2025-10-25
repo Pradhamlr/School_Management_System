@@ -95,6 +95,19 @@ const getClassSubjects = async (req, res) => {
     res.status(StatusCodes.OK).json({ subjects });
 }
 
+const getSubjectAssignments = async (req, res) => {
+    const subjectId = Number(req.params.subjectId);
+    const assignments = await prisma.teacherClassSubject.findMany({
+        where: { subjectId },
+        include: { 
+            teacher: { include: { user: { select: { id: true, name: true, email: true, role: true } } } }, 
+            class: true, 
+            subject: true 
+        },
+    });
+    res.status(StatusCodes.OK).json({ assignments });
+}
+
 
 
 
@@ -105,5 +118,6 @@ module.exports = {
     deleteSubject,
     assignTeacherToSubject,
     getTeacherAssignments,
-    getClassSubjects
+    getClassSubjects,
+    getSubjectAssignments
 };
