@@ -92,7 +92,7 @@ const AdminSidebar = () => {
 
   return (
     <div className={cn(
-      "h-screen bg-white border-r border-gray-200 transition-all duration-300 flex flex-col shadow-lg",
+      "h-screen bg-white dark:bg-slate-900 border-r border-gray-200 dark:border-slate-700 transition-all duration-300 flex flex-col shadow-lg",
       collapsed ? "w-16" : "w-64"
     )}>
       {/* Header */}
@@ -101,11 +101,11 @@ const AdminSidebar = () => {
           {!collapsed && (
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-blue-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">CL</span>
+                <span className="text-white font-bold text-sm">AC</span>
               </div>
               <div>
-                <h2 className="font-bold text-gray-900">ClassLinker</h2>
-                <p className="text-xs text-gray-500">Admin Panel</p>
+                <h2 className="font-bold text-gray-900 dark:text-white">Acadion</h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Admin Panel</p>
               </div>
             </div>
           )}
@@ -139,8 +139,8 @@ const AdminSidebar = () => {
                 "w-full justify-start gap-3 h-11 transition-all duration-200",
                 collapsed ? "px-2" : "px-3",
                 active 
-                  ? "bg-gradient-to-r from-purple-50 to-blue-50 text-purple-700 border border-purple-200 shadow-sm" 
-                  : "hover:bg-gray-50 text-gray-700 hover:text-gray-900"
+                  ? "bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/20 dark:to-blue-900/20 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-700 shadow-sm" 
+                  : "hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white"
               )}
             >
               <Icon className={cn(

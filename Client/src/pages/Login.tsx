@@ -83,7 +83,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4 transition-colors duration-300">
       <div className="w-full max-w-md">
         <Button
           variant="ghost"
@@ -94,17 +94,17 @@ const Login = () => {
           Back to Home
         </Button>
 
-        <Card className="shadow-xl">
+        <Card className="shadow-xl dark:bg-slate-800 dark:border-slate-700">
           <CardHeader className="text-center">
             <div className={`w-16 h-16 mx-auto mb-4 rounded-full bg-gradient-to-r ${getRoleColor()} flex items-center justify-center`}>
               <span className="text-2xl font-bold text-white">
                 {role?.charAt(0).toUpperCase()}
               </span>
             </div>
-            <CardTitle className="text-2xl font-bold">
+            <CardTitle className="text-2xl font-bold dark:text-white">
               {role?.charAt(0).toUpperCase() + role?.slice(1)} Login
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="dark:text-gray-300">
               Enter your credentials to access your account
             </CardDescription>
             {role === 'admin' && (
@@ -126,7 +126,7 @@ const Login = () => {
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email" className="dark:text-gray-200">Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -140,7 +140,7 @@ const Login = () => {
                 )}
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="dark:text-gray-200">Password</Label>
                 <div className="relative">
                   <Input
                     id="password"
@@ -172,7 +172,7 @@ const Login = () => {
               <div className="flex items-center justify-between">
                 <Link
                   to={`/forgot-password/${role}`}
-                  className="text-sm text-blue-600 hover:underline"
+                  className="text-sm text-blue-600 dark:text-blue-400 hover:underline"
                 >
                   Forgot password?
                 </Link>

@@ -43,7 +43,7 @@ const Dashboard = () => {
                 </p>
                 <div className="flex items-center gap-6 pt-4">
                   <div>
-                    <p className="text-2xl font-bold text-foreground">ClassLinker</p>
+                    <p className="text-2xl font-bold text-foreground">Acadion</p>
                     <p className="text-sm text-muted-foreground">Educational Institute Management</p>
                   </div>
                 </div>
